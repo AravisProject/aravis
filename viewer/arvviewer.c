@@ -119,6 +119,7 @@ struct  _ArvViewer {
 	GtkWidget *main_window;
 	GtkWidget *main_stack;
 	GtkWidget *main_headerbar;
+	GtkWidget *window_title;
 	GtkWidget *camera_box;
 	GtkWidget *refresh_button;
 	GtkWidget *video_mode_button;
@@ -322,10 +323,10 @@ arv_viewer_show_notification (ArvViewer *viewer, const char *message, const char
         gtk_label_set_text (GTK_LABEL (viewer->notification_label), message);
         if (details != NULL) {
                 g_autofree char *text = g_strdup_printf ("<small>%s</small>", details);
-                gtk_widget_show (viewer->notification_details);
+                gtk_widget_set_visible (viewer->notification_details, TRUE);
                 gtk_label_set_markup (GTK_LABEL (viewer->notification_details), text);
         } else {
-                gtk_widget_hide (viewer->notification_details);
+                gtk_widget_set_visible (viewer->notification_details, FALSE);
         }
         gtk_revealer_set_reveal_child (GTK_REVEALER (viewer->notification_revealer), TRUE);
 
@@ -858,34 +859,26 @@ new_buffer_cb (ArvStream *stream, ArvViewer *viewer)
 static void
 _apply_frame_rate (GtkEntry *entry, ArvViewer *viewer, gboolean grab_focus)
 {
-	char *text;
+	const char *text;
+	char *string;
 	double frame_rate;
 
-	text = (char *) gtk_entry_get_text (entry);
+	text = gtk_editable_get_text (GTK_EDITABLE (entry));
 
 	arv_camera_set_frame_rate (viewer->camera, g_strtod (text, NULL), NULL);
 
 	frame_rate = arv_camera_get_frame_rate (viewer->camera, NULL);
-	text = g_strdup_printf ("%g", frame_rate);
-	gtk_entry_set_text (entry, text);
+	string = g_strdup_printf ("%g", frame_rate);
+	gtk_editable_set_text (GTK_EDITABLE (entry), string);
 	if (grab_focus)
-		gtk_widget_grab_focus (GTK_WIDGET(entry));
-	g_free (text);
+		gtk_widget_grab_focus (GTK_WIDGET (entry));
+	g_free (string);
 }
 
 static void
-frame_rate_entry_cb (GtkEntry *entry, ArvViewer *viewer)
+frame_rate_entry_focus_cb (GtkEntry *entry, GParamSpec *pspec, ArvViewer *viewer)
 {
-	_apply_frame_rate (entry, viewer, TRUE);
-}
-
-static gboolean
-frame_rate_entry_focus_cb (GtkEntry *entry, GdkEventFocus *event,
-		    ArvViewer *viewer)
-{
-	_apply_frame_rate (entry, viewer, FALSE);
-
-	return FALSE;
+	_apply_frame_rate (entry, viewer, gtk_widget_has_focus(GTK_WIDGET (entry)));
 }
 
 static void
@@ -1167,7 +1160,7 @@ set_camera_widgets(ArvViewer *viewer)
 	gtk_widget_set_sensitive (viewer->frame_rate_entry, is_frame_rate_available);
 
 	string = g_strdup_printf ("%g", arv_camera_get_frame_rate (viewer->camera, NULL));
-	gtk_entry_set_text (GTK_ENTRY (viewer->frame_rate_entry), string);
+	gtk_editable_set_text (GTK_EDITABLE (viewer->frame_rate_entry), string);
 
 	is_gain_available = arv_camera_is_gain_available (viewer->camera, NULL);
 	if (is_gain_available) {
@@ -1311,6 +1304,8 @@ _save_gst_sample_to_file (GstSample *sample, const char *path, const char *mime_
 static void
 snapshot_cb (GtkButton *button, ArvViewer *viewer)
 {
+}
+/*
         GtkFileFilter *filter;
         GtkFileFilter *filter_all;
         GtkWidget *dialog;
@@ -1426,7 +1421,7 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
         g_clear_pointer (&sample, gst_sample_unref);
         g_clear_object (&buffer);
 }
-
+*/
 static void
 update_transform (ArvViewer *viewer)
 {
@@ -1630,7 +1625,7 @@ update_pixel_format (ArvViewer *viewer)
 	gtk_widget_set_sensitive (viewer->pixel_format_combo, n_valid_formats > 0);
 	gtk_widget_set_sensitive (viewer->video_mode_button,
                                   n_valid_formats > 0 &&
-                                  gtk_toggle_button_get_active (GTK_TOGGLE_BUTTON(viewer->component_check)));
+                                  gtk_check_button_get_active (GTK_CHECK_BUTTON (viewer->component_check)));
 
 	gtk_combo_box_set_active (GTK_COMBO_BOX (viewer->pixel_format_combo), current_format >= 0 ? current_format : 0);
 
@@ -1679,7 +1674,7 @@ component_combo_cb (GtkComboBoxText *combo, ArvViewer *viewer)
         g_free (component);
 
 	g_signal_handler_block (viewer->component_check, viewer->component_toggled);
-        gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(viewer->component_check), enabled);
+        gtk_check_button_set_active(GTK_CHECK_BUTTON (viewer->component_check), enabled);
 	g_signal_handler_unblock (viewer->component_check, viewer->component_toggled);
 
 	update_camera_region (viewer);
@@ -1687,13 +1682,13 @@ component_combo_cb (GtkComboBoxText *combo, ArvViewer *viewer)
 }
 
 static void
-component_toggled_cb (GtkToggleButton *button, ArvViewer *viewer)
+component_toggled_cb (GtkCheckButton *button, ArvViewer *viewer)
 {
         char *component;
         gboolean enable;
 
         component = gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT(viewer->component_combo));
-        enable = gtk_toggle_button_get_active(button);
+        enable = gtk_check_button_get_active (button);
 
 	gtk_widget_set_sensitive (viewer->video_mode_button, enable);
 
@@ -1716,7 +1711,7 @@ pixel_format_combo_cb (GtkComboBoxText *combo, ArvViewer *viewer)
 }
 
 static void
-update_device_list_cb (GtkToolButton *button, ArvViewer *viewer)
+update_device_list_cb (GtkButton *button, ArvViewer *viewer)
 {
 	GtkListStore *list_store;
 	GtkTreeIter iter;
@@ -1756,13 +1751,14 @@ update_device_list_cb (GtkToolButton *button, ArvViewer *viewer)
 static void
 remove_widget (GtkWidget *widget, gpointer data)
 {
-	gtk_container_remove (data, widget);
-	g_object_unref (widget);
+	gtk_widget_unparent (widget);
 }
 
 static void
 stop_video (ArvViewer *viewer)
 {
+	GtkWidget *video_widget;
+
 	if (ARV_IS_STREAM (viewer->stream))
 		arv_stream_set_emit_signals (viewer->stream, FALSE);
 
@@ -1787,7 +1783,9 @@ stop_video (ArvViewer *viewer)
 	if (ARV_IS_CAMERA (viewer->camera))
 		arv_camera_stop_acquisition (viewer->camera, NULL);
 
-	gtk_container_foreach (GTK_CONTAINER (viewer->video_frame), remove_widget, viewer->video_frame);
+	video_widget = gtk_frame_get_child (GTK_FRAME (viewer->video_frame));
+	if (video_widget != NULL)
+		remove_widget (video_widget, viewer->video_frame);
 
 	if (viewer->status_bar_update_event > 0) {
 		g_source_remove (viewer->status_bar_update_event);
@@ -1905,8 +1903,8 @@ start_video (ArvViewer *viewer)
         gst_element_link_many (viewer->transform, viewer->videosink, NULL);
 
         g_object_get (viewer->videosink, "widget", &video_widget, NULL);
-        gtk_container_add (GTK_CONTAINER (viewer->video_frame), video_widget);
-        gtk_widget_show (video_widget);
+        gtk_frame_set_child (GTK_FRAME (viewer->video_frame), video_widget);
+        gtk_widget_set_visible (video_widget, TRUE);
         g_object_set(G_OBJECT (video_widget), "force-aspect-ratio", TRUE, NULL);
         gtk_widget_set_size_request (video_widget, 640, 480);
 
@@ -1942,7 +1940,7 @@ select_camera_list_mode (gpointer user_data)
 	ArvViewer *viewer = user_data;
 
 	select_mode (viewer, ARV_VIEWER_MODE_CAMERA_LIST);
-	update_device_list_cb (GTK_TOOL_BUTTON (viewer->refresh_button), viewer);
+	update_device_list_cb (GTK_BUTTON (viewer->refresh_button), viewer);
 
 	return FALSE;
 }
@@ -2042,14 +2040,14 @@ start_camera (ArvViewer *viewer, const char *camera_id)
                 }
                 g_free (components);
                 gtk_widget_set_sensitive (viewer->component_combo, n_components > 0);
-                gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(viewer->component_check), n_components > 0);
+                gtk_check_button_set_active(GTK_CHECK_BUTTON (viewer->component_check), n_components > 0);
                 if (n_components > 0)
                         gtk_combo_box_set_active (GTK_COMBO_BOX (viewer->component_combo), MAX(first_enabled_component, 0));
                 g_signal_handler_unblock (viewer->component_check, viewer->component_toggled);
                 g_signal_handler_unblock (viewer->component_combo, viewer->component_changed);
         } else {
                 g_signal_handler_block (viewer->component_check, viewer->component_toggled);
-                gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(viewer->component_check), TRUE);
+                gtk_check_button_set_active(GTK_CHECK_BUTTON (viewer->component_check), TRUE);
                 g_signal_handler_unblock (viewer->component_check, viewer->component_toggled);
                 gtk_widget_set_visible(viewer->component_label, FALSE);
                 gtk_widget_set_visible(viewer->component_combo, FALSE);
@@ -2106,8 +2104,8 @@ select_mode (ArvViewer *viewer, ArvViewerMode mode)
 		case ARV_VIEWER_MODE_CAMERA_LIST:
 			video_visibility = FALSE;
 			gtk_stack_set_visible_child (GTK_STACK (viewer->main_stack), viewer->camera_box);
-			gtk_header_bar_set_title (GTK_HEADER_BAR (viewer->main_headerbar), "Aravis Viewer");
-			gtk_header_bar_set_subtitle (GTK_HEADER_BAR (viewer->main_headerbar), NULL);
+			adw_window_title_set_title (ADW_WINDOW_TITLE (viewer->window_title), "Aravis Viewer");
+			adw_window_title_set_subtitle (ADW_WINDOW_TITLE (viewer->window_title), NULL);
 			stop_video (viewer);
 			break;
 		case ARV_VIEWER_MODE_VIDEO:
@@ -2125,8 +2123,8 @@ select_mode (ArvViewer *viewer, ArvViewerMode mode)
 						    x, y,
 						    arv_camera_get_pixel_format_as_string (viewer->camera, NULL));
 			gtk_stack_set_visible_child (GTK_STACK (viewer->main_stack), viewer->video_box);
-			gtk_header_bar_set_title (GTK_HEADER_BAR (viewer->main_headerbar), viewer->camera_name);
-			gtk_header_bar_set_subtitle (GTK_HEADER_BAR (viewer->main_headerbar), subtitle);
+			adw_window_title_set_title (ADW_WINDOW_TITLE (viewer->window_title), viewer->camera_name);
+			adw_window_title_set_subtitle (ADW_WINDOW_TITLE (viewer->window_title), subtitle);
 			g_free (subtitle);
 			start_video (viewer);
 			break;
@@ -2145,22 +2143,24 @@ select_mode (ArvViewer *viewer, ArvViewerMode mode)
 }
 
 static void
-switch_to_camera_list_cb (GtkToolButton *button, ArvViewer *viewer)
+switch_to_camera_list_cb (GtkButton *button, ArvViewer *viewer)
 {
 	select_mode (viewer, ARV_VIEWER_MODE_CAMERA_LIST);
 }
 
 static void
-switch_to_video_mode_cb (GtkToolButton *button, ArvViewer *viewer)
+switch_to_video_mode_cb (GtkButton *button, ArvViewer *viewer)
 {
 	select_mode (viewer, ARV_VIEWER_MODE_VIDEO);
 }
 
-static void
+static gboolean
 arv_viewer_quit_cb (GtkApplicationWindow *window, ArvViewer *viewer)
 {
 	stop_camera (viewer);
 	g_application_quit (G_APPLICATION (viewer));
+
+	return FALSE;
 }
 
 static void
@@ -2176,6 +2176,7 @@ activate (GApplication *application)
 	viewer->main_window = GTK_WIDGET (gtk_builder_get_object (builder, "main_window"));
 	viewer->main_stack = GTK_WIDGET (gtk_builder_get_object (builder, "main_stack"));
 	viewer->main_headerbar = GTK_WIDGET (gtk_builder_get_object (builder, "main_headerbar"));
+	viewer->window_title = GTK_WIDGET (gtk_builder_get_object (builder, "window_title"));
 	viewer->camera_box = GTK_WIDGET (gtk_builder_get_object (builder, "camera_box"));
 	viewer->refresh_button = GTK_WIDGET (gtk_builder_get_object (builder, "refresh_button"));
 	viewer->video_mode_button = GTK_WIDGET (gtk_builder_get_object (builder, "video_mode_button"));
@@ -2242,16 +2243,21 @@ activate (GApplication *application)
         gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (viewer->pixel_format_combo), renderer, "text", 0, NULL);
         gtk_cell_layout_set_cell_data_func (GTK_CELL_LAYOUT (viewer->pixel_format_combo), renderer, set_sensitive, NULL, NULL);
 
-	gtk_widget_set_no_show_all (viewer->trigger_combo_box, TRUE);
+	/* GtkWidget:no-show-all is gone in GTK4; trigger_combobox is left hidden
+	 * by the set_visible() calls that drive the rest of the camera widgets. */
+	gtk_widget_set_visible (viewer->trigger_combo_box, FALSE);
 
-	gtk_widget_show_all (viewer->main_window);
-
+	/* the window must be registered with the application before it is
+	 * presented, otherwise the application has no window to keep it alive
+	 * and exits immediately */
 	gtk_application_add_window (GTK_APPLICATION (application), GTK_WINDOW (viewer->main_window));
+
+	gtk_window_present (GTK_WINDOW (viewer->main_window));
 
 	g_signal_connect (viewer->refresh_button, "clicked", G_CALLBACK (update_device_list_cb), viewer);
 	g_signal_connect (viewer->video_mode_button, "clicked", G_CALLBACK (switch_to_video_mode_cb), viewer);
 	g_signal_connect (viewer->back_button, "clicked", G_CALLBACK (switch_to_camera_list_cb), viewer);
-	g_signal_connect (viewer->main_window, "destroy", G_CALLBACK (arv_viewer_quit_cb), viewer);
+	g_signal_connect (viewer->main_window, "close-request", G_CALLBACK (arv_viewer_quit_cb), viewer);
 	g_signal_connect (viewer->snapshot_button, "clicked", G_CALLBACK (snapshot_cb), viewer);
 	viewer->rotate_cw_clicked = g_signal_connect (viewer->rotate_cw_button, "clicked",
                                                       G_CALLBACK (rotate_cw_cb), viewer);
@@ -2259,8 +2265,7 @@ activate (GApplication *application)
                                                             "clicked", G_CALLBACK (flip_horizontal_cb), viewer);
 	viewer->flip_vertical_clicked = g_signal_connect (viewer->flip_vertical_toggle, "clicked",
                                                           G_CALLBACK (flip_vertical_cb), viewer);
-	g_signal_connect (viewer->frame_rate_entry, "activate", G_CALLBACK (frame_rate_entry_cb), viewer);
-	g_signal_connect (viewer->frame_rate_entry, "focus-out-event", G_CALLBACK (frame_rate_entry_focus_cb), viewer);
+	g_signal_connect (viewer->frame_rate_entry, "notify::has-focus", G_CALLBACK (frame_rate_entry_focus_cb), viewer);
 
 	viewer->camera_selected = g_signal_connect (gtk_tree_view_get_selection (GTK_TREE_VIEW (viewer->camera_tree)), "changed",
 						    G_CALLBACK (camera_selection_changed_cb), viewer);
@@ -2305,7 +2310,7 @@ activate (GApplication *application)
 	gtk_revealer_set_reveal_child (GTK_REVEALER(viewer->camera_parameters), FALSE);
 
 	select_mode (viewer, ARV_VIEWER_MODE_CAMERA_LIST);
-	update_device_list_cb (GTK_TOOL_BUTTON (viewer->refresh_button), viewer);
+	update_device_list_cb (GTK_BUTTON (viewer->refresh_button), viewer);
 }
 
 static void
