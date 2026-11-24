@@ -2,8 +2,10 @@
 
 #include <glib.h>
 #include <arv.h>
+#include "../src/arvgvcpprivate.h"
 
 static ArvCamera *camera = NULL;
+static ArvGvFakeCamera *simulator = NULL;
 
 static void
 discovery_test (void)
@@ -264,10 +266,141 @@ dynamic_roi_test (void)
 	g_clear_object (&stream);
 }
 
+#if ARAVIS_HAS_EVENT
+
+#define EVENT_TEST_N_EVENTS	5
+#define EVENT_TEST_TIMEOUT_US	10000000
+
+typedef struct {
+	GThread *thread;
+	guint n_events;
+	gint64 last_frame_id;
+	gboolean is_duplicated;
+	gboolean is_wrong_thread;
+	gboolean is_wrong_data;
+} EventTestData;
+
+static void
+event_test_callback (void *user_data, ArvEvent *event)
+{
+	EventTestData *data = user_data;
+	GError *error = NULL;
+	gint64 frame_id;
+	gint64 timestamp;
+
+	if (g_thread_self () != data->thread)
+		data->is_wrong_thread = TRUE;
+
+	g_assert_cmpuint (arv_event_get_id (event), ==, ARV_FAKE_CAMERA_EVENT_EXPOSURE_END);
+
+	frame_id = arv_camera_get_integer (camera, "EventExposureEndFrameID", &error);
+	g_assert_no_error (error);
+	timestamp = arv_camera_get_integer (camera, "EventExposureEndTimestamp", &error);
+	g_assert_no_error (error);
+
+	if (frame_id != (gint64) (arv_event_get_block_id (event) & 0xffff) ||
+	    timestamp != (gint64) arv_event_get_timestamp (event))
+		data->is_wrong_data = TRUE;
+
+	if (data->n_events > 0 && frame_id == data->last_frame_id)
+		data->is_duplicated = TRUE;
+
+	data->last_frame_id = frame_id;
+	data->n_events++;
+}
+
+static void
+event_test_run (double lost_ack_ratio)
+{
+	EventTestData data = {0};
+	ArvFakeCamera *fake_camera;
+	ArvDevice *device;
+	ArvStream *stream;
+	GError *error = NULL;
+	gint64 start_time;
+	guint32 port = 0;
+	size_t payload;
+	int i;
+
+	device = arv_camera_get_device (camera);
+	fake_camera = arv_gv_fake_camera_get_fake_camera (simulator);
+
+	/* The message channel is configured at device creation */
+	arv_fake_camera_read_register (fake_camera, ARV_GVBS_MESSAGE_CHANNEL_0_PORT_OFFSET, &port);
+	g_assert_cmpuint (port, !=, 0);
+
+	g_object_set (simulator, "gvcp-event-lost-ack-ratio", lost_ack_ratio, NULL);
+
+	data.thread = g_thread_self ();
+
+	arv_camera_set_event_notification (camera, "ExposureEnd", TRUE, &error);
+	g_assert_no_error (error);
+	arv_device_set_event_callback (device, event_test_callback, &data, NULL);
+
+	stream = arv_camera_create_stream (camera, NULL, NULL, NULL, &error);
+	g_assert_no_error (error);
+	payload = arv_camera_get_payload (camera, &error);
+	g_assert_no_error (error);
+	for (i = 0; i < 5; i++)
+		arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
+
+	arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS, &error);
+	g_assert_no_error (error);
+	arv_camera_start_acquisition (camera, &error);
+	g_assert_no_error (error);
+
+	start_time = g_get_monotonic_time ();
+	while (data.n_events < EVENT_TEST_N_EVENTS &&
+	       g_get_monotonic_time () - start_time < EVENT_TEST_TIMEOUT_US) {
+		ArvBuffer *buffer;
+
+		buffer = arv_stream_timeout_pop_buffer (stream, 100000);
+		if (buffer != NULL)
+			arv_stream_push_buffer (stream, buffer);
+
+		while (g_main_context_iteration (NULL, FALSE));
+	}
+
+	arv_camera_stop_acquisition (camera, &error);
+	g_assert_no_error (error);
+
+	arv_camera_set_event_notification (camera, "ExposureEnd", FALSE, &error);
+	g_assert_no_error (error);
+
+	g_object_unref (stream);
+
+	/* Late events */
+	g_usleep (100000);
+	while (g_main_context_iteration (NULL, FALSE));
+
+	arv_device_set_event_callback (device, NULL, NULL, NULL);
+	g_object_set (simulator, "gvcp-event-lost-ack-ratio", 0.0, NULL);
+
+	g_assert_cmpuint (data.n_events, >=, EVENT_TEST_N_EVENTS);
+	g_assert_false (data.is_wrong_thread);
+	g_assert_false (data.is_wrong_data);
+	g_assert_false (data.is_duplicated);
+	g_assert_cmpuint (arv_device_get_n_dropped_events (device), ==, 0);
+}
+
+static void
+event_test (void)
+{
+	event_test_run (0.0);
+}
+
+static void
+event_retransmission_test (void)
+{
+	/* All acknowledges are ignored by the fake camera, which retransmits each event */
+	event_test_run (1.0);
+}
+
+#endif
+
 int
 main (int argc, char *argv[])
 {
-	ArvGvFakeCamera *simulator;
 	int result;
 
 	g_test_init (&argc, &argv, NULL);
@@ -287,10 +420,25 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fakegv/acquisition", acquisition_test);
 	g_test_add_func ("/fakegv/stream", stream_test);
 	g_test_add_func ("/fakegv/dynamic_roi", dynamic_roi_test);
+#if ARAVIS_HAS_EVENT
+	g_test_add_func ("/fakegv/event", event_test);
+	g_test_add_func ("/fakegv/event-retransmission", event_retransmission_test);
+#endif
 
 	result = g_test_run();
 
 	g_object_unref (camera);
+
+#if ARAVIS_HAS_EVENT
+	{
+		guint32 port = 0xffff;
+
+		/* The message channel is closed at device destruction */
+		arv_fake_camera_read_register (arv_gv_fake_camera_get_fake_camera (simulator),
+					       ARV_GVBS_MESSAGE_CHANNEL_0_PORT_OFFSET, &port);
+		g_assert_cmpuint (port, ==, 0);
+	}
+#endif
 
 	g_object_unref (simulator);
 
