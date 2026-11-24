@@ -39,7 +39,8 @@ jobs:
           mingw-w64-${{matrix.env}}-gst-plugins-good
           mingw-w64-${{matrix.env}}-gst-plugins-bad
           mingw-w64-${{matrix.env}}-gstreamer
-          mingw-w64-${{matrix.env}}-gtk3
+          mingw-w64-${{matrix.env}}-gtk4
+          mingw-w64-${{matrix.env}}-libadwaita
           mingw-w64-${{matrix.env}}-libxml2
           mingw-w64-${{matrix.env}}-zlib
           mingw-w64-${{matrix.env}}-libusb
