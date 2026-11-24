@@ -52,6 +52,7 @@ enum
   PROP_SERIAL_NUMBER,
   PROP_GENICAM_FILENAME,
   PROP_GVSP_LOST_PACKET_RATIO,
+  PROP_GVCP_EVENT_LOST_ACK_RATIO,
   PROP_CM_DOMAIN
 };
 
@@ -73,11 +74,14 @@ typedef struct {
 	GSocket *input_sockets[ARV_GV_FAKE_CAMERA_N_INPUT_SOCKETS];
 
 	GSocket *gvsp_socket;
+	GSocket *message_socket;
+	guint16 message_packet_id;
 
 	GThread *thread;
 	gboolean cancel;
 
 	double gvsp_lost_packet_ratio;
+	double gvcp_event_lost_ack_ratio;
 } ArvGvFakeCameraPrivate;
 
 struct _ArvGvFakeCamera {
@@ -241,6 +245,95 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 	}
 
 	return success;
+}
+
+static void
+_send_exposure_end_event (ArvGvFakeCamera *gv_fake_camera, ArvBuffer *image_buffer, void *ack_buffer)
+{
+	ArvFakeCamera *camera = gv_fake_camera->priv->camera;
+	ArvGvcpPacket *packet;
+	GSocketAddress *message_address;
+	GInetAddress *inet_address;
+	guint32 port = 0;
+	guint32 address = 0;
+	guint32 timeout_ms = 0;
+	guint32 n_retries = 0;
+	guint8 address_bytes[4];
+	size_t packet_size;
+	guint16 packet_id;
+	guint i;
+
+	if (!G_IS_SOCKET (gv_fake_camera->priv->message_socket) ||
+	    !arv_fake_camera_get_event_notification (camera, ARV_FAKE_CAMERA_EVENT_EXPOSURE_END))
+		return;
+
+	arv_fake_camera_read_register (camera, ARV_GVBS_MESSAGE_CHANNEL_0_PORT_OFFSET, &port);
+	port &= ARV_GVBS_MESSAGE_CHANNEL_0_PORT_MASK;
+	if (port == 0)
+		return;
+
+	arv_fake_camera_read_register (camera, ARV_GVBS_MESSAGE_CHANNEL_0_DESTINATION_ADDRESS_OFFSET, &address);
+	arv_fake_camera_read_register (camera, ARV_GVBS_MESSAGE_CHANNEL_0_TRANSMISSION_TIMEOUT_OFFSET, &timeout_ms);
+	arv_fake_camera_read_register (camera, ARV_GVBS_MESSAGE_CHANNEL_0_RETRY_COUNT_OFFSET, &n_retries);
+
+	address_bytes[0] = (address >> 24) & 0xff;
+	address_bytes[1] = (address >> 16) & 0xff;
+	address_bytes[2] = (address >> 8) & 0xff;
+	address_bytes[3] = address & 0xff;
+	inet_address = g_inet_address_new_from_bytes (address_bytes, G_SOCKET_FAMILY_IPV4);
+	message_address = g_inet_socket_address_new (inet_address, port);
+	g_object_unref (inet_address);
+
+	gv_fake_camera->priv->message_packet_id++;
+	if (gv_fake_camera->priv->message_packet_id == 0)
+		gv_fake_camera->priv->message_packet_id = 1;
+	packet_id = gv_fake_camera->priv->message_packet_id;
+
+	/* The event record header carries the event data: frame id and timestamp */
+	packet = arv_gvcp_packet_new_eventdata_cmd (ARV_FAKE_CAMERA_EVENT_EXPOSURE_END, 0,
+						    image_buffer->priv->frame_id,
+						    arv_buffer_get_timestamp (image_buffer),
+						    NULL, 0, FALSE, packet_id, &packet_size);
+
+	for (i = 0; i <= n_retries; i++) {
+		gboolean acknowledged = FALSE;
+		gint64 deadline;
+
+		g_socket_send_to (gv_fake_camera->priv->message_socket, message_address,
+				  (const char *) packet, packet_size, NULL, NULL);
+		arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
+
+		deadline = g_get_monotonic_time () + 1000 * (gint64) timeout_ms;
+
+		while (!acknowledged && g_get_monotonic_time () < deadline) {
+			ArvGvcpPacket *ack_packet = ack_buffer;
+			gssize count;
+
+			if (!g_socket_condition_timed_wait (gv_fake_camera->priv->message_socket, G_IO_IN,
+							    deadline - g_get_monotonic_time (), NULL, NULL))
+				break;
+
+			count = g_socket_receive (gv_fake_camera->priv->message_socket,
+						  ack_buffer, ARV_GV_FAKE_CAMERA_BUFFER_SIZE, NULL, NULL);
+			if (count >= (gssize) sizeof (ArvGvcpHeader) &&
+			    arv_gvcp_packet_get_packet_type (ack_packet, count) == ARV_GVCP_PACKET_TYPE_ACK &&
+			    arv_gvcp_packet_get_command (ack_packet, count) == ARV_GVCP_COMMAND_EVENTDATA_ACK &&
+			    arv_gvcp_packet_get_packet_id (ack_packet, count) == packet_id) {
+				/* Simulation of lost acknowledges, which triggers retransmissions */
+				if (g_random_double () >= gv_fake_camera->priv->gvcp_event_lost_ack_ratio)
+					acknowledged = TRUE;
+				else
+					arv_info_device ("[GvFakeCamera::send_event] Drop event acknowledge %u",
+							 packet_id);
+			}
+		}
+
+		if (acknowledged)
+			break;
+	}
+
+	g_free (packet);
+	g_object_unref (message_address);
 }
 
 static void *
@@ -438,6 +531,8 @@ _thread (void *user_data)
                                         g_clear_error (&error);
                                 }
 
+				_send_exposure_end_event (gv_fake_camera, image_buffer, packet_buffer);
+
 				is_streaming = TRUE;
 			}
 		}
@@ -531,6 +626,8 @@ arv_gv_fake_camera_start (ArvGvFakeCamera *gv_fake_camera)
 
 	_create_and_bind_input_socket (&gv_fake_camera->priv->gvsp_socket,
 								 "GVSP", gvcp_inet_address, 0, FALSE, TRUE);
+	_create_and_bind_input_socket (&gv_fake_camera->priv->message_socket,
+				       "Message", gvcp_inet_address, 0, FALSE, FALSE);
 	_create_and_bind_input_socket
 		(&gv_fake_camera->priv->input_sockets[ARV_GV_FAKE_CAMERA_INPUT_SOCKET_GVCP],
 		 "GVCP", gvcp_inet_address, ARV_GVCP_PORT, FALSE, FALSE);
@@ -602,6 +699,7 @@ arv_gv_fake_camera_stop (ArvGvFakeCamera *gv_fake_camera)
 		g_clear_object (&gv_fake_camera->priv->input_sockets[i]);
 	}
 	g_clear_object (&gv_fake_camera->priv->gvsp_socket);
+	g_clear_object (&gv_fake_camera->priv->message_socket);
 
 	g_clear_object (&gv_fake_camera->priv->controller_address);
 }
@@ -666,6 +764,9 @@ _set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *
 			break;
 		case PROP_GVSP_LOST_PACKET_RATIO:
 			gv_fake_camera->priv->gvsp_lost_packet_ratio = g_value_get_double (value);
+			break;
+		case PROP_GVCP_EVENT_LOST_ACK_RATIO:
+			gv_fake_camera->priv->gvcp_event_lost_ack_ratio = g_value_get_double (value);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -785,6 +886,15 @@ arv_gv_fake_camera_class_init (ArvGvFakeCameraClass *this_class)
 					 g_param_spec_double ("gvsp-lost-ratio",
 							      "GVSP lost packet ratio",
 							      "GVSP lost packet ratio",
+							      0.0, 1.0, 0.0,
+							      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_GVCP_EVENT_LOST_ACK_RATIO,
+					 g_param_spec_double ("gvcp-event-lost-ack-ratio",
+							      "GVCP event lost acknowledge ratio",
+							      "Ratio of event acknowledges ignored by the fake camera",
 							      0.0, 1.0, 0.0,
 							      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT |
 							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |

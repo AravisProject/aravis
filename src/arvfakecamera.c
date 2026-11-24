@@ -1114,6 +1114,13 @@ arv_fake_camera_new_full (const char *serial_number, const char *genicam_filenam
 
 	arv_fake_camera_write_register (fake_camera, ARV_GVBS_N_STREAM_CHANNELS_OFFSET, 1);
 
+	arv_fake_camera_write_register (fake_camera, ARV_GVBS_GVCP_CAPABILITY_OFFSET,
+					ARV_GVBS_GVCP_CAPABILITY_EVENT | ARV_GVBS_GVCP_CAPABILITY_EVENT_DATA);
+	arv_fake_camera_write_register (fake_camera, ARV_GVBS_N_MESSAGE_CHANNELS_OFFSET, 1);
+	arv_fake_camera_write_register (fake_camera, ARV_GVBS_MESSAGE_CHANNEL_0_PORT_OFFSET, 0);
+	arv_fake_camera_write_register (fake_camera, ARV_GVBS_MESSAGE_CHANNEL_0_TRANSMISSION_TIMEOUT_OFFSET, 10);
+	arv_fake_camera_write_register (fake_camera, ARV_GVBS_MESSAGE_CHANNEL_0_RETRY_COUNT_OFFSET, 2);
+
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_TEST, ARV_FAKE_CAMERA_TEST_REGISTER_DEFAULT);
 
 	return fake_camera;
