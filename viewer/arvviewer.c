@@ -28,6 +28,7 @@
 #include <arv.h>
 #include <arvdebugprivate.h>
 #include <arvviewer.h>
+#include <arvcameralist.h>
 #include <arvvideosink.h>
 #include <math.h>
 #include <memory.h>
@@ -128,6 +129,7 @@ struct  _ArvViewer {
 	GtkWidget *refresh_button;
 	GtkWidget *video_mode_button;
 	GtkWidget *camera_tree;
+	ArvCameraList *camera_list;
 	GtkWidget *back_button;
 	GtkWidget *snapshot_button;
 	GtkWidget *rotate_cw_button;
@@ -1751,8 +1753,6 @@ pixel_format_combo_cb (GtkComboBoxText *combo, ArvViewer *viewer)
 static void
 update_device_list_cb (GtkButton *button, ArvViewer *viewer)
 {
-	GtkListStore *list_store;
-	GtkTreeIter iter;
 	unsigned int n_devices;
 	unsigned int i;
 
@@ -1760,9 +1760,10 @@ update_device_list_cb (GtkButton *button, ArvViewer *viewer)
 	gtk_revealer_set_reveal_child (GTK_REVEALER(viewer->camera_parameters), FALSE);
 	gtk_widget_set_sensitive (viewer->camera_parameters, FALSE);
 
-	g_signal_handler_block (gtk_tree_view_get_selection (GTK_TREE_VIEW (viewer->camera_tree)), viewer->camera_selected);
-	list_store = GTK_LIST_STORE (gtk_tree_view_get_model (GTK_TREE_VIEW (viewer->camera_tree)));
-	gtk_list_store_clear (list_store);
+	/* removing every row drops the selection, which would stop the camera:
+	 * keep the handler quiet while the list is rebuilt */
+	g_signal_handler_block (viewer->camera_list->selection, viewer->camera_selected);
+	arv_camera_list_clear (viewer->camera_list);
 	arv_update_device_list ();
 	n_devices = arv_get_n_devices ();
 	for (i = 0; i < n_devices; i++) {
@@ -1772,18 +1773,16 @@ update_device_list_cb (GtkButton *button, ArvViewer *viewer)
 		g_string_append_printf (protocol, "aravis-%s-symbolic", arv_get_device_protocol (i));
 		g_string_ascii_down (protocol);
 
-		gtk_list_store_append (list_store, &iter);
-		gtk_list_store_set (list_store, &iter,
-				    0, arv_get_device_id (i),
-				    1, protocol->str,
-				    2, arv_get_device_vendor (i),
-				    3, arv_get_device_model (i),
-				    4, arv_get_device_serial_nbr (i),
-				    -1);
+		arv_camera_list_append (viewer->camera_list,
+					arv_get_device_id (i),
+					protocol->str,
+					arv_get_device_vendor (i),
+					arv_get_device_model (i),
+					arv_get_device_serial_nbr (i));
 
 		g_string_free (protocol, TRUE);
 	}
-	g_signal_handler_unblock (gtk_tree_view_get_selection (GTK_TREE_VIEW (viewer->camera_tree)), viewer->camera_selected);
+	g_signal_handler_unblock (viewer->camera_list->selection, viewer->camera_selected);
 }
 
 static void
@@ -2106,14 +2105,13 @@ start_camera (ArvViewer *viewer, const char *camera_id)
 }
 
 static void
-camera_selection_changed_cb (GtkTreeSelection *selection, ArvViewer *viewer)
+camera_selection_changed_cb (GtkSingleSelection *selection, GParamSpec *pspec,
+			     ArvViewer *viewer)
 {
-	GtkTreeIter iter;
-	GtkTreeModel *tree_model;
-	char *camera_id = NULL;
+	char *camera_id;
 
-	if (gtk_tree_selection_get_selected (selection, &tree_model, &iter)) {
-		gtk_tree_model_get (tree_model, &iter, 0, &camera_id, -1);
+	camera_id = arv_camera_list_get_selected_id (viewer->camera_list);
+	if (camera_id != NULL) {
 		start_camera (viewer, camera_id);
 		g_free (camera_id);
 	} else
@@ -2212,7 +2210,13 @@ activate (GApplication *application)
 	viewer->video_mode_button = GTK_WIDGET (gtk_builder_get_object (builder, "video_mode_button"));
 	viewer->back_button = GTK_WIDGET (gtk_builder_get_object (builder, "back_button"));
 	viewer->snapshot_button = GTK_WIDGET (gtk_builder_get_object (builder, "snapshot_button"));
-	viewer->camera_tree = GTK_WIDGET (gtk_builder_get_object (builder, "camera_tree"));
+	{
+		GtkWidget *sw = GTK_WIDGET (gtk_builder_get_object (builder, "camera_list"));
+
+		viewer->camera_list = arv_camera_list_new ();
+		viewer->camera_tree = viewer->camera_list->view;
+		gtk_scrolled_window_set_child (GTK_SCROLLED_WINDOW (sw), viewer->camera_tree);
+	}
 	viewer->camera_parameters = GTK_WIDGET (gtk_builder_get_object (builder, "camera_parameters"));
 	viewer->component_label = GTK_WIDGET (gtk_builder_get_object (builder, "component_label"));
 	viewer->component_combo = GTK_WIDGET (gtk_builder_get_object (builder, "component_combo"));
@@ -2297,7 +2301,7 @@ activate (GApplication *application)
                                                           G_CALLBACK (flip_vertical_cb), viewer);
 	g_signal_connect (viewer->frame_rate_entry, "notify::has-focus", G_CALLBACK (frame_rate_entry_focus_cb), viewer);
 
-	viewer->camera_selected = g_signal_connect (gtk_tree_view_get_selection (GTK_TREE_VIEW (viewer->camera_tree)), "changed",
+	viewer->camera_selected = g_signal_connect (viewer->camera_list->selection, "notify::selected",
 						    G_CALLBACK (camera_selection_changed_cb), viewer);
 	viewer->exposure_spin_changed = g_signal_connect (viewer->exposure_spin_button, "value-changed",
 							  G_CALLBACK (exposure_spin_cb), viewer);
@@ -2367,6 +2371,12 @@ finalize (GObject *object)
 	if (viewer->unpack_pool) {
 		g_thread_pool_free (viewer->unpack_pool, FALSE, TRUE);
 		viewer->unpack_pool = NULL;
+	}
+
+	if (viewer->camera_list != NULL) {
+		g_clear_object (&viewer->camera_list->selection);
+		g_clear_object (&viewer->camera_list->store);
+		g_free (viewer->camera_list);
 	}
 
 	g_free (viewer->unpack_buf);

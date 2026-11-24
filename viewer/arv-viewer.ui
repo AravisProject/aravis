@@ -23,20 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
   <requires lib="gtk" version="4.0"/>
   <!-- interface-license-type lgplv2 -->
   <object class="GtkSizeGroup"/>
-  <object class="GtkListStore" id="camera_liststore">
-    <columns>
-      <!-- column-name id -->
-      <column type="gchararray"/>
-      <!-- column-name protocol -->
-      <column type="gchararray"/>
-      <!-- column-name manufacturer -->
-      <column type="gchararray"/>
-      <!-- column-name model -->
-      <column type="gchararray"/>
-      <!-- column-name serial -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkListStore" id="format_liststore">
     <columns>
       <!-- column-name format -->
@@ -311,7 +297,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                 <property name="margin-end">6</property>
                 <property name="orientation">vertical</property>
                 <child>
-                  <object class="GtkScrolledWindow">
+                  <object class="GtkScrolledWindow" id="camera_list">
                     <property name="height-request">200</property>
                     <property name="visible">True</property>
                     <property name="can-focus">True</property>
@@ -319,58 +305,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                     <property name="vexpand">True</property>
                     <property name="vscrollbar-policy">always</property>
                     <child>
-                      <object class="GtkTreeView" id="camera_tree">
-                        <property name="visible">True</property>
-                        <property name="can-focus">True</property>
-                        <property name="vexpand">True</property>
-                        <property name="model">camera_liststore</property>
-                        <property name="enable-search">False</property>
-                        <property name="search-column">0</property>
-                        <child internal-child="selection">
-                          <object class="GtkTreeSelection"/>
-                        </child>
-                        <child>
-                          <object class="GtkTreeViewColumn" id="vendor">
-                            <property name="title" translatable="yes">Vendor</property>
-                            <child>
-                              <object class="GtkCellRendererText"/>
-                              <attributes>
-                                <attribute name="text">2</attribute>
-                              </attributes>
-                            </child>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkTreeViewColumn" id="model">
-                            <property name="title" translatable="yes">Model</property>
-                            <child>
-                              <object class="GtkCellRendererPixbuf">
-                                <property name="xpad">4</property>
-                              </object>
-                              <attributes>
-                                <attribute name="icon-name">1</attribute>
-                              </attributes>
-                            </child>
-                            <child>
-                              <object class="GtkCellRendererText"/>
-                              <attributes>
-                                <attribute name="text">3</attribute>
-                              </attributes>
-                            </child>
-                          </object>
-                        </child>
-                        <child>
-                          <object class="GtkTreeViewColumn" id="serial">
-                            <property name="title" translatable="yes">Serial</property>
-                            <child>
-                              <object class="GtkCellRendererText"/>
-                              <attributes>
-                                <attribute name="text">4</attribute>
-                              </attributes>
-                            </child>
-                          </object>
-                        </child>
-                      </object>
+                      <placeholder/>
                     </child>
                   </object>
                 </child>
