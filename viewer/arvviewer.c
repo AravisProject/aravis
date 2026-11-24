@@ -1306,39 +1306,86 @@ _save_gst_sample_to_file (GstSample *sample, const char *path, const char *mime_
 }
 
 static void
+snapshot_save_finish_cb (GObject *source, GAsyncResult *result, gpointer user_data)
+{
+	ArvViewer *viewer = user_data;
+	ArvBuffer *buffer;
+	GstSample *sample;
+	g_autoptr (GError) error = NULL;
+	g_autoptr (GFile) file = NULL;
+	g_autofree char *content_type = NULL;
+	g_autofree char *filename = NULL;
+	const char *data = NULL;
+	size_t size = 0;
+	gboolean success = FALSE;
+
+	/* the buffers are attached to the dialog, so they are released with it
+	 * even if this callback is never called (see snapshot_cb) */
+	buffer = g_object_get_data (source, "arv-snapshot-buffer");
+	sample = g_object_get_data (source, "arv-snapshot-sample");
+
+	file = gtk_file_dialog_save_finish (GTK_FILE_DIALOG (source), result, &error);
+
+	if (file == NULL) {
+		/* dismissing the dialog is not an error worth reporting */
+		if (!g_error_matches (error, GTK_DIALOG_ERROR, GTK_DIALOG_ERROR_DISMISSED))
+			arv_viewer_show_notification (viewer, "Failed to save image to file",
+						      error->message);
+		return;
+	}
+
+	filename = g_file_get_path (file);
+	if (filename == NULL) {
+		arv_viewer_show_notification (viewer, "Failed to save image to file",
+					      "No filename provided");
+		return;
+	}
+
+	content_type = g_content_type_guess (filename, NULL, 0, NULL);
+
+	if (GST_IS_SAMPLE (sample) && g_content_type_is_mime_type (content_type, "image/png")) {
+		success = _save_gst_sample_to_file (sample, filename, "image/png", &error);
+	} else if (GST_IS_SAMPLE (sample) && g_content_type_is_mime_type (content_type, "image/jpeg")) {
+		success = _save_gst_sample_to_file (sample, filename, "image/jpeg", &error);
+	} else if (ARV_IS_BUFFER (buffer)) {
+		data = arv_buffer_get_image_data (buffer, &size);
+		success = g_file_set_contents (filename, data, size, &error);
+	}
+
+	if (!success)
+		arv_viewer_show_notification (viewer, "Failed to save image to file",
+					      error != NULL ? error->message : NULL);
+}
+
+static void
 snapshot_cb (GtkButton *button, ArvViewer *viewer)
 {
-}
-/*
-        GtkFileFilter *filter;
-        GtkFileFilter *filter_all;
-        GtkWidget *dialog;
-        GstSample *sample = NULL;
-        ArvBuffer *buffer = NULL;
-	char *path;
+	GtkFileDialog *dialog;
+	GtkFileFilter *filter;
+	GtkFileFilter *filter_all;
+	GListStore *filters;
+	GstSample *sample = NULL;
+	ArvBuffer *buffer = NULL;
 	char *filename;
+	const char *folder;
 	GDateTime *date;
 	char *date_string;
 	int width, height;
-	const char *data;
 	const char *pixel_format;
-	size_t size;
-        gint result;
 
-        sample = arv_video_sink_get_last_sample (viewer->video_sink);
-        if (ARV_IS_BUFFER (viewer->last_buffer))
-                buffer = g_object_ref (viewer->last_buffer);
+	sample = arv_video_sink_get_last_sample (viewer->video_sink);
+	if (ARV_IS_BUFFER (viewer->last_buffer))
+		buffer = g_object_ref (viewer->last_buffer);
 
-        if (!ARV_IS_BUFFER (buffer) && !GST_IS_SAMPLE (sample)) {
-                arv_viewer_show_notification (viewer, "No buffer available", NULL);
-                return;
-        }
+	if (!ARV_IS_BUFFER (buffer) && !GST_IS_SAMPLE (sample)) {
+		arv_viewer_show_notification (viewer, "No buffer available", NULL);
+		return;
+	}
 
 	g_return_if_fail (ARV_IS_CAMERA (viewer->camera));
 
 	pixel_format = arv_camera_get_pixel_format_as_string (viewer->camera, NULL);
 	arv_buffer_get_image_region (buffer, NULL, NULL, &width, &height);
-	data = arv_buffer_get_image_data (buffer, &size);
 
 	date = g_date_time_new_now_local ();
 	date_string = g_date_time_format (date, "%Y-%m-%d-%H:%M:%S");
@@ -1352,79 +1399,67 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
 	g_free (date_string);
 	g_date_time_unref (date);
 
-	path = g_build_filename (g_get_user_special_dir (G_USER_DIRECTORY_PICTURES), filename, NULL);
+	dialog = gtk_file_dialog_new ();
+	gtk_file_dialog_set_title (dialog, "Save Snapshot");
+	gtk_file_dialog_set_modal (dialog, TRUE);
+	gtk_file_dialog_set_initial_name (dialog, filename);
 
-        dialog = gtk_file_chooser_dialog_new ("Save Snapshot", GTK_WINDOW (viewer->main_window),
-                                              GTK_FILE_CHOOSER_ACTION_SAVE,
-                                              "_Cancel",
-                                              GTK_RESPONSE_CANCEL,
-                                              "_Save",
-                                              GTK_RESPONSE_ACCEPT,
-                                              NULL);
-        gtk_file_chooser_set_do_overwrite_confirmation (GTK_FILE_CHOOSER (dialog), TRUE);
-        gtk_file_chooser_set_filename (GTK_FILE_CHOOSER (dialog), path);
-        gtk_file_chooser_set_current_name (GTK_FILE_CHOOSER (dialog), filename);
+	folder = g_get_user_special_dir (G_USER_DIRECTORY_PICTURES);
+	if (folder != NULL)
+		gtk_file_dialog_set_initial_folder (dialog, g_file_new_for_path (folder));
 
-        filter_all = gtk_file_filter_new ();
-        gtk_file_filter_set_name (filter_all, "Supported image formats");
-
-        if (GST_IS_SAMPLE (sample)) {
-                filter = gtk_file_filter_new ();
-                gtk_file_filter_add_mime_type (filter, "image/png");
-                gtk_file_filter_add_mime_type (filter_all, "image/png");
-                gtk_file_filter_set_name (filter, "PNG (*.png)");
-                gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
-
-                filter = gtk_file_filter_new ();
-                gtk_file_filter_add_mime_type (filter, "image/jpeg");
-                gtk_file_filter_add_mime_type (filter_all, "image/jpeg");
-                gtk_file_filter_set_name (filter, "JPEG (*.jpeg)");
-                gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
-        }
-
-        if (ARV_IS_BUFFER (buffer)) {
-                filter = gtk_file_filter_new ();
-                gtk_file_filter_add_pattern (filter, "*.raw");
-                gtk_file_filter_add_pattern (filter_all, "*.raw");
-                gtk_file_filter_set_name (filter, "Raw images (*.raw)");
-                gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter);
-        }
-
-        gtk_file_chooser_add_filter (GTK_FILE_CHOOSER (dialog), filter_all);
-        gtk_file_chooser_set_filter (GTK_FILE_CHOOSER (dialog), filter_all);
-
-	g_free (path);
 	g_free (filename);
 
-        result = gtk_dialog_run (GTK_DIALOG (dialog));
-        if (result == GTK_RESPONSE_ACCEPT) {
-                g_autoptr (GError) error = NULL;
-                g_autofree char * content_type = NULL;
-                gboolean success = FALSE;
+	filters = g_list_store_new (GTK_TYPE_FILE_FILTER);
 
-                filename = gtk_file_chooser_get_filename (GTK_FILE_CHOOSER (dialog));
+	filter_all = gtk_file_filter_new ();
+	gtk_file_filter_set_name (filter_all, "Supported image formats");
 
-                content_type = g_content_type_guess (filename, NULL, 0, NULL);
+	if (GST_IS_SAMPLE (sample)) {
+		filter = gtk_file_filter_new ();
+		gtk_file_filter_add_mime_type (filter, "image/png");
+		gtk_file_filter_add_mime_type (filter_all, "image/png");
+		gtk_file_filter_set_name (filter, "PNG (*.png)");
+		g_list_store_append (filters, filter);
+		g_object_unref (filter);
 
-                if (GST_IS_SAMPLE (sample) && g_content_type_is_mime_type (content_type, "image/png")) {
-                        success = _save_gst_sample_to_file (sample, filename, "image/png", NULL);
-                } else if (GST_IS_SAMPLE (sample) && g_content_type_is_mime_type (content_type, "image/jpeg")) {
-                        success = _save_gst_sample_to_file (sample, filename, "image/jpeg", NULL);
-                } else if (ARV_IS_BUFFER (buffer)) {
-                        success = g_file_set_contents (filename, data, size, &error);
-                        g_free (filename);
-                }
+		filter = gtk_file_filter_new ();
+		gtk_file_filter_add_mime_type (filter, "image/jpeg");
+		gtk_file_filter_add_mime_type (filter_all, "image/jpeg");
+		gtk_file_filter_set_name (filter, "JPEG (*.jpeg)");
+		g_list_store_append (filters, filter);
+		g_object_unref (filter);
+	}
 
-                if (!success)
-                        arv_viewer_show_notification (viewer, "Failed to save image to file",
-                                                      error != NULL ? error->message : NULL);
-        }
+	if (ARV_IS_BUFFER (buffer)) {
+		filter = gtk_file_filter_new ();
+		gtk_file_filter_add_pattern (filter, "*.raw");
+		gtk_file_filter_add_pattern (filter_all, "*.raw");
+		gtk_file_filter_set_name (filter, "Raw images (*.raw)");
+		g_list_store_append (filters, filter);
+		g_object_unref (filter);
+	}
 
-        gtk_widget_destroy (dialog);
-        g_clear_pointer (&sample, gst_sample_unref);
-        g_clear_object (&buffer);
+	g_list_store_append (filters, filter_all);
+	gtk_file_dialog_set_filters (dialog, G_LIST_MODEL (filters));
+	gtk_file_dialog_set_default_filter (dialog, filter_all);
+	g_object_unref (filters);
+	g_object_unref (filter_all);
+
+	/* Attach the buffers to the dialog rather than the viewer: the dialog is
+	 * ref'ed by the pending async operation, so it lives exactly as long as
+	 * the callback can be reached, and these destroy notifies release the
+	 * objects even if the callback never runs. */
+	g_object_set_data_full (G_OBJECT (dialog), "arv-snapshot-buffer", buffer, g_object_unref);
+	g_object_set_data_full (G_OBJECT (dialog), "arv-snapshot-sample", sample,
+				(GDestroyNotify) gst_sample_unref);
+
+	gtk_file_dialog_save (dialog, GTK_WINDOW (viewer->main_window), NULL,
+			      snapshot_save_finish_cb, viewer);
+
+	g_object_unref (dialog);
 }
-*/
+
 static void
 update_transform (ArvViewer *viewer)
 {
