@@ -545,9 +545,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                           </object>
                         </child>
                         <child>
-                          <object class="GtkComboBoxText" id="component_combo">
+                          <object class="GtkDropDown" id="component_combo">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
+                            <property name="hexpand">True</property>
                             <layout>
                               <property name="column">1</property>
                               <property name="row">0</property>

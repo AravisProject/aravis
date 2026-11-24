@@ -268,6 +268,7 @@ struct  _ArvViewer {
 	GtkWidget *camera_parameters;
 	GtkWidget *component_label;
 	GtkWidget *component_combo;
+	GtkStringList *component_store;
 	GtkWidget *component_check;
 	GtkWidget *pixel_format_combo;
 	GListStore *pixel_format_store;
@@ -360,6 +361,19 @@ struct  _ArvViewer {
 typedef AdwApplicationClass ArvViewerClass;
 
 G_DEFINE_TYPE (ArvViewer, arv_viewer, ADW_TYPE_APPLICATION)
+
+/* The name of the selected component, or NULL; the caller frees it. */
+static char *
+component_combo_get_active (ArvViewer *viewer)
+{
+	GtkStringObject *item;
+
+	item = gtk_drop_down_get_selected_item (GTK_DROP_DOWN (viewer->component_combo));
+	if (item == NULL)
+		return NULL;
+
+	return g_strdup (gtk_string_object_get_string (item));
+}
 
 typedef enum {
 	ARV_VIEWER_MODE_CAMERA_LIST,
@@ -1833,12 +1847,12 @@ camera_binning_cb (GtkSpinButton *spin_button, ArvViewer *viewer)
 }
 
 static void
-component_combo_cb (GtkComboBoxText *combo, ArvViewer *viewer)
+component_combo_cb (GtkDropDown *drop_down, GParamSpec *pspec, ArvViewer *viewer)
 {
 	char *component;
         gboolean enabled;
 
-	component = gtk_combo_box_text_get_active_text (combo);
+	component = component_combo_get_active (viewer);
         enabled = arv_camera_select_component (viewer->camera, component, ARV_COMPONENT_SELECTION_FLAGS_NONE, NULL,
                                                NULL);
         g_free (component);
@@ -1857,7 +1871,7 @@ component_toggled_cb (GtkCheckButton *button, ArvViewer *viewer)
         char *component;
         gboolean enable;
 
-        component = gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT(viewer->component_combo));
+        component = component_combo_get_active (viewer);
         enable = gtk_check_button_get_active (button);
 
 	gtk_widget_set_sensitive (viewer->video_mode_button, enable);
@@ -1990,7 +2004,7 @@ start_video (ArvViewer *viewer)
 
 	stop_video (viewer);
 
-        component = gtk_combo_box_text_get_active_text (GTK_COMBO_BOX_TEXT(viewer->component_combo));
+        component = component_combo_get_active (viewer);
         if (component != NULL) {
                 arv_camera_select_component (viewer->camera, component, ARV_COMPONENT_SELECTION_FLAGS_NONE,
                                              &viewer->component_id, NULL);
@@ -2130,8 +2144,6 @@ stop_camera (ArvViewer *viewer)
 static gboolean
 start_camera (ArvViewer *viewer, const char *camera_id)
 {
-	GtkTreeIter iter;
-	GtkListStore *list_store;
         const char **components;
         guint n_components;
 	gboolean binning_available;
@@ -2175,14 +2187,12 @@ start_camera (ArvViewer *viewer, const char *camera_id)
                 g_signal_handler_block (viewer->component_check, viewer->component_toggled);
                 g_signal_handler_block (viewer->component_combo, viewer->component_changed);
 
-                list_store = GTK_LIST_STORE (gtk_combo_box_get_model (GTK_COMBO_BOX (viewer->component_combo)));
-                gtk_list_store_clear (list_store);
+                gtk_string_list_splice (viewer->component_store, 0,
+                                        g_list_model_get_n_items (G_LIST_MODEL (viewer->component_store)),
+                                        NULL);
                 components = arv_camera_dup_available_components (viewer->camera, &n_components, NULL);
                 for (i = 0; i < n_components; i++) {
-                        gtk_list_store_append (list_store, &iter);
-                        gtk_list_store_set (list_store, &iter,
-                                            0, components[i],
-                                            -1);
+                        gtk_string_list_append (viewer->component_store, components[i]);
 
                         if (first_enabled_component < 0 &&
                             arv_camera_select_component(viewer->camera, components[i],
@@ -2193,7 +2203,8 @@ start_camera (ArvViewer *viewer, const char *camera_id)
                 gtk_widget_set_sensitive (viewer->component_combo, n_components > 0);
                 gtk_check_button_set_active(GTK_CHECK_BUTTON (viewer->component_check), n_components > 0);
                 if (n_components > 0)
-                        gtk_combo_box_set_active (GTK_COMBO_BOX (viewer->component_combo), MAX(first_enabled_component, 0));
+                        gtk_drop_down_set_selected (GTK_DROP_DOWN (viewer->component_combo),
+                                                    MAX(first_enabled_component, 0));
                 g_signal_handler_unblock (viewer->component_check, viewer->component_toggled);
                 g_signal_handler_unblock (viewer->component_combo, viewer->component_changed);
         } else {
@@ -2318,8 +2329,6 @@ activate (GApplication *application)
 {
 	ArvViewer *viewer = (ArvViewer *) application;
 	g_autoptr (GtkBuilder) builder = NULL;
-        g_autoptr (GtkListStore) list_store = NULL;
-        GtkCellRenderer *renderer;
         GtkListItemFactory *pixel_format_factory;
 
 	builder = gtk_builder_new_from_resource ("/org/aravis/viewer/arv-viewer.ui");
@@ -2383,13 +2392,9 @@ activate (GApplication *application)
         g_signal_connect (viewer->notification_dismiss, "clicked",
                           G_CALLBACK (notification_dismiss_clicked_cb), viewer);
 
-        list_store = gtk_list_store_new(1, G_TYPE_STRING);
-        gtk_combo_box_set_model (GTK_COMBO_BOX (viewer->component_combo), GTK_TREE_MODEL (list_store));
-
-        renderer = gtk_cell_renderer_text_new();
-        gtk_cell_layout_clear (GTK_CELL_LAYOUT (viewer->component_combo));
-        gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (viewer->component_combo), renderer, TRUE);
-        gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (viewer->component_combo), renderer, "text", 0, NULL);
+        viewer->component_store = gtk_string_list_new (NULL);
+        gtk_drop_down_set_model (GTK_DROP_DOWN (viewer->component_combo),
+                                 G_LIST_MODEL (viewer->component_store));
 
         /* The pixel format list carries a `valid` flag per entry; the factory
          * greys and disables the ones GStreamer cannot display. */
@@ -2453,7 +2458,7 @@ activate (GApplication *application)
 							G_CALLBACK (black_level_scale_cb), viewer);
 	viewer->auto_black_level_clicked = g_signal_connect (viewer->auto_black_level_toggle, "clicked",
 						      G_CALLBACK (auto_black_level_cb), viewer);
-	viewer->component_changed = g_signal_connect (viewer->component_combo, "changed",
+	viewer->component_changed = g_signal_connect (viewer->component_combo, "notify::selected",
 							 G_CALLBACK (component_combo_cb), viewer);
         viewer->component_toggled = g_signal_connect (viewer->component_check, "toggled",
                                                       G_CALLBACK (component_toggled_cb), viewer);
