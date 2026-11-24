@@ -205,15 +205,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
           </object>
         </child>
         <child>
-          <object class="GtkComboBox" id="trigger_combobox">
-            <property name="can-focus">False</property>
-            <layout>
-              <property name="column">0</property>
-              <property name="row">0</property>
-            </layout>
-          </object>
-        </child>
-        <child>
           <object class="GtkToggleButton" id="auto_black_level_togglebutton">
             <property name="label" translatable="yes">Auto</property>
             <property name="visible">True</property>

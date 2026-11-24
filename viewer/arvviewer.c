@@ -286,7 +286,6 @@ struct  _ArvViewer {
 	GtkWidget *video_frame;
 	GtkWidget *fps_label;
 	GtkWidget *image_label;
-	GtkWidget *trigger_combo_box;
 	GtkWidget *frame_rate_entry;
 	GtkWidget *exposure_spin_button;
 	GtkWidget *exposure_hscale;
@@ -2368,7 +2367,6 @@ activate (GApplication *application)
 	viewer->video_frame = GTK_WIDGET (gtk_builder_get_object (builder, "video_frame"));
 	viewer->fps_label = GTK_WIDGET (gtk_builder_get_object (builder, "fps_label"));
 	viewer->image_label = GTK_WIDGET (gtk_builder_get_object (builder, "image_label"));
-	viewer->trigger_combo_box = GTK_WIDGET (gtk_builder_get_object (builder, "trigger_combobox"));
 	viewer->frame_rate_entry = GTK_WIDGET (gtk_builder_get_object (builder, "frame_rate_entry"));
 	viewer->exposure_spin_button = GTK_WIDGET (gtk_builder_get_object (builder, "exposure_spinbutton"));
 	viewer->exposure_hscale = GTK_WIDGET (gtk_builder_get_object (builder, "exposure_hscale"));
@@ -2413,10 +2411,6 @@ activate (GApplication *application)
         gtk_drop_down_set_model (GTK_DROP_DOWN (viewer->pixel_format_combo),
                                  G_LIST_MODEL (viewer->pixel_format_store));
         g_object_unref (pixel_format_factory);
-
-	/* GtkWidget:no-show-all is gone in GTK4; trigger_combobox is left hidden
-	 * by the set_visible() calls that drive the rest of the camera widgets. */
-	gtk_widget_set_visible (viewer->trigger_combo_box, FALSE);
 
 	/* the window must be registered with the application before it is
 	 * presented, otherwise the application has no window to keep it alive
