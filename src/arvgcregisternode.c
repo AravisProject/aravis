@@ -35,7 +35,7 @@
 #include <arvgcselector.h>
 #include <arvgcfloat.h>
 #include <arvgcstring.h>
-#include <arvgcport.h>
+#include <arvgcportprivate.h>
 #include <arvgcprivate.h>
 #include <arvmiscprivate.h>
 #include <arvdebugprivate.h>
@@ -377,7 +377,9 @@ _read_from_port (ArvGcRegisterNode *self, gint64 address, gint64 length, void *b
 		g_free (cache);
 	}
 
-	if (cachable != ARV_GC_CACHABLE_NO_CACHE)
+	/* Event data change at each event notification, never cache them. */
+	if (cachable != ARV_GC_CACHABLE_NO_CACHE &&
+	    !arv_gc_port_get_event_id (ARV_GC_PORT (port), NULL))
 		priv->cached = TRUE;
 	else
 		priv->cached = FALSE;

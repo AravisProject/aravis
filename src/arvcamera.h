@@ -295,6 +295,16 @@ ARV_API gboolean		arv_camera_get_chunk_state		(ArvCamera *camera, const char *ch
 ARV_API void			arv_camera_set_chunks			(ArvCamera *camera, const char *chunk_list, GError **error);
 ARV_API ArvChunkParser *	arv_camera_create_chunk_parser		(ArvCamera *camera);
 
+#if ARAVIS_HAS_EVENT
+ARV_API gboolean		arv_camera_are_events_available		(ArvCamera *camera, GError **error);
+ARV_API void			arv_camera_set_event_notification	(ArvCamera *camera, const char *event,
+									 gboolean is_enabled, GError **error);
+ARV_API gboolean		arv_camera_get_event_notification	(ArvCamera *camera, const char *event,
+									 GError **error);
+ARV_API void			arv_camera_set_events			(ArvCamera *camera, const char *event_list,
+									 GError **error);
+#endif
+
 G_END_DECLS
 
 #endif
