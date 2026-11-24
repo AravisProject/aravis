@@ -41,6 +41,12 @@
 #include <gst/app/gstappsink.h>
 #include <gst/video/video.h>
 
+/* The formats memory_format_from_info() can draw, in the order videoconvert
+ * should prefer them. Anything else (packed YUV, for instance) is converted
+ * by videoconvert before it reaches the sink. */
+#define ARV_VIDEO_SINK_CPU_CAPS \
+	"video/x-raw, format=(string){ RGB, BGR, RGBA, BGRA, GRAY8, GRAY16_LE }"
+
 struct _ArvVideoSink {
 	GtkWidget *frame;   /* borrowed: the GtkFrame we were attached to */
 	GtkWidget *picture;
@@ -238,15 +244,25 @@ arv_video_sink_new (GtkWidget *frame)
 		sink->picture = gtk_picture_new_for_paintable (paintable);
 		g_clear_object (&paintable);
 	} else {
+		GstCaps *accepted;
+
 		element = gst_element_factory_make ("appsink", NULL);
 
+		/* An appsink caps of ANY gives videoconvert nothing to negotiate
+		 * toward, so a packed YUV format such as YUY2 reaches this sink
+		 * unchanged and cannot be mapped to a GdkMemoryFormat. State the
+		 * formats this renderer can draw, and videoconvert converts the rest
+		 * (YCbCr422_8 included) before they arrive. */
+		accepted = gst_caps_from_string (ARV_VIDEO_SINK_CPU_CAPS);
 		g_object_set (element,
 			      "emit-signals", TRUE,
+			      "caps", accepted,
 			      /* keep the queue shallow: the slot holds the newest frame,
 			       * there is nothing to gain from buffering more */
 			      "max-buffers", 2,
 			      "drop", TRUE,
 			      NULL);
+		gst_caps_unref (accepted);
 
 		sink->picture = gtk_picture_new ();
 		g_signal_connect (element, "new-sample", G_CALLBACK (cpu_new_sample), sink);

@@ -38,6 +38,136 @@
 
 static gboolean has_bayer2rgb = FALSE;
 
+/* One pixel format the camera offers, and whether GStreamer can display it.
+ * A GObject because GListStore holds objects. */
+typedef struct _ArvPixelFormatItem ArvPixelFormatItem;
+
+struct _ArvPixelFormatItem {
+	GObject parent_instance;
+
+	char *name;
+	gboolean valid;
+};
+
+typedef struct {
+	GObjectClass parent_class;
+} ArvPixelFormatItemClass;
+
+GType arv_pixel_format_item_get_type (void);
+#define ARV_TYPE_PIXEL_FORMAT_ITEM (arv_pixel_format_item_get_type ())
+G_DEFINE_TYPE (ArvPixelFormatItem, arv_pixel_format_item, G_TYPE_OBJECT)
+
+enum {
+	ARV_PIXEL_FORMAT_ITEM_PROP_NAME = 1,
+	ARV_PIXEL_FORMAT_ITEM_PROP_VALID,
+	ARV_PIXEL_FORMAT_ITEM_N_PROPERTIES
+};
+
+static GParamSpec *arv_pixel_format_item_properties[ARV_PIXEL_FORMAT_ITEM_N_PROPERTIES];
+
+static void
+arv_pixel_format_item_set_property (GObject *object, guint property_id,
+				    const GValue *value, GParamSpec *pspec)
+{
+	ArvPixelFormatItem *item = (ArvPixelFormatItem *) object;
+
+	switch (property_id) {
+		case ARV_PIXEL_FORMAT_ITEM_PROP_NAME:
+			g_free (item->name);
+			item->name = g_value_dup_string (value);
+			break;
+		case ARV_PIXEL_FORMAT_ITEM_PROP_VALID:
+			item->valid = g_value_get_boolean (value);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+			break;
+	}
+}
+
+static void
+arv_pixel_format_item_get_property (GObject *object, guint property_id,
+				    GValue *value, GParamSpec *pspec)
+{
+	ArvPixelFormatItem *item = (ArvPixelFormatItem *) object;
+
+	switch (property_id) {
+		case ARV_PIXEL_FORMAT_ITEM_PROP_NAME:
+			g_value_set_string (value, item->name);
+			break;
+		case ARV_PIXEL_FORMAT_ITEM_PROP_VALID:
+			g_value_set_boolean (value, item->valid);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, property_id, pspec);
+			break;
+	}
+}
+
+static void
+arv_pixel_format_item_finalize (GObject *object)
+{
+	ArvPixelFormatItem *item = (ArvPixelFormatItem *) object;
+
+	g_free (item->name);
+
+	G_OBJECT_CLASS (arv_pixel_format_item_parent_class)->finalize (object);
+}
+
+static void
+arv_pixel_format_item_class_init (ArvPixelFormatItemClass *class)
+{
+	GObjectClass *object_class = G_OBJECT_CLASS (class);
+
+	object_class->set_property = arv_pixel_format_item_set_property;
+	object_class->get_property = arv_pixel_format_item_get_property;
+	object_class->finalize = arv_pixel_format_item_finalize;
+
+	arv_pixel_format_item_properties[ARV_PIXEL_FORMAT_ITEM_PROP_NAME] =
+		g_param_spec_string ("name", "name", "Format name", NULL,
+				     G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+	arv_pixel_format_item_properties[ARV_PIXEL_FORMAT_ITEM_PROP_VALID] =
+		g_param_spec_boolean ("valid", "valid", "Whether GStreamer can display it", FALSE,
+				      G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS);
+
+	g_object_class_install_properties (object_class, ARV_PIXEL_FORMAT_ITEM_N_PROPERTIES,
+					   arv_pixel_format_item_properties);
+}
+
+static void
+arv_pixel_format_item_init (ArvPixelFormatItem *item)
+{
+	item->name = NULL;
+	item->valid = FALSE;
+}
+
+/* A format GStreamer cannot display is greyed and cannot be picked: the list
+ * item is made unselectable, which GtkDropDown honours for user picks. */
+static void
+pixel_format_item_setup (GtkSignalListItemFactory *factory, GtkListItem *list_item,
+			 gpointer user_data)
+{
+	gtk_list_item_set_child (list_item, gtk_label_new (NULL));
+}
+
+static void
+pixel_format_item_bind (GtkSignalListItemFactory *factory, GtkListItem *list_item,
+			gpointer user_data)
+{
+	ArvPixelFormatItem *item = gtk_list_item_get_item (list_item);
+	GtkWidget *label = gtk_list_item_get_child (list_item);
+	char *name = NULL;
+	gboolean valid = FALSE;
+
+	g_object_get (item, "name", &name, "valid", &valid, NULL);
+
+	gtk_label_set_label (GTK_LABEL (label), name != NULL ? name : "");
+	gtk_widget_set_sensitive (label, valid);
+	gtk_list_item_set_selectable (list_item, valid);
+
+	g_free (name);
+}
+
 static gboolean
 gstreamer_plugin_check (void)
 {
@@ -140,6 +270,7 @@ struct  _ArvViewer {
 	GtkWidget *component_combo;
 	GtkWidget *component_check;
 	GtkWidget *pixel_format_combo;
+	GListStore *pixel_format_store;
 	GtkWidget *camera_x;
 	GtkWidget *camera_y;
         GtkWidget *camera_position_label;
@@ -1621,8 +1752,6 @@ update_camera_region (ArvViewer *viewer)
 static void
 update_pixel_format (ArvViewer *viewer)
 {
-	GtkListStore *list_store;
-	GtkTreeIter iter;
 	gint64 *pixel_formats;
 	const char *pixel_format_string;
 	const char **pixel_format_strings;
@@ -1632,8 +1761,7 @@ update_pixel_format (ArvViewer *viewer)
 
 	g_signal_handler_block (viewer->pixel_format_combo, viewer->pixel_format_changed);
 
-	list_store = GTK_LIST_STORE (gtk_combo_box_get_model (GTK_COMBO_BOX (viewer->pixel_format_combo)));
-	gtk_list_store_clear (list_store);
+	g_list_store_remove_all (viewer->pixel_format_store);
 	n_valid_formats = 0;
 	pixel_format_strings = arv_camera_dup_available_pixel_formats_as_strings (viewer->camera, &n_pixel_format_strings, NULL);
 	pixel_formats = arv_camera_dup_available_pixel_formats (viewer->camera, &n_pixel_formats, NULL);
@@ -1641,9 +1769,8 @@ update_pixel_format (ArvViewer *viewer)
 	pixel_format_string = arv_camera_get_pixel_format_as_string (viewer->camera, NULL);
 	for (i = 0; i < n_pixel_formats; i++) {
 		const char *caps_string = arv_pixel_format_to_gst_caps_string (pixel_formats[i]);
+                ArvPixelFormatItem *item;
                 gboolean valid = FALSE;
-
-                gtk_list_store_append (list_store, &iter);
 
                 if (caps_string != NULL && g_str_has_prefix (caps_string, "video/x-bayer") && !has_bayer2rgb) {
                         bayer_tooltip = TRUE;
@@ -1655,10 +1782,12 @@ update_pixel_format (ArvViewer *viewer)
                         valid = TRUE;
 		}
 
-                gtk_list_store_set (list_store, &iter,
-                                    0, pixel_format_strings[i],
-                                    1, valid,
-                                    -1);
+                item = g_object_new (ARV_TYPE_PIXEL_FORMAT_ITEM,
+                                     "name", pixel_format_strings[i],
+                                     "valid", valid,
+                                     NULL);
+                g_list_store_append (viewer->pixel_format_store, item);
+                g_object_unref (item);
 	}
 	g_free (pixel_formats);
 	g_free (pixel_format_strings);
@@ -1667,7 +1796,8 @@ update_pixel_format (ArvViewer *viewer)
                                   n_valid_formats > 0 &&
                                   gtk_check_button_get_active (GTK_CHECK_BUTTON (viewer->component_check)));
 
-	gtk_combo_box_set_active (GTK_COMBO_BOX (viewer->pixel_format_combo), current_format >= 0 ? current_format : 0);
+	gtk_drop_down_set_selected (GTK_DROP_DOWN (viewer->pixel_format_combo),
+				    current_format >= 0 ? current_format : 0);
 
         gtk_widget_set_tooltip_text (GTK_WIDGET (viewer->pixel_format_combo),
                                      bayer_tooltip ?
@@ -1741,13 +1871,19 @@ component_toggled_cb (GtkCheckButton *button, ArvViewer *viewer)
 }
 
 static void
-pixel_format_combo_cb (GtkComboBoxText *combo, ArvViewer *viewer)
+pixel_format_combo_cb (GtkDropDown *drop_down, GParamSpec *pspec, ArvViewer *viewer)
 {
-	char *pixel_format;
+	ArvPixelFormatItem *item;
+	char *pixel_format = NULL;
 
-	pixel_format = gtk_combo_box_text_get_active_text (combo);
-	arv_camera_set_pixel_format_from_string (viewer->camera, pixel_format, NULL);
-	g_free (pixel_format);
+	item = gtk_drop_down_get_selected_item (drop_down);
+	if (item != NULL)
+		g_object_get (item, "name", &pixel_format, NULL);
+
+	if (pixel_format != NULL) {
+		arv_camera_set_pixel_format_from_string (viewer->camera, pixel_format, NULL);
+		g_free (pixel_format);
+	}
 }
 
 static void
@@ -1991,20 +2127,6 @@ stop_camera (ArvViewer *viewer)
 	g_clear_pointer (&viewer->camera_name, g_free);
 }
 
-static void
-set_sensitive (GtkCellLayout *cell_layout,
-               GtkCellRenderer *cell,
-               GtkTreeModel *tree_model,
-               GtkTreeIter *iter,
-               gpointer data)
-{
-        gboolean valid;
-
-        gtk_tree_model_get (tree_model, iter, 1, &valid, -1);
-
-        g_object_set(cell, "sensitive", valid, NULL);
-}
-
 static gboolean
 start_camera (ArvViewer *viewer, const char *camera_id)
 {
@@ -2198,6 +2320,7 @@ activate (GApplication *application)
 	g_autoptr (GtkBuilder) builder = NULL;
         g_autoptr (GtkListStore) list_store = NULL;
         GtkCellRenderer *renderer;
+        GtkListItemFactory *pixel_format_factory;
 
 	builder = gtk_builder_new_from_resource ("/org/aravis/viewer/arv-viewer.ui");
 
@@ -2268,14 +2391,23 @@ activate (GApplication *application)
         gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (viewer->component_combo), renderer, TRUE);
         gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (viewer->component_combo), renderer, "text", 0, NULL);
 
-        list_store = gtk_list_store_new(2, G_TYPE_STRING, G_TYPE_BOOLEAN);
-        gtk_combo_box_set_model (GTK_COMBO_BOX (viewer->pixel_format_combo), GTK_TREE_MODEL (list_store));
-
-        renderer = gtk_cell_renderer_text_new();
-        gtk_cell_layout_clear (GTK_CELL_LAYOUT (viewer->pixel_format_combo));
-        gtk_cell_layout_pack_start (GTK_CELL_LAYOUT (viewer->pixel_format_combo), renderer, TRUE);
-        gtk_cell_layout_set_attributes (GTK_CELL_LAYOUT (viewer->pixel_format_combo), renderer, "text", 0, NULL);
-        gtk_cell_layout_set_cell_data_func (GTK_CELL_LAYOUT (viewer->pixel_format_combo), renderer, set_sensitive, NULL, NULL);
+        /* The pixel format list carries a `valid` flag per entry; the factory
+         * greys and disables the ones GStreamer cannot display. */
+        viewer->pixel_format_store = g_list_store_new (ARV_TYPE_PIXEL_FORMAT_ITEM);
+        pixel_format_factory = gtk_signal_list_item_factory_new ();
+        g_signal_connect (pixel_format_factory, "setup",
+                          G_CALLBACK (pixel_format_item_setup), NULL);
+        g_signal_connect (pixel_format_factory, "bind",
+                          G_CALLBACK (pixel_format_item_bind), NULL);
+        /* set_factory draws the button's own label; the popup rows need
+         * list_factory, which is where the greyed-out entries appear */
+        gtk_drop_down_set_factory (GTK_DROP_DOWN (viewer->pixel_format_combo),
+                                   pixel_format_factory);
+        gtk_drop_down_set_list_factory (GTK_DROP_DOWN (viewer->pixel_format_combo),
+                                        pixel_format_factory);
+        gtk_drop_down_set_model (GTK_DROP_DOWN (viewer->pixel_format_combo),
+                                 G_LIST_MODEL (viewer->pixel_format_store));
+        g_object_unref (pixel_format_factory);
 
 	/* GtkWidget:no-show-all is gone in GTK4; trigger_combobox is left hidden
 	 * by the set_visible() calls that drive the rest of the camera widgets. */
@@ -2325,7 +2457,7 @@ activate (GApplication *application)
 							 G_CALLBACK (component_combo_cb), viewer);
         viewer->component_toggled = g_signal_connect (viewer->component_check, "toggled",
                                                       G_CALLBACK (component_toggled_cb), viewer);
-        viewer->pixel_format_changed = g_signal_connect (viewer->pixel_format_combo, "changed",
+        viewer->pixel_format_changed = g_signal_connect (viewer->pixel_format_combo, "notify::selected",
                                                          G_CALLBACK (pixel_format_combo_cb), viewer);
         viewer->camera_x_changed = g_signal_connect (viewer->camera_x, "value-changed",
                                                      G_CALLBACK (camera_region_cb), viewer);

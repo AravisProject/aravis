@@ -23,12 +23,6 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
   <requires lib="gtk" version="4.0"/>
   <!-- interface-license-type lgplv2 -->
   <object class="GtkSizeGroup"/>
-  <object class="GtkListStore" id="format_liststore">
-    <columns>
-      <!-- column-name format -->
-      <column type="gchararray"/>
-    </columns>
-  </object>
   <object class="GtkSizeGroup">
     <widgets>
       <widget name="frame_rate_entry"/>
@@ -479,9 +473,10 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
                           </object>
                         </child>
                         <child>
-                          <object class="GtkComboBoxText" id="pixel_format_combo">
+                          <object class="GtkDropDown" id="pixel_format_combo">
                             <property name="visible">True</property>
                             <property name="can-focus">False</property>
+                            <property name="hexpand">True</property>
                             <layout>
                               <property name="column">1</property>
                               <property name="row">1</property>
