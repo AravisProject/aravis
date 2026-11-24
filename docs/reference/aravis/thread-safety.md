@@ -89,3 +89,7 @@ most of the [class@Aravis.Stream] functions are not, the exceptions being
 [method@Aravis.Stream.push_buffer], [method@Aravis.Stream.pop_buffer],
 [method@Aravis.Stream.try_pop_buffer] and
 [method@Aravis.Stream.timeout_pop_buffer].
+
+The [signal@Aravis.Device::device-event] signal and the event callback are
+emitted from an internal thread dedicated to the event delivery. See
+[Event Notifications](events.html).

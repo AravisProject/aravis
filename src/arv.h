@@ -47,6 +47,7 @@
 
 #include <arvenums.h>
 #include <arvevaluator.h>
+#include <arvevent.h>
 
 #include <arvfakecamera.h>
 #include <arvfakedevice.h>

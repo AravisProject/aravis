@@ -6,6 +6,7 @@
 #include <string.h>
 #include "../src/arvgvcpprivate.h"
 #include "../src/arvmiscprivate.h"
+#include "../src/arveventprivate.h"
 
 #if !ARAVIS_CHECK_VERSION (ARAVIS_MAJOR_VERSION, ARAVIS_MINOR_VERSION, ARAVIS_MICRO_VERSION)
 #error
@@ -308,6 +309,41 @@ gvcp_force_ip_packet_test (void)
 	g_free (packet);
 }
 
+static void
+event_test (void)
+{
+	const guint8 payload[] = {0x01, 0x02, 0x03, 0x04, 0x05};
+	ArvEvent *event;
+	GBytes *bytes;
+	const guint8 *data;
+	size_t size;
+
+	event = arv_event_new (0x9001, 1234, 42, 0, payload, sizeof (payload));
+	g_assert_true (ARV_IS_EVENT (event));
+
+	g_assert_cmpuint (arv_event_get_id (event), ==, 0x9001);
+	g_assert_cmpuint (arv_event_get_timestamp (event), ==, 1234);
+	g_assert_cmpuint (arv_event_get_block_id (event), ==, 42);
+	g_assert_cmpuint (arv_event_get_stream_channel (event), ==, 0);
+
+	data = arv_event_peek_data (event, &size);
+	g_assert_cmpmem (data, size, payload, sizeof (payload));
+
+	bytes = arv_event_get_data (event);
+	g_assert_cmpmem (g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes), payload, sizeof (payload));
+
+	g_object_unref (event);
+
+	/* Data stay valid after the event destruction */
+	g_assert_cmpuint (g_bytes_get_size (bytes), ==, sizeof (payload));
+	g_bytes_unref (bytes);
+
+	event = arv_event_new (0x9002, 0, 0, ARV_EVENT_STREAM_CHANNEL_NONE, NULL, 0);
+	data = arv_event_peek_data (event, &size);
+	g_assert_cmpuint (size, ==, 0);
+	g_object_unref (event);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -325,6 +361,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/misc/globs", glob_test);
 	g_test_add_func ("/misc/matches", match_test);
 	g_test_add_func ("/gvcp/force-ip-packet", gvcp_force_ip_packet_test);
+	g_test_add_func ("/misc/event", event_test);
 
 
 	result = g_test_run();

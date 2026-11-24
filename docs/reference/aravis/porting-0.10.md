@@ -78,3 +78,32 @@ callback, should however be aware of a few points (see
 
 - the lock must not be held while waiting for an internal aravis thread, for
   example during the destruction of a device or a stream.
+
+#### Event support
+
+Event support is still experimental, and only available when aravis is built
+with the `event` meson option. Code using the previous event implementation,
+which was only available for GenTL devices, must be adapted (see
+[Event Notifications](events.html)):
+
+- the [signal@Aravis.Device::device-event] signal now passes an
+  [class@Aravis.Event] instead of the event identifier. A handler with the
+  previous signature still compiles, but would read a pointer as an integer.
+  The event identifier is returned by [method@Aravis.Event.get_id]:
+
+```C
+static void
+device_event_cb (ArvDevice *device, ArvEvent *event, gpointer user_data)
+{
+	printf ("Event 0x%04x\n", arv_event_get_id (event));
+}
+```
+
+- the signal, as well as the new callback set with
+  [method@Aravis.Device.set_event_callback], is emitted from an internal
+  thread dedicated to the event delivery. Event features can be read from the
+  handler, but feature access sequences shared with other threads must be
+  protected using [method@Aravis.Camera.lock].
+
+- the `device_event` virtual function of [class@Aravis.Device] takes an
+  [class@Aravis.Event] parameter.

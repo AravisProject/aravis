@@ -32,6 +32,7 @@
 #include <arvtypes.h>
 #include <arvstream.h>
 #include <arvchunkparser.h>
+#include <arvevent.h>
 
 G_BEGIN_DECLS
 
@@ -78,6 +79,22 @@ typedef enum {
         ARV_DEVICE_ERROR_PROTOCOL_ERROR_BUSY
 } ArvDeviceError;
 
+#if ARAVIS_HAS_EVENT
+/**
+ * ArvDeviceEventCallback:
+ * @user_data: user data, as passed to [method@ArvDevice.set_event_callback]
+ * @event: (transfer none): the received event
+ *
+ * Callback for event notifications. It is invoked from an internal thread dedicated to the event delivery, one event
+ * at a time. Event features can be read safely from this callback, as feature accesses are protected by the Genicam
+ * data lock.
+ *
+ * Since: 0.10.0
+ */
+
+typedef void (*ArvDeviceEventCallback)	(void *user_data, ArvEvent *event);
+#endif
+
 #define ARV_TYPE_DEVICE             (arv_device_get_type ())
 ARV_API G_DECLARE_DERIVABLE_TYPE (ArvDevice, arv_device, ARV, DEVICE, GObject)
 
@@ -102,7 +119,7 @@ struct _ArvDeviceClass {
 	/* signals */
 	void		(*control_lost)		(ArvDevice *device);
 #if ARAVIS_HAS_EVENT
-	void		(*device_event)		(ArvDevice *device);
+	void		(*device_event)		(ArvDevice *device, ArvEvent *event);
 #endif
 
         /* Padding for future expansion */
@@ -126,6 +143,9 @@ ARV_API gboolean	arv_device_write_register		(ArvDevice *device, guint64 address,
 ARV_API gboolean	arv_device_read_event_data		(ArvDevice *device, int event_id,
                                                                  guint64 address, guint32 size, void *buffer,
                                                                  GError **error);
+ARV_API void		arv_device_set_event_callback		(ArvDevice *device, ArvDeviceEventCallback callback,
+                                                                 void *user_data, GDestroyNotify destroy);
+ARV_API guint64		arv_device_get_n_dropped_events		(ArvDevice *device);
 #endif
 
 ARV_API const char *	arv_device_get_genicam_xml		(ArvDevice *device, size_t *size);
