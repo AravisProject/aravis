@@ -54,3 +54,27 @@ receiving thread.
 [method@Aravis.FakeCamera.set_fill_pattern] take an additional GDestroyNotify
 parameter, that will be called when the callback closure data are not useful
 anymore, and can be destroyed.
+
+#### Thread safety
+
+Feature accesses are now protected by a recursive lock owned by the Genicam
+data. Existing code does not need any change, and keeps working as before.
+Code using a device from several threads, for example from a stream
+callback, should however be aware of a few points (see
+[Thread Safety](thread-safety.html)):
+
+- a single feature access is safe from any thread, but a sequence of feature
+  accesses, for example a selector change followed by the access to a
+  selected feature, must be protected using [method@Aravis.Camera.lock] and
+  [method@Aravis.Camera.unlock], or [method@Aravis.Device.lock_genicam] and
+  [method@Aravis.Device.unlock_genicam]. This also applies to the selection
+  functions, like [method@Aravis.Camera.select_gain].
+
+- the functions returning a string owned by the Genicam data, like
+  [method@Aravis.Camera.get_string] or
+  [method@Aravis.Device.get_string_feature_value], are not thread safe. Their
+  `dup` counterparts, like [method@Aravis.Camera.dup_string] or
+  [method@Aravis.Device.dup_string_feature_value], return a copy instead.
+
+- the lock must not be held while waiting for an internal aravis thread, for
+  example during the destruction of a device or a stream.

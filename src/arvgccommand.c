@@ -104,29 +104,30 @@ arv_gc_command_execute (ArvGcCommand *gc_command, GError **error)
 	if (gc_command->value == NULL)
 		return;
 
+	arv_gc_lock (genicam);
+
         if (!arv_gc_feature_node_check_write_access (ARV_GC_FEATURE_NODE (gc_command), error))
-                return;
+		goto out;
 
 	command_value = arv_gc_property_node_get_int64 (gc_command->command_value, &local_error);
 
-	if (local_error != NULL) {
-		g_propagate_prefixed_error (error, local_error, "[%s] ",
-                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_command)));
-		return;
+	if (local_error == NULL) {
+		arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_command));
+		arv_gc_property_node_set_int64 (gc_command->value, command_value, &local_error);
 	}
 
-	arv_gc_feature_node_increment_change_count (ARV_GC_FEATURE_NODE (gc_command));
-	arv_gc_property_node_set_int64 (gc_command->value, command_value, &local_error);
-
 	if (local_error != NULL) {
 		g_propagate_prefixed_error (error, local_error, "[%s] ",
                                             arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_command)));
-		return;
+		goto out;
 	}
 
 	arv_debug_genicam ("[GcCommand::execute] %s (0x%" G_GINT64_MODIFIER "x)",
 			 arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_command)),
 			 command_value);
+
+out:
+	arv_gc_unlock (genicam);
 }
 
 static ArvGcFeatureNode *

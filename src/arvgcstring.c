@@ -25,6 +25,7 @@
  * @short_description: String interface
  */
 
+#include <arvgcprivate.h>
 #include <arvgcstring.h>
 #include <arvmisc.h>
 #include <arvgcfeaturenodeprivate.h>
@@ -41,7 +42,9 @@ G_DEFINE_INTERFACE (ArvGcString, arv_gc_string, G_TYPE_OBJECT)
  * @gc_string: an object implementing #ArvGcString
  * @error: a #GError placeholder, or %NULL to ignore
  *
- * <warning><para>Please note the string content is still owned by the @gc_string object, which means the returned pointer may not be still valid after a new call to this function.</para></warning>
+ * The string content is still owned by the @gc_string object, which means the returned pointer may not be valid
+ * anymore after a new call to this function. This function is not thread safe: the string may be changed by a
+ * feature access from another thread. Use [method@ArvGcString.dup_value] instead.
  *
  * Returns: the string value.
  */
@@ -49,13 +52,48 @@ G_DEFINE_INTERFACE (ArvGcString, arv_gc_string, G_TYPE_OBJECT)
 const char *
 arv_gc_string_get_value (ArvGcString *gc_string, GError **error)
 {
+	ArvGc *genicam;
+	const char *value = NULL;
+
 	g_return_val_if_fail (ARV_IS_GC_STRING (gc_string), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
-        if (!arv_gc_feature_node_check_read_access (ARV_GC_FEATURE_NODE (gc_string), error))
-                return NULL;
+	genicam = arv_gc_node_lock_genicam (gc_string);
 
-	return ARV_GC_STRING_GET_IFACE (gc_string)->get_value (gc_string, error);
+        if (arv_gc_feature_node_check_read_access (ARV_GC_FEATURE_NODE (gc_string), error))
+		value = ARV_GC_STRING_GET_IFACE (gc_string)->get_value (gc_string, error);
+
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
+}
+
+/**
+ * arv_gc_string_dup_value:
+ * @gc_string: an object implementing #ArvGcString
+ * @error: a #GError placeholder, or %NULL to ignore
+ *
+ * Thread safe version of [method@ArvGcString.get_value].
+ *
+ * Returns: (transfer full): a newly allocated copy of the string value, %NULL on error.
+ *
+ * Since: 0.10.0
+ */
+
+char *
+arv_gc_string_dup_value (ArvGcString *gc_string, GError **error)
+{
+	ArvGc *genicam;
+	char *value;
+
+	g_return_val_if_fail (ARV_IS_GC_STRING (gc_string), NULL);
+	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
+
+	genicam = arv_gc_node_lock_genicam (gc_string);
+	value = g_strdup (arv_gc_string_get_value (gc_string, error));
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
 /**
@@ -70,13 +108,17 @@ arv_gc_string_get_value (ArvGcString *gc_string, GError **error)
 void
 arv_gc_string_set_value (ArvGcString *gc_string, const char *value, GError **error)
 {
+	ArvGc *genicam;
+
 	g_return_if_fail (ARV_IS_GC_STRING (gc_string));
 	g_return_if_fail (error == NULL || *error == NULL);
 
-        if (!arv_gc_feature_node_check_write_access (ARV_GC_FEATURE_NODE (gc_string), error))
-                return;
+	genicam = arv_gc_node_lock_genicam (gc_string);
 
-	ARV_GC_STRING_GET_IFACE (gc_string)->set_value (gc_string, value, error);
+        if (arv_gc_feature_node_check_write_access (ARV_GC_FEATURE_NODE (gc_string), error))
+		ARV_GC_STRING_GET_IFACE (gc_string)->set_value (gc_string, value, error);
+
+	arv_gc_node_unlock_genicam (genicam);
 }
 
 /**
@@ -91,14 +133,20 @@ gint64
 arv_gc_string_get_max_length (ArvGcString *gc_string, GError **error)
 {
 	ArvGcStringInterface *string_interface;
+	ArvGc *genicam;
+	gint64 value = 0;
 
 	g_return_val_if_fail (ARV_IS_GC_STRING (gc_string), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
 	string_interface = ARV_GC_STRING_GET_IFACE (gc_string);
 
+	genicam = arv_gc_node_lock_genicam (gc_string);
+
 	if (string_interface->get_max_length != NULL)
-		return string_interface->get_max_length (gc_string, error);
-	else
-		return 0;
+		value = string_interface->get_max_length (gc_string, error);
+
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }

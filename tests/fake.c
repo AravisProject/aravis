@@ -811,6 +811,141 @@ set_features_from_string_test (void)
 	g_object_unref (device);
 }
 
+#define GENICAM_LOCK_TEST_N_ITERATIONS	2000
+
+typedef struct {
+	ArvCamera *camera;
+	const char *selector;
+	gboolean success;
+} GenicamLockThreadData;
+
+static gpointer
+genicam_lock_thread (gpointer user_data)
+{
+	GenicamLockThreadData *data = user_data;
+	int i;
+
+	data->success = TRUE;
+
+	for (i = 0; i < GENICAM_LOCK_TEST_N_ITERATIONS; i++) {
+		GError *error = NULL;
+		char *selector;
+		gint64 width;
+
+		/* Atomic selector sequence */
+		arv_camera_lock (data->camera);
+		arv_camera_lock (data->camera);
+		arv_camera_set_string (data->camera, "TriggerSelector", data->selector, &error);
+		g_assert_no_error (error);
+		selector = arv_camera_dup_string (data->camera, "TriggerSelector", &error);
+		g_assert_no_error (error);
+		if (g_strcmp0 (selector, data->selector) != 0)
+			data->success = FALSE;
+		g_free (selector);
+		arv_camera_unlock (data->camera);
+		arv_camera_unlock (data->camera);
+
+		/* Unprotected single accesses */
+		width = arv_camera_get_integer (data->camera, "Width", &error);
+		g_assert_no_error (error);
+		arv_camera_set_integer (data->camera, "Width", width, &error);
+		g_assert_no_error (error);
+	}
+
+	return NULL;
+}
+
+static void
+genicam_lock_test (void)
+{
+	GenicamLockThreadData data[2];
+	GThread *threads[2];
+	ArvCamera *camera;
+	GError *error = NULL;
+	int i;
+
+	camera = arv_camera_new ("Fake_1", &error);
+	g_assert_no_error (error);
+
+	data[0].camera = camera;
+	data[0].selector = "FrameStart";
+	data[1].camera = camera;
+	data[1].selector = "AcquisitionStart";
+
+	for (i = 0; i < 2; i++)
+		threads[i] = g_thread_new ("genicam-lock", genicam_lock_thread, &data[i]);
+	for (i = 0; i < 2; i++)
+		g_thread_join (threads[i]);
+
+	g_assert_true (data[0].success);
+	g_assert_true (data[1].success);
+
+	g_object_unref (camera);
+}
+
+static void
+dup_string_test (void)
+{
+	ArvCamera *camera;
+	ArvDevice *device;
+	ArvGcNode *node;
+	GError *error = NULL;
+	char *string;
+
+	camera = arv_camera_new ("Fake_1", &error);
+	g_assert_no_error (error);
+	device = arv_camera_get_device (camera);
+
+	string = arv_camera_dup_vendor_name (camera, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, "Aravis");
+	g_free (string);
+
+	string = arv_camera_dup_model_name (camera, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, arv_camera_get_model_name (camera, NULL));
+	g_free (string);
+
+	string = arv_camera_dup_device_id (camera, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, arv_camera_get_device_id (camera, NULL));
+	g_free (string);
+
+	string = arv_camera_dup_device_serial_number (camera, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, arv_camera_get_device_serial_number (camera, NULL));
+	g_free (string);
+
+	string = arv_camera_dup_string (camera, "DeviceVendorName", &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, "Aravis");
+	g_free (string);
+
+	string = arv_device_dup_string_feature_value (device, "DeviceModelName", &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, arv_device_get_string_feature_value (device, "DeviceModelName", NULL));
+	g_free (string);
+
+	string = arv_device_dup_string_feature_value (device, "Unknown", &error);
+	g_assert_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND);
+	g_assert_null (string);
+	g_clear_error (&error);
+
+	node = arv_device_get_feature (device, "DeviceVendorName");
+	string = arv_gc_string_dup_value (ARV_GC_STRING (node), &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, "Aravis");
+	g_free (string);
+
+	node = arv_device_get_feature (device, "Width");
+	string = arv_gc_feature_node_dup_value_as_string (ARV_GC_FEATURE_NODE (node), &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node), NULL));
+	g_free (string);
+
+	g_object_unref (camera);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -834,6 +969,8 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fake/camera-device", camera_device_test);
 	g_test_add_func ("/fake/camera-trigger-selector", camera_trigger_selector_test);
 	g_test_add_func ("/fake/set-features-from-string", set_features_from_string_test);
+	g_test_add_func ("/fake/genicam-lock", genicam_lock_test);
+	g_test_add_func ("/fake/dup-string", dup_string_test);
 
 	result = g_test_run();
 

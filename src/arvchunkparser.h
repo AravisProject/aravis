@@ -59,6 +59,8 @@ ARV_API gboolean		arv_chunk_parser_get_boolean_value	(ArvChunkParser *parser, Ar
 									 const char *chunk, GError **error);
 ARV_API const char *		arv_chunk_parser_get_string_value	(ArvChunkParser *parser, ArvBuffer *buffer,
 									 const char *chunk, GError **error);
+ARV_API char *			arv_chunk_parser_dup_string_value	(ArvChunkParser *parser, ArvBuffer *buffer,
+									 const char *chunk, GError **error);
 ARV_API gint64			arv_chunk_parser_get_integer_value	(ArvChunkParser *parser, ArvBuffer *buffer,
 									 const char *chunk, GError **error);
 ARV_API double			arv_chunk_parser_get_float_value	(ArvChunkParser *parser, ArvBuffer *buffer,
