@@ -25,6 +25,7 @@
  * @short_description: Class for Boolean nodes
  */
 
+#include <arvgcprivate.h>
 #include <arvgcboolean.h>
 #include <arvgcinteger.h>
 #include <arvgcfeaturenodeprivate.h>
@@ -140,8 +141,8 @@ arv_gc_boolean_get_off_value (ArvGcBoolean *gc_boolean, GError **error)
  * Since: 0.8.0
  */
 
-gboolean
-arv_gc_boolean_get_value (ArvGcBoolean *gc_boolean, GError **error)
+static gboolean
+_arv_gc_boolean_get_value_unlocked (ArvGcBoolean *gc_boolean, GError **error)
 {
 	gboolean value;
 	gint64 on_value;
@@ -175,6 +176,19 @@ arv_gc_boolean_get_value (ArvGcBoolean *gc_boolean, GError **error)
 	return value == on_value;
 }
 
+gboolean
+arv_gc_boolean_get_value (ArvGcBoolean *gc_boolean, GError **error)
+{
+	ArvGc *genicam;
+	gboolean value;
+
+	genicam = arv_gc_node_lock_genicam (gc_boolean);
+	value = _arv_gc_boolean_get_value_unlocked (gc_boolean, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
+}
+
 /**
  * arv_gc_boolean_get_value_gi: (rename-to arv_gc_boolean_get_value)
  * @gc_boolean: a #ArvGcBoolean
@@ -186,8 +200,8 @@ arv_gc_boolean_get_value (ArvGcBoolean *gc_boolean, GError **error)
  * Since: 0.8.0
  */
 
-void
-arv_gc_boolean_get_value_gi (ArvGcBoolean *gc_boolean, gboolean *value, GError **error)
+static void
+_arv_gc_boolean_get_value_gi_unlocked (ArvGcBoolean *gc_boolean, gboolean *value, GError **error)
 {
         GError *local_error = NULL;
 
@@ -201,7 +215,17 @@ arv_gc_boolean_get_value_gi (ArvGcBoolean *gc_boolean, gboolean *value, GError *
 }
 
 void
-arv_gc_boolean_set_value (ArvGcBoolean *gc_boolean, gboolean v_boolean, GError **error)
+arv_gc_boolean_get_value_gi (ArvGcBoolean *gc_boolean, gboolean *value, GError **error)
+{
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_lock_genicam (gc_boolean);
+	_arv_gc_boolean_get_value_gi_unlocked (gc_boolean, value, error);
+	arv_gc_node_unlock_genicam (genicam);
+}
+
+static void
+_arv_gc_boolean_set_value_unlocked (ArvGcBoolean *gc_boolean, gboolean v_boolean, GError **error)
 {
 	gboolean value;
 	GError *local_error = NULL;
@@ -229,6 +253,16 @@ arv_gc_boolean_set_value (ArvGcBoolean *gc_boolean, gboolean v_boolean, GError *
 	if (local_error != NULL)
 		g_propagate_prefixed_error (error, local_error, "[%s] ",
                                             arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_boolean)));
+}
+
+void
+arv_gc_boolean_set_value (ArvGcBoolean *gc_boolean, gboolean v_boolean, GError **error)
+{
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_lock_genicam (gc_boolean);
+	_arv_gc_boolean_set_value_unlocked (gc_boolean, v_boolean, error);
+	arv_gc_node_unlock_genicam (genicam);
 }
 
 static ArvGcFeatureNode *

@@ -33,6 +33,7 @@
 G_BEGIN_DECLS
 
 #define ARV_UVCP_MAGIC	0x43563355
+#define ARV_UVCP_EVENT_MAGIC	0x45563355
 
 #define ARV_UVCP_DEFAULT_RESPONSE_TIME_MS		5
 
@@ -72,6 +73,12 @@ G_BEGIN_DECLS
 #define ARV_SBRM_IIDC2_ADDRESS			0x0038
 #define ARV_SBRM_CURRENT_SPEED			0x0040
 #define ARV_SBRM_RESERVED			0x0044
+
+#define ARV_EIRM_CONTROL			0x0000
+#define ARV_EIRM_MAX_EVENT_TRANSFER_LENGTH	0x0004
+#define ARV_EIRM_EVENT_TEST_CONTROL		0x0008
+
+#define ARV_EIRM_CONTROL_EVENT_ENABLE		0x00000001
 
 #define ARV_SIRM_INFO				0x0000
 #define ARV_SIRM_CONTROL			0x0004
@@ -275,6 +282,31 @@ arv_uvcp_manifest_entry_get_schema_type (ArvUvcpManifestEntry *entry)
 
 	return (ArvUvcpManifestSchemaType) ((entry->schema >> 10) & 0x0000001f);
 }
+
+/*
+ * Size of the header of each event in an event packet: event size (16 bits), event id (16 bits) and timestamp
+ * (64 bits).
+ */
+
+#define ARV_UVCP_EVENT_HEADER_SIZE		12
+
+/*
+ * ArvUvcpEventInfos:
+ * @event_id: event identifier
+ * @timestamp: event timestamp
+ * @record: whole event record, header included
+ * @record_size: size of the event record
+ */
+
+typedef struct {
+	guint16 event_id;
+	guint64 timestamp;
+	const void *record;
+	size_t record_size;
+} ArvUvcpEventInfos;
+
+gboolean		arv_uvcp_packet_get_next_event		(const void *packet, size_t packet_size,
+								 size_t *offset, ArvUvcpEventInfos *infos);
 
 void 			arv_uvcp_packet_free 			(ArvUvcpPacket *packet);
 ArvUvcpPacket * 	arv_uvcp_packet_new_read_memory_cmd 	(guint64 address, guint32 size,

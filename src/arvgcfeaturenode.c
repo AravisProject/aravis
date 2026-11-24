@@ -28,6 +28,7 @@
  * types of Genicam feature node (Group, Integer, Float, Enumeration...).
  */
 
+#include <arvgcprivate.h>
 #include <arvgcfeaturenodeprivate.h>
 #include <arvgcpropertynode.h>
 #include <arvgc.h>
@@ -315,8 +316,8 @@ arv_gc_feature_node_get_display_name (ArvGcFeatureNode *node)
 	return arv_gc_property_node_get_string (priv->display_name, NULL);
 }
 
-gboolean
-arv_gc_feature_node_is_implemented (ArvGcFeatureNode *gc_feature_node, GError **error)
+static gboolean
+_arv_gc_feature_node_is_implemented_unlocked (ArvGcFeatureNode *gc_feature_node, GError **error)
 {
 	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (gc_feature_node);
 	gboolean value;
@@ -341,7 +342,20 @@ arv_gc_feature_node_is_implemented (ArvGcFeatureNode *gc_feature_node, GError **
 }
 
 gboolean
-arv_gc_feature_node_is_available (ArvGcFeatureNode *gc_feature_node, GError **error)
+arv_gc_feature_node_is_implemented (ArvGcFeatureNode *gc_feature_node, GError **error)
+{
+	ArvGc *genicam;
+	gboolean value;
+
+	genicam = arv_gc_node_lock_genicam (gc_feature_node);
+	value = _arv_gc_feature_node_is_implemented_unlocked (gc_feature_node, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
+}
+
+static gboolean
+_arv_gc_feature_node_is_available_unlocked (ArvGcFeatureNode *gc_feature_node, GError **error)
 {
 	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (gc_feature_node);
 	gboolean value;
@@ -365,7 +379,20 @@ arv_gc_feature_node_is_available (ArvGcFeatureNode *gc_feature_node, GError **er
 }
 
 gboolean
-arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error)
+arv_gc_feature_node_is_available (ArvGcFeatureNode *gc_feature_node, GError **error)
+{
+	ArvGc *genicam;
+	gboolean value;
+
+	genicam = arv_gc_node_lock_genicam (gc_feature_node);
+	value = _arv_gc_feature_node_is_available_unlocked (gc_feature_node, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
+}
+
+static gboolean
+_arv_gc_feature_node_is_locked_unlocked (ArvGcFeatureNode *gc_feature_node, GError **error)
 {
 	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (gc_feature_node);
 	gboolean locked;
@@ -385,6 +412,19 @@ arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error
 	}
 
 	return locked;
+}
+
+gboolean
+arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error)
+{
+	ArvGc *genicam;
+	gboolean value;
+
+	genicam = arv_gc_node_lock_genicam (gc_feature_node);
+	value = _arv_gc_feature_node_is_locked_unlocked (gc_feature_node, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
 /**
@@ -426,8 +466,8 @@ arv_gc_feature_node_get_imposed_access_mode (ArvGcFeatureNode *gc_feature_node)
  * Since: 0.8.0
  */
 
-ArvGcAccessMode
-arv_gc_feature_node_get_actual_access_mode (ArvGcFeatureNode *gc_feature_node)
+static ArvGcAccessMode
+_arv_gc_feature_node_get_actual_access_mode_unlocked (ArvGcFeatureNode *gc_feature_node)
 {
 	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (gc_feature_node);
 	ArvGcAccessMode access_mode = ARV_GC_ACCESS_MODE_RO;
@@ -447,6 +487,19 @@ arv_gc_feature_node_get_actual_access_mode (ArvGcFeatureNode *gc_feature_node)
 	return imposed_access_mode;
 }
 
+ArvGcAccessMode
+arv_gc_feature_node_get_actual_access_mode (ArvGcFeatureNode *gc_feature_node)
+{
+	ArvGc *genicam;
+	ArvGcAccessMode value;
+
+	genicam = arv_gc_node_lock_genicam (gc_feature_node);
+	value = _arv_gc_feature_node_get_actual_access_mode_unlocked (gc_feature_node);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
+}
+
 /**
  * arv_gc_feature_node_set_value_from_string:
  * @gc_feature_node: a #ArvGcFeatureNode
@@ -456,8 +509,8 @@ arv_gc_feature_node_get_actual_access_mode (ArvGcFeatureNode *gc_feature_node)
  * Set the node value using a string representation of the value. May not be applicable to every node type, but safe.
  */
 
-void
-arv_gc_feature_node_set_value_from_string (ArvGcFeatureNode *self, const char *string, GError **error)
+static void
+_arv_gc_feature_node_set_value_from_string_unlocked (ArvGcFeatureNode *self, const char *string, GError **error)
 {
         GError *local_error = NULL;
 
@@ -517,6 +570,16 @@ arv_gc_feature_node_set_value_from_string (ArvGcFeatureNode *self, const char *s
                 g_propagate_error (error, local_error);
 }
 
+void
+arv_gc_feature_node_set_value_from_string (ArvGcFeatureNode *self, const char *string, GError **error)
+{
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_lock_genicam (self);
+	_arv_gc_feature_node_set_value_from_string_unlocked (self, string, error);
+	arv_gc_node_unlock_genicam (genicam);
+}
+
 /**
  * arv_gc_feature_node_get_value_as_string:
  * @gc_feature_node: a #ArvGcFeatureNode
@@ -529,8 +592,8 @@ arv_gc_feature_node_set_value_from_string (ArvGcFeatureNode *self, const char *s
  * Returns: (transfer none): a string representation of the node value, %NULL if not applicable.
  */
 
-const char *
-arv_gc_feature_node_get_value_as_string (ArvGcFeatureNode *self, GError **error)
+static const char *
+_arv_gc_feature_node_get_value_as_string_unlocked (ArvGcFeatureNode *self, GError **error)
 {
 	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (self);
         GError *local_error = NULL;
@@ -560,6 +623,19 @@ arv_gc_feature_node_get_value_as_string (ArvGcFeatureNode *self, GError **error)
 
         if (local_error != NULL)
                 g_propagate_error (error, local_error);
+
+	return value;
+}
+
+const char *
+arv_gc_feature_node_get_value_as_string (ArvGcFeatureNode *self, GError **error)
+{
+	ArvGc *genicam;
+	const char *value;
+
+	genicam = arv_gc_node_lock_genicam (self);
+	value = _arv_gc_feature_node_get_value_as_string_unlocked (self, error);
+	arv_gc_node_unlock_genicam (genicam);
 
 	return value;
 }

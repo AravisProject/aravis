@@ -193,6 +193,10 @@ ARV_API void		arv_camera_get_boolean_gi		(ArvCamera *camera, const char *feature
 
 ARV_API void		arv_camera_set_string			(ArvCamera *camera, const char *feature, const char *value, GError **error);
 ARV_API const char *	arv_camera_get_string			(ArvCamera *camera, const char *feature, GError **error);
+ARV_API char *		arv_camera_dup_string			(ArvCamera *camera, const char *feature, GError **error);
+
+ARV_API void		arv_camera_lock				(ArvCamera *camera);
+ARV_API void		arv_camera_unlock			(ArvCamera *camera);
 
 ARV_API void		arv_camera_set_integer			(ArvCamera *camera, const char *feature, gint64 value, GError **error);
 ARV_API gint64		arv_camera_get_integer			(ArvCamera *camera, const char *feature, GError **error);
@@ -286,6 +290,16 @@ ARV_API void			arv_camera_set_chunk_state		(ArvCamera *camera, const char *chunk
 ARV_API gboolean		arv_camera_get_chunk_state		(ArvCamera *camera, const char *chunk, GError **error);
 ARV_API void			arv_camera_set_chunks			(ArvCamera *camera, const char *chunk_list, GError **error);
 ARV_API ArvChunkParser *	arv_camera_create_chunk_parser		(ArvCamera *camera);
+
+#if ARAVIS_HAS_EVENT
+ARV_API gboolean		arv_camera_are_events_available		(ArvCamera *camera, GError **error);
+ARV_API void			arv_camera_set_event_notification	(ArvCamera *camera, const char *event,
+									 gboolean is_enabled, GError **error);
+ARV_API gboolean		arv_camera_get_event_notification	(ArvCamera *camera, const char *event,
+									 GError **error);
+ARV_API void			arv_camera_set_events			(ArvCamera *camera, const char *event_list,
+									 GError **error);
+#endif
 
 G_END_DECLS
 

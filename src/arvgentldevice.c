@@ -26,6 +26,7 @@
  */
 
 #include <arvdeviceprivate.h>
+#include <arveventprivate.h>
 #include <arvgentldeviceprivate.h>
 #include <arvgentlsystemprivate.h>
 #include <arvgentlinterfaceprivate.h>
@@ -58,7 +59,6 @@ typedef struct {
 	void *port_handle;
 
 #if ARAVIS_HAS_EVENT
-	GHashTable *event_data;
 	int event_thread_run;
 	GThread* event_thread;
 #endif
@@ -132,18 +132,25 @@ arv_gentl_device_get_system(ArvGenTLDevice *device)
 
 #if ARAVIS_HAS_EVENT
 static char *
-_get_event_data(ArvGenTLModule *gentl, EVENT_HANDLE event_handle, void *event_data, size_t event_data_size, EVENT_DATA_INFO_CMD cmd)
+_get_event_data(ArvGenTLModule *gentl, EVENT_HANDLE event_handle, void *event_data, size_t event_data_size,
+		EVENT_DATA_INFO_CMD cmd, size_t *value_size)
 {
 	INFO_DATATYPE type;
-	size_t size;
+	size_t size = 0;
 	char *value = NULL;
 	GC_ERROR error;
+
+	if (value_size != NULL)
+		*value_size = 0;
+
 	error = gentl->EventGetDataInfo(event_handle, event_data, event_data_size, cmd, &type, NULL, &size);
 	if (error == GC_ERR_SUCCESS) {
 		value = g_malloc(size);
 		error = gentl->EventGetDataInfo(event_handle, event_data, event_data_size, cmd, &type, value, &size);
 		if (error != GC_ERR_SUCCESS)
 			g_clear_pointer(&value, g_free);
+		else if (value_size != NULL)
+			*value_size = size;
 	}
 
 	return value;
@@ -178,7 +185,7 @@ event_thread_func(void *p)
         while (priv->event_thread_run)
         {
 		char *event_data_id, *event_data_value;
-		int event_data_id_number = 0;
+		size_t event_data_value_size;
 		size_t event_data_size = event_data_size_max;
 		error = gentl->EventGetData(event_handle, event_data, &event_data_size, 100);
 		if (error != GC_ERR_SUCCESS) {
@@ -187,15 +194,20 @@ event_thread_func(void *p)
 			continue;
 		}
 		/* Get event id and value */
-		event_data_id = _get_event_data(gentl, event_handle, event_data, event_data_size, EVENT_DATA_ID);
-		event_data_value = _get_event_data(gentl, event_handle, event_data, event_data_size, EVENT_DATA_VALUE);
-		if (event_data_id && event_data_value) {
-			/* Cache the event data */
-			event_data_id_number = (int) g_ascii_strtoll(event_data_id, NULL, 16);
-			g_hash_table_replace(priv->event_data, GINT_TO_POINTER(event_data_id_number), event_data_value);
-			/* Emit the device-event signal */
-			arv_device_emit_device_event_signal( ARV_DEVICE(gentl_device), event_data_id_number);
+		event_data_id = _get_event_data(gentl, event_handle, event_data, event_data_size, EVENT_DATA_ID, NULL);
+		event_data_value = _get_event_data(gentl, event_handle, event_data, event_data_size, EVENT_DATA_VALUE,
+						   &event_data_value_size);
+		if (event_data_id != NULL && event_data_value != NULL) {
+			ArvEvent *event;
+
+			event = arv_event_new ((guint) g_ascii_strtoull (event_data_id, NULL, 16), 0, 0,
+					       ARV_EVENT_STREAM_CHANNEL_NONE, event_data_value, event_data_value_size);
+			/* Delivered in the device main context, where the Genicam data can be accessed */
+			arv_device_queue_event (ARV_DEVICE (gentl_device), event);
+			g_object_unref (event);
 		}
+		g_free (event_data_id);
+		g_free (event_data_value);
         }
 
 	error = gentl->GCUnregisterEvent(priv->device_handle, EVENT_REMOTE_DEVICE);
@@ -301,22 +313,6 @@ arv_gentl_device_write_register (ArvDevice *device, guint64 address, guint32 val
 	return arv_gentl_device_write_memory(device, address, sizeof(guint32), &value, error);
 }
 
-#if ARAVIS_HAS_EVENT
-static gboolean
-arv_gentl_device_read_event_data (ArvDevice *device, int event_id, guint64 address, guint32 size, void *buffer, GError **error)
-{
-	ArvGenTLDevicePrivate *priv = arv_gentl_device_get_instance_private ( ARV_GENTL_DEVICE(device) );
-
-	char *event_value = g_hash_table_lookup(priv->event_data, GINT_TO_POINTER(event_id));
-	if (event_value == NULL) {
-		g_set_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_UNKNOWN,
-			     "Event not found");
-		return FALSE;
-	}
-	memcpy(buffer, event_value + address, size);
-	return TRUE;
-}
-#endif /* ARAVIS_HAS_EVENT */
 
 static void
 arv_gentl_device_init (ArvGenTLDevice *gentl_device)
@@ -331,9 +327,6 @@ arv_gentl_device_init (ArvGenTLDevice *gentl_device)
 	priv->interface_id = NULL;
 	priv->device_id = NULL;
 	priv->port_handle = NULL;
-#if ARAVIS_HAS_EVENT
-	priv->event_data = g_hash_table_new_full(g_direct_hash, g_direct_equal, NULL, g_free);
-#endif
 }
 
 static char *
@@ -587,9 +580,6 @@ arv_gentl_device_finalize (GObject *object)
 	g_clear_pointer(&priv->interface_id, g_free);
 	g_clear_pointer(&priv->device_id, g_free);
 
-#if ARAVIS_HAS_EVENT
-	g_hash_table_unref(priv->event_data);
-#endif
 
 	G_OBJECT_CLASS (arv_gentl_device_parent_class)->finalize (object);
 }
@@ -612,9 +602,6 @@ arv_gentl_device_class_init (ArvGenTLDeviceClass *gentl_device_class)
 	device_class->write_memory = arv_gentl_device_write_memory;
 	device_class->read_register = arv_gentl_device_read_register;
 	device_class->write_register = arv_gentl_device_write_register;
-#if ARAVIS_HAS_EVENT
-	device_class->read_event_data = arv_gentl_device_read_event_data;
-#endif
 
 	g_object_class_install_property
 		(object_class,

@@ -25,6 +25,7 @@
  * @short_description: Register interface
  */
 
+#include <arvgcprivate.h>
 #include <arvgcregister.h>
 #include <arvmisc.h>
 
@@ -35,8 +36,8 @@ arv_gc_register_default_init (ArvGcRegisterInterface *gc_register_iface)
 
 G_DEFINE_INTERFACE (ArvGcRegister, arv_gc_register, G_TYPE_OBJECT)
 
-void
-arv_gc_register_get (ArvGcRegister *gc_register, void *buffer, guint64 length, GError **error)
+static void
+_arv_gc_register_get_unlocked (ArvGcRegister *gc_register, void *buffer, guint64 length, GError **error)
 {
 	g_return_if_fail (ARV_IS_GC_REGISTER (gc_register));
 	g_return_if_fail (buffer != NULL);
@@ -47,7 +48,17 @@ arv_gc_register_get (ArvGcRegister *gc_register, void *buffer, guint64 length, G
 }
 
 void
-arv_gc_register_set (ArvGcRegister *gc_register, const void *buffer, guint64 length, GError **error)
+arv_gc_register_get (ArvGcRegister *gc_register, void *buffer, guint64 length, GError **error)
+{
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_lock_genicam (gc_register);
+	_arv_gc_register_get_unlocked (gc_register, buffer, length, error);
+	arv_gc_node_unlock_genicam (genicam);
+}
+
+static void
+_arv_gc_register_set_unlocked (ArvGcRegister *gc_register, const void *buffer, guint64 length, GError **error)
 {
 	g_return_if_fail (ARV_IS_GC_REGISTER (gc_register));
 	g_return_if_fail (buffer != NULL);
@@ -57,8 +68,18 @@ arv_gc_register_set (ArvGcRegister *gc_register, const void *buffer, guint64 len
 	ARV_GC_REGISTER_GET_IFACE (gc_register)->set (gc_register, buffer, length, error);
 }
 
-guint64
-arv_gc_register_get_address (ArvGcRegister *gc_register, GError **error)
+void
+arv_gc_register_set (ArvGcRegister *gc_register, const void *buffer, guint64 length, GError **error)
+{
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_lock_genicam (gc_register);
+	_arv_gc_register_set_unlocked (gc_register, buffer, length, error);
+	arv_gc_node_unlock_genicam (genicam);
+}
+
+static guint64
+_arv_gc_register_get_address_unlocked (ArvGcRegister *gc_register, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_GC_REGISTER (gc_register), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
@@ -67,12 +88,38 @@ arv_gc_register_get_address (ArvGcRegister *gc_register, GError **error)
 }
 
 guint64
-arv_gc_register_get_length (ArvGcRegister *gc_register, GError **error)
+arv_gc_register_get_address (ArvGcRegister *gc_register, GError **error)
+{
+	ArvGc *genicam;
+	guint64 value;
+
+	genicam = arv_gc_node_lock_genicam (gc_register);
+	value = _arv_gc_register_get_address_unlocked (gc_register, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
+}
+
+static guint64
+_arv_gc_register_get_length_unlocked (ArvGcRegister *gc_register, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_GC_REGISTER (gc_register), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
 	return ARV_GC_REGISTER_GET_IFACE (gc_register)->get_length (gc_register, error);
+}
+
+guint64
+arv_gc_register_get_length (ArvGcRegister *gc_register, GError **error)
+{
+	ArvGc *genicam;
+	guint64 value;
+
+	genicam = arv_gc_node_lock_genicam (gc_register);
+	value = _arv_gc_register_get_length_unlocked (gc_register, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
 /**
@@ -86,8 +133,8 @@ arv_gc_register_get_length (ArvGcRegister *gc_register, GError **error)
  * Since: 0.8.31
  */
 
-void *
-arv_gc_register_dup (ArvGcRegister *gc_register, guint64 *length, GError **error)
+static void *
+_arv_gc_register_dup_unlocked (ArvGcRegister *gc_register, guint64 *length, GError **error)
 {
         GError *local_error = NULL;
         void *buffer = NULL;
@@ -115,5 +162,18 @@ arv_gc_register_dup (ArvGcRegister *gc_register, guint64 *length, GError **error
                 *length = register_length;
 
         return buffer;
+}
+
+void *
+arv_gc_register_dup (ArvGcRegister *gc_register, guint64 *length, GError **error)
+{
+	ArvGc *genicam;
+	void *value;
+
+	genicam = arv_gc_node_lock_genicam (gc_register);
+	value = _arv_gc_register_dup_unlocked (gc_register, length, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
