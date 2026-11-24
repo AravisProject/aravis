@@ -850,6 +850,26 @@ arv_fake_camera_get_acquisition_status (ArvFakeCamera *camera)
 }
 
 /**
+ * arv_fake_camera_get_event_notification:
+ * @camera: a #ArvFakeCamera
+ * @event_id: an event identifier
+ *
+ * Returns: %TRUE if the notification of @event_id is enabled. Only the ExposureEnd event
+ * (%ARV_FAKE_CAMERA_EVENT_EXPOSURE_END) is implemented.
+ *
+ * Since: 0.10.0
+ */
+
+gboolean
+arv_fake_camera_get_event_notification (ArvFakeCamera *camera, guint event_id)
+{
+	g_return_val_if_fail (ARV_IS_FAKE_CAMERA (camera), FALSE);
+
+	return event_id == ARV_FAKE_CAMERA_EVENT_EXPOSURE_END &&
+		_get_register (camera, ARV_FAKE_CAMERA_REGISTER_EVENT_NOTIFICATION) != 0;
+}
+
+/**
  * arv_fake_camera_get_stream_address:
  * @camera: a #ArvFakeCamera
  *
@@ -1078,6 +1098,10 @@ arv_fake_camera_new_full (const char *serial_number, const char *genicam_filenam
 
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_GAIN_RAW, 0);
 	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_GAIN_MODE, 1);
+
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_EVENT_SELECTOR,
+					ARV_FAKE_CAMERA_EVENT_EXPOSURE_END);
+	arv_fake_camera_write_register (fake_camera, ARV_FAKE_CAMERA_REGISTER_EVENT_NOTIFICATION, 0);
 
 	arv_fake_camera_write_register (fake_camera, ARV_GVBS_HEARTBEAT_TIMEOUT_OFFSET, 3000);
 	arv_fake_camera_write_register (fake_camera, ARV_GVBS_TIMESTAMP_TICK_FREQUENCY_HIGH_OFFSET, 0);
