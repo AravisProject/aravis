@@ -505,6 +505,185 @@ arv_gvcp_packet_type_to_string (ArvGvcpPacketType value)
 }
 
 /**
+ * arv_gvcp_packet_new_eventdata_cmd: (skip)
+ * @event_id: event identifier
+ * @stream_channel: stream channel index, 0xffff if not related to a stream channel
+ * @block_id: stream block id
+ * @timestamp: event timestamp
+ * @data: (array length=data_size): event data
+ * @data_size: event data size
+ * @extended_ids: use 64 bit block id
+ * @packet_id: packet id
+ * @packet_size: (out): packet size, in bytes
+ * Return value: (transfer full): a new #ArvGvcpPacket
+ *
+ * Create a gvcp packet for an event with data command.
+ */
+
+ArvGvcpPacket *
+arv_gvcp_packet_new_eventdata_cmd (guint16 event_id, guint16 stream_channel, guint64 block_id, guint64 timestamp,
+				   const void *data, size_t data_size, gboolean extended_ids,
+				   guint16 packet_id, size_t *packet_size)
+{
+	ArvGvcpPacket *packet;
+	size_t header_size;
+	guint8 *record;
+
+	g_return_val_if_fail (packet_size != NULL, NULL);
+	g_return_val_if_fail (data != NULL || data_size == 0, NULL);
+
+	header_size = extended_ids ? ARV_GVCP_EVENT_EXTENDED_HEADER_SIZE : ARV_GVCP_EVENT_HEADER_SIZE;
+
+	*packet_size = sizeof (ArvGvcpHeader) + header_size + data_size;
+
+	packet = g_malloc0 (*packet_size);
+
+	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
+	packet->header.packet_flags = ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED |
+		(extended_ids ? ARV_GVCP_EVENT_PACKET_FLAGS_64BIT_ID : 0);
+	packet->header.command = g_htons (ARV_GVCP_COMMAND_EVENTDATA_CMD);
+	packet->header.size = g_htons (header_size + data_size);
+	packet->header.id = g_htons (packet_id);
+
+	record = packet->data;
+
+	if (extended_ids) {
+		*((guint16 *) &record[0]) = g_htons (header_size + data_size);
+		*((guint16 *) &record[2]) = g_htons (event_id);
+		*((guint16 *) &record[4]) = g_htons (stream_channel);
+		*((guint64 *) &record[8]) = GUINT64_TO_BE (block_id);
+		*((guint64 *) &record[16]) = GUINT64_TO_BE (timestamp);
+	} else {
+		*((guint16 *) &record[2]) = g_htons (event_id);
+		*((guint16 *) &record[4]) = g_htons (stream_channel);
+		*((guint16 *) &record[6]) = g_htons (block_id & 0xffff);
+		*((guint32 *) &record[8]) = g_htonl (timestamp >> 32);
+		*((guint32 *) &record[12]) = g_htonl (timestamp & 0xffffffff);
+	}
+
+	if (data_size > 0)
+		memcpy (record + header_size, data, data_size);
+
+	return packet;
+}
+
+/**
+ * arv_gvcp_packet_new_event_ack: (skip)
+ * @command: acknowledged command, %ARV_GVCP_COMMAND_EVENT_CMD or %ARV_GVCP_COMMAND_EVENTDATA_CMD
+ * @packet_id: id of the acknowledged packet
+ * @packet_size: (out): packet size, in bytes
+ * Return value: (transfer full): a new #ArvGvcpPacket
+ *
+ * Create a gvcp packet for an event acknowledge.
+ */
+
+ArvGvcpPacket *
+arv_gvcp_packet_new_event_ack (ArvGvcpCommand command, guint16 packet_id, size_t *packet_size)
+{
+	ArvGvcpPacket *packet;
+
+	g_return_val_if_fail (packet_size != NULL, NULL);
+	g_return_val_if_fail (command == ARV_GVCP_COMMAND_EVENT_CMD ||
+			      command == ARV_GVCP_COMMAND_EVENTDATA_CMD, NULL);
+
+	*packet_size = sizeof (ArvGvcpHeader);
+
+	packet = g_malloc0 (*packet_size);
+
+	packet->header.packet_type = ARV_GVCP_PACKET_TYPE_ACK;
+	packet->header.packet_flags = 0;
+	packet->header.command = g_htons (command == ARV_GVCP_COMMAND_EVENT_CMD ?
+					  ARV_GVCP_COMMAND_EVENT_ACK :
+					  ARV_GVCP_COMMAND_EVENTDATA_ACK);
+	packet->header.size = 0;
+	packet->header.id = g_htons (packet_id);
+
+	return packet;
+}
+
+/**
+ * arv_gvcp_packet_get_next_event: (skip)
+ * @packet: an event or event data command packet
+ * @packet_size: received packet size
+ * @offset: (inout): offset of the next event record in the packet payload, 0 for the first one
+ * @infos: (out): event informations placeholder
+ *
+ * Parses the next event record of an EVENT_CMD or EVENTDATA_CMD packet. An EVENT_CMD packet may contain several event
+ * records, an EVENTDATA_CMD packet always contains exactly one record, followed by the event data.
+ *
+ * Returns: %TRUE if a record was found, %FALSE when all records have been parsed or if the packet is malformed.
+ */
+
+gboolean
+arv_gvcp_packet_get_next_event (const ArvGvcpPacket *packet, size_t packet_size,
+				size_t *offset, ArvGvcpEventInfos *infos)
+{
+	ArvGvcpCommand command;
+	const guint8 *record;
+	gboolean extended_ids;
+	size_t header_size;
+	size_t payload_size;
+	size_t record_size;
+
+	g_return_val_if_fail (offset != NULL, FALSE);
+	g_return_val_if_fail (infos != NULL, FALSE);
+
+	if (packet == NULL || packet_size < sizeof (ArvGvcpHeader) ||
+	    packet->header.packet_type != ARV_GVCP_PACKET_TYPE_CMD)
+		return FALSE;
+
+	command = g_ntohs (packet->header.command);
+	if (command != ARV_GVCP_COMMAND_EVENT_CMD &&
+	    command != ARV_GVCP_COMMAND_EVENTDATA_CMD)
+		return FALSE;
+
+	extended_ids = (packet->header.packet_flags & ARV_GVCP_EVENT_PACKET_FLAGS_64BIT_ID) != 0;
+	header_size = extended_ids ? ARV_GVCP_EVENT_EXTENDED_HEADER_SIZE : ARV_GVCP_EVENT_HEADER_SIZE;
+
+	payload_size = MIN (g_ntohs (packet->header.size), packet_size - sizeof (ArvGvcpHeader));
+
+	/* There is only one event in an EVENTDATA packet */
+	if (command == ARV_GVCP_COMMAND_EVENTDATA_CMD && *offset != 0)
+		return FALSE;
+
+	if (*offset >= payload_size || payload_size - *offset < header_size)
+		return FALSE;
+
+	record = packet->data + *offset;
+
+	if (command == ARV_GVCP_COMMAND_EVENTDATA_CMD) {
+		record_size = payload_size;
+	} else {
+		/* The record size field is reserved, and set to 0, in older devices not using extended ids */
+		record_size = g_ntohs (*((guint16 *) &record[0]));
+		if (record_size == 0)
+			record_size = header_size;
+		/* Record sizes must be a multiple of 8 bytes, which keeps the fields of the next records
+		 * aligned */
+		if (record_size < header_size || record_size > payload_size - *offset ||
+		    record_size % 8 != 0)
+			return FALSE;
+	}
+
+	infos->event_id = g_ntohs (*((guint16 *) &record[2]));
+	infos->stream_channel = g_ntohs (*((guint16 *) &record[4]));
+	if (extended_ids) {
+		infos->block_id = GUINT64_FROM_BE (*((guint64 *) &record[8]));
+		infos->timestamp = GUINT64_FROM_BE (*((guint64 *) &record[16]));
+	} else {
+		infos->block_id = g_ntohs (*((guint16 *) &record[6]));
+		infos->timestamp = ((guint64) g_ntohl (*((guint32 *) &record[8])) << 32) |
+			g_ntohl (*((guint32 *) &record[12]));
+	}
+	infos->record = record;
+	infos->record_size = record_size;
+
+	*offset += record_size;
+
+	return TRUE;
+}
+
+/**
  * arv_gvcp_packet_flags_to_string_new: (skip)
  * @command: a #ArvGvcpCommand identifier
  * @flags: a packet flag value
@@ -533,6 +712,8 @@ arv_gvcp_packet_flags_to_string_new (ArvGvcpCommand command, guint8 flags)
 			}
 			break;
 		case ARV_GVCP_COMMAND_PACKET_RESEND_CMD:
+		case ARV_GVCP_COMMAND_EVENT_CMD:
+		case ARV_GVCP_COMMAND_EVENTDATA_CMD:
 			for (i = 0; i < 8; i++) {
 				if ((1 << i) & flags)
 					g_string_append_printf (string, "%s%s", string->len > 0 ? " " : "",
@@ -679,6 +860,29 @@ arv_gvcp_packet_to_string (const ArvGvcpPacket *packet)
 			value = g_ntohl (*((guint32 *) &data[0]));
 			g_string_append_printf (string, "address      = %10u (0x%08x)\n",
 						value, value);
+			break;
+		case ARV_GVCP_COMMAND_EVENT_CMD:
+		case ARV_GVCP_COMMAND_EVENTDATA_CMD:
+			{
+				ArvGvcpEventInfos infos;
+				size_t offset = 0;
+
+				while (arv_gvcp_packet_get_next_event (packet,
+								       sizeof (ArvGvcpHeader) +
+								       g_ntohs (packet->header.size),
+								       &offset, &infos)) {
+					g_string_append_printf (string, "event id     = 0x%04x\n", infos.event_id);
+					g_string_append_printf (string, "channel      = %u\n", infos.stream_channel);
+					g_string_append_printf (string, "block id     = %" G_GUINT64_FORMAT "\n",
+								infos.block_id);
+					g_string_append_printf (string, "timestamp    = %" G_GUINT64_FORMAT "\n",
+								infos.timestamp);
+					g_string_append_printf (string, "record size  = %" G_GSIZE_FORMAT "\n",
+								infos.record_size);
+				}
+			}
+			break;
+		default:
 			break;
 	}
 
