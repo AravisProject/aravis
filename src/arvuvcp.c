@@ -39,6 +39,66 @@ arv_uvcp_packet_free (ArvUvcpPacket *packet)
 }
 
 /**
+ * arv_uvcp_packet_get_next_event: (skip)
+ * @packet: an event packet, as received on the event endpoint
+ * @packet_size: received packet size
+ * @offset: (inout): offset of the next event in the packet payload, 0 for the first one
+ * @infos: (out): event informations placeholder
+ *
+ * Parses the next event of an event packet. An event packet may contain several events, each one starting with its
+ * size, its identifier and its timestamp, followed by the event data.
+ *
+ * Returns: %TRUE if an event was found, %FALSE when all events have been parsed or if the packet is malformed.
+ */
+
+gboolean
+arv_uvcp_packet_get_next_event (const void *packet, size_t packet_size, size_t *offset, ArvUvcpEventInfos *infos)
+{
+	const ArvUvcpHeader *header = packet;
+	const guint8 *payload;
+	const guint8 *record;
+	size_t payload_size;
+	size_t record_size;
+	guint16 value16;
+	guint64 value64;
+
+	g_return_val_if_fail (offset != NULL, FALSE);
+	g_return_val_if_fail (infos != NULL, FALSE);
+
+	if (packet == NULL || packet_size < sizeof (ArvUvcpHeader) ||
+	    GUINT32_FROM_LE (header->magic) != ARV_UVCP_EVENT_MAGIC ||
+	    GUINT16_FROM_LE (header->command) != ARV_UVCP_COMMAND_EVENT_CMD)
+		return FALSE;
+
+	payload = (const guint8 *) packet + sizeof (ArvUvcpHeader);
+	payload_size = MIN (GUINT16_FROM_LE (header->size), packet_size - sizeof (ArvUvcpHeader));
+
+	if (*offset >= payload_size || payload_size - *offset < ARV_UVCP_EVENT_HEADER_SIZE)
+		return FALSE;
+
+	record = payload + *offset;
+
+	memcpy (&value16, &record[0], sizeof (value16));
+	record_size = GUINT16_FROM_LE (value16);
+	/* A null size means the event spans the whole remaining payload */
+	if (record_size == 0)
+		record_size = payload_size - *offset;
+	if (record_size < ARV_UVCP_EVENT_HEADER_SIZE || record_size > payload_size - *offset)
+		return FALSE;
+
+	memcpy (&value16, &record[2], sizeof (value16));
+	infos->event_id = GUINT16_FROM_LE (value16);
+	memcpy (&value64, &record[4], sizeof (value64));
+	infos->timestamp = GUINT64_FROM_LE (value64);
+	infos->record = record;
+	infos->record_size = record_size;
+
+	*offset += record_size;
+
+	return TRUE;
+}
+
+/**
  * arv_uvcp_packet_new_read_memory_cmd: (skip)
  * @address: read address
  * @size: read size, in bytes
