@@ -28,6 +28,7 @@
 #include <arv.h>
 #include <arvdebugprivate.h>
 #include <arvviewer.h>
+#include <arvvideosink.h>
 #include <math.h>
 #include <memory.h>
 
@@ -48,11 +49,13 @@ gstreamer_plugin_check (void)
 		unsigned int i;
 		gboolean success = TRUE;
 
+		/* the display sink is chosen at runtime by arv_video_sink_new():
+		 * gtk4paintablesink when available, appsink otherwise */
 		static char *plugins[] = {
 			"appsrc",
 			"videoconvert",
 			"videoflip",
-                        "gtksink"
+                        "appsink"
 		};
 
 		registry = gst_registry_get ();
@@ -105,6 +108,7 @@ struct  _ArvViewer {
 	GstElement *appsrc;
 	GstElement *transform;
         GstElement *videosink;
+	ArvVideoSink *video_sink;
 
 	guint rotation;
 	gboolean flip_vertical;
@@ -1321,8 +1325,7 @@ snapshot_cb (GtkButton *button, ArvViewer *viewer)
 	size_t size;
         gint result;
 
-        if (GST_IS_ELEMENT (viewer->videosink))
-                sample = gst_base_sink_get_last_sample (GST_BASE_SINK (viewer->videosink));
+        sample = arv_video_sink_get_last_sample (viewer->video_sink);
         if (ARV_IS_BUFFER (viewer->last_buffer))
                 buffer = g_object_ref (viewer->last_buffer);
 
@@ -1749,16 +1752,8 @@ update_device_list_cb (GtkButton *button, ArvViewer *viewer)
 }
 
 static void
-remove_widget (GtkWidget *widget, gpointer data)
-{
-	gtk_widget_unparent (widget);
-}
-
-static void
 stop_video (ArvViewer *viewer)
 {
-	GtkWidget *video_widget;
-
 	if (ARV_IS_STREAM (viewer->stream))
 		arv_stream_set_emit_signals (viewer->stream, FALSE);
 
@@ -1783,9 +1778,11 @@ stop_video (ArvViewer *viewer)
 	if (ARV_IS_CAMERA (viewer->camera))
 		arv_camera_stop_acquisition (viewer->camera, NULL);
 
-	video_widget = gtk_frame_get_child (GTK_FRAME (viewer->video_frame));
-	if (video_widget != NULL)
-		remove_widget (video_widget, viewer->video_frame);
+	/* arv_video_sink_free() unparents the picture, after stopping the tick
+	 * callback and detaching the sink element */
+	arv_video_sink_free (viewer->video_sink);
+	viewer->video_sink = NULL;
+	viewer->videosink = NULL;
 
 	if (viewer->status_bar_update_event > 0) {
 		g_source_remove (viewer->status_bar_update_event);
@@ -1811,7 +1808,6 @@ stop_video (ArvViewer *viewer)
 static gboolean
 start_video (ArvViewer *viewer)
 {
-        GtkWidget *video_widget;
 	GstElement *videoconvert;
 	GstCaps *caps;
 	ArvPixelFormat pixel_format;
@@ -1898,17 +1894,16 @@ start_video (ArvViewer *viewer)
 		gst_element_link_many (viewer->appsrc, videoconvert, viewer->transform, NULL);
 	}
 
-        viewer->videosink = gst_element_factory_make ("gtksink", NULL);
+        viewer->video_sink = arv_video_sink_new (viewer->video_frame);
+        if (viewer->video_sink == NULL) {
+                g_message ("No usable GStreamer video sink");
+                stop_video (viewer);
+                return FALSE;
+        }
+
+        viewer->videosink = arv_video_sink_get_element (viewer->video_sink);
         gst_bin_add_many (GST_BIN (viewer->pipeline), viewer->videosink, NULL);
         gst_element_link_many (viewer->transform, viewer->videosink, NULL);
-
-        g_object_get (viewer->videosink, "widget", &video_widget, NULL);
-        gtk_frame_set_child (GTK_FRAME (viewer->video_frame), video_widget);
-        gtk_widget_set_visible (video_widget, TRUE);
-        g_object_set(G_OBJECT (video_widget), "force-aspect-ratio", TRUE, NULL);
-        gtk_widget_set_size_request (video_widget, 640, 480);
-
-	g_object_set(G_OBJECT (viewer->videosink), "sync", FALSE, NULL);
 
 	caps = gst_caps_from_string (caps_string);
 	arv_camera_get_region (viewer->camera, NULL, NULL, &width, &height, NULL);
