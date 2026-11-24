@@ -25,6 +25,7 @@
  * @short_description: Float interface
  */
 
+#include <arvgcprivate.h>
 #include <arvgcfloat.h>
 #include <arvgcfeaturenodeprivate.h>
 #include <arvgcdefaultsprivate.h>
@@ -40,8 +41,8 @@ arv_gc_float_default_init (ArvGcFloatInterface *gc_float_iface)
 
 G_DEFINE_INTERFACE (ArvGcFloat, arv_gc_float, G_TYPE_OBJECT)
 
-double
-arv_gc_float_get_value (ArvGcFloat *gc_float, GError **error)
+static double
+_arv_gc_float_get_value_unlocked (ArvGcFloat *gc_float, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_GC_FLOAT (gc_float), 0.0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0.0);
@@ -52,8 +53,21 @@ arv_gc_float_get_value (ArvGcFloat *gc_float, GError **error)
 	return ARV_GC_FLOAT_GET_IFACE (gc_float)->get_value (gc_float, error);
 }
 
-void
-arv_gc_float_set_value (ArvGcFloat *gc_float, double value, GError **error)
+double
+arv_gc_float_get_value (ArvGcFloat *gc_float, GError **error)
+{
+	ArvGc *genicam;
+	double value;
+
+	genicam = arv_gc_node_lock_genicam (gc_float);
+	value = _arv_gc_float_get_value_unlocked (gc_float, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
+}
+
+static void
+_arv_gc_float_set_value_unlocked (ArvGcFloat *gc_float, double value, GError **error)
 {
 	ArvGc *genicam;
 	ArvRangeCheckPolicy policy;
@@ -107,6 +121,16 @@ arv_gc_float_set_value (ArvGcFloat *gc_float, double value, GError **error)
 	ARV_GC_FLOAT_GET_IFACE (gc_float)->set_value (gc_float, value, error);
 }
 
+void
+arv_gc_float_set_value (ArvGcFloat *gc_float, double value, GError **error)
+{
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_lock_genicam (gc_float);
+	_arv_gc_float_set_value_unlocked (gc_float, value, error);
+	arv_gc_node_unlock_genicam (genicam);
+}
+
 /**
  * arv_gc_float_get_min:
  * @gc_float: a #ArvGcFloat
@@ -115,8 +139,8 @@ arv_gc_float_set_value (ArvGcFloat *gc_float, double value, GError **error)
  * Returns: The feature Min property, -#G_MAXDOUBLE if not defined or on error
  */
 
-double
-arv_gc_float_get_min (ArvGcFloat *gc_float, GError **error)
+static double
+_arv_gc_float_get_min_unlocked (ArvGcFloat *gc_float, GError **error)
 {
 	ArvGcFloatInterface *float_interface;
 
@@ -134,6 +158,19 @@ arv_gc_float_get_min (ArvGcFloat *gc_float, GError **error)
 	return -G_MAXDOUBLE;
 }
 
+double
+arv_gc_float_get_min (ArvGcFloat *gc_float, GError **error)
+{
+	ArvGc *genicam;
+	double value;
+
+	genicam = arv_gc_node_lock_genicam (gc_float);
+	value = _arv_gc_float_get_min_unlocked (gc_float, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
+}
+
 /**
  * arv_gc_float_get_max:
  * @gc_float: a #ArvGcFloat
@@ -142,8 +179,8 @@ arv_gc_float_get_min (ArvGcFloat *gc_float, GError **error)
  * Returns: The feature Max property, #G_MAXDOUBLE if not defined or on error
  */
 
-double
-arv_gc_float_get_max (ArvGcFloat *gc_float, GError **error)
+static double
+_arv_gc_float_get_max_unlocked (ArvGcFloat *gc_float, GError **error)
 {
 	ArvGcFloatInterface *float_interface;
 
@@ -161,6 +198,19 @@ arv_gc_float_get_max (ArvGcFloat *gc_float, GError **error)
 	return G_MAXDOUBLE;
 }
 
+double
+arv_gc_float_get_max (ArvGcFloat *gc_float, GError **error)
+{
+	ArvGc *genicam;
+	double value;
+
+	genicam = arv_gc_node_lock_genicam (gc_float);
+	value = _arv_gc_float_get_max_unlocked (gc_float, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
+}
+
 /**
  * arv_gc_float_get_inc:
  * @gc_float: a #ArvGcFloat
@@ -169,8 +219,8 @@ arv_gc_float_get_max (ArvGcFloat *gc_float, GError **error)
  * Returns: The feature Inc property, #G_MINDOUBLE if not defined or on error
  */
 
-double
-arv_gc_float_get_inc (ArvGcFloat *gc_float, GError **error)
+static double
+_arv_gc_float_get_inc_unlocked (ArvGcFloat *gc_float, GError **error)
 {
 	ArvGcFloatInterface *float_interface;
 
@@ -186,6 +236,19 @@ arv_gc_float_get_inc (ArvGcFloat *gc_float, GError **error)
 		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)));
 
 	return G_MINDOUBLE;
+}
+
+double
+arv_gc_float_get_inc (ArvGcFloat *gc_float, GError **error)
+{
+	ArvGc *genicam;
+	double value;
+
+	genicam = arv_gc_node_lock_genicam (gc_float);
+	value = _arv_gc_float_get_inc_unlocked (gc_float, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
 /**
@@ -280,7 +343,8 @@ arv_gc_float_get_display_precision (ArvGcFloat *gc_float)
 	return ARV_GC_DISPLAY_PRECISION_DEFAULT;
 }
 
-void arv_gc_float_impose_min (ArvGcFloat *gc_float, double minimum, GError **error)
+static void
+_arv_gc_float_impose_min_unlocked (ArvGcFloat *gc_float, double minimum, GError **error)
 {
 	ArvGcFloatInterface *float_interface;
 
@@ -296,7 +360,18 @@ void arv_gc_float_impose_min (ArvGcFloat *gc_float, double minimum, GError **err
 			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)));
 }
 
-void arv_gc_float_impose_max (ArvGcFloat *gc_float, double maximum, GError **error)
+void
+arv_gc_float_impose_min (ArvGcFloat *gc_float, double minimum, GError **error)
+{
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_lock_genicam (gc_float);
+	_arv_gc_float_impose_min_unlocked (gc_float, minimum, error);
+	arv_gc_node_unlock_genicam (genicam);
+}
+
+static void
+_arv_gc_float_impose_max_unlocked (ArvGcFloat *gc_float, double maximum, GError **error)
 {
 	ArvGcFloatInterface *float_interface;
 
@@ -310,4 +385,14 @@ void arv_gc_float_impose_max (ArvGcFloat *gc_float, double maximum, GError **err
 	else
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "[%s] <Max> node not found",
 			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_float)));
+}
+
+void
+arv_gc_float_impose_max (ArvGcFloat *gc_float, double maximum, GError **error)
+{
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_lock_genicam (gc_float);
+	_arv_gc_float_impose_max_unlocked (gc_float, maximum, error);
+	arv_gc_node_unlock_genicam (genicam);
 }

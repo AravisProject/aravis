@@ -121,6 +121,8 @@ ARV_API ArvGcNode *			arv_gc_get_node				(ArvGc *genicam, const char *name);
 ARV_API ArvDevice *			arv_gc_get_device			(ArvGc *genicam);
 ARV_API void				arv_gc_set_buffer			(ArvGc *genicam, ArvBuffer *buffer);
 ARV_API ArvBuffer *			arv_gc_get_buffer			(ArvGc *genicam);
+ARV_API void				arv_gc_lock				(ArvGc *genicam);
+ARV_API void				arv_gc_unlock				(ArvGc *genicam);
 
 G_END_DECLS
 

@@ -811,6 +811,78 @@ set_features_from_string_test (void)
 	g_object_unref (device);
 }
 
+#define GENICAM_LOCK_TEST_N_ITERATIONS	2000
+
+typedef struct {
+	ArvCamera *camera;
+	const char *selector;
+	gboolean success;
+} GenicamLockThreadData;
+
+static gpointer
+genicam_lock_thread (gpointer user_data)
+{
+	GenicamLockThreadData *data = user_data;
+	int i;
+
+	data->success = TRUE;
+
+	for (i = 0; i < GENICAM_LOCK_TEST_N_ITERATIONS; i++) {
+		GError *error = NULL;
+		char *selector;
+		gint64 width;
+
+		/* Atomic selector sequence */
+		arv_camera_lock (data->camera);
+		arv_camera_lock (data->camera);
+		arv_camera_set_string (data->camera, "TriggerSelector", data->selector, &error);
+		g_assert_no_error (error);
+		selector = arv_camera_dup_string (data->camera, "TriggerSelector", &error);
+		g_assert_no_error (error);
+		if (g_strcmp0 (selector, data->selector) != 0)
+			data->success = FALSE;
+		g_free (selector);
+		arv_camera_unlock (data->camera);
+		arv_camera_unlock (data->camera);
+
+		/* Unprotected single accesses */
+		width = arv_camera_get_integer (data->camera, "Width", &error);
+		g_assert_no_error (error);
+		arv_camera_set_integer (data->camera, "Width", width, &error);
+		g_assert_no_error (error);
+	}
+
+	return NULL;
+}
+
+static void
+genicam_lock_test (void)
+{
+	GenicamLockThreadData data[2];
+	GThread *threads[2];
+	ArvCamera *camera;
+	GError *error = NULL;
+	int i;
+
+	camera = arv_camera_new ("Fake_1", &error);
+	g_assert_no_error (error);
+
+	data[0].camera = camera;
+	data[0].selector = "FrameStart";
+	data[1].camera = camera;
+	data[1].selector = "AcquisitionStart";
+
+	for (i = 0; i < 2; i++)
+		threads[i] = g_thread_new ("genicam-lock", genicam_lock_thread, &data[i]);
+	for (i = 0; i < 2; i++)
+		g_thread_join (threads[i]);
+
+	g_assert_true (data[0].success);
+	g_assert_true (data[1].success);
+
+	g_object_unref (camera);
+}
+
 #if ARAVIS_HAS_EVENT
 
 #define EVENT_TEST_N_EVENTS	5
@@ -1112,6 +1184,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fake/camera-device", camera_device_test);
 	g_test_add_func ("/fake/camera-trigger-selector", camera_trigger_selector_test);
 	g_test_add_func ("/fake/set-features-from-string", set_features_from_string_test);
+	g_test_add_func ("/fake/genicam-lock", genicam_lock_test);
 #if ARAVIS_HAS_EVENT
 	g_test_add_func ("/fake/event", event_test);
 	g_test_add_func ("/fake/event-worker-thread", event_worker_thread_test);

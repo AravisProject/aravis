@@ -25,6 +25,7 @@
  * @short_description: Class for Command nodes
  */
 
+#include <arvgcprivate.h>
 #include <arvgccommand.h>
 #include <arvgcinteger.h>
 #include <arvgcfeaturenodeprivate.h>
@@ -90,8 +91,8 @@ arv_gc_command_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 
 /* ArvGcCommand implementation */
 
-void
-arv_gc_command_execute (ArvGcCommand *gc_command, GError **error)
+static void
+_arv_gc_command_execute_unlocked (ArvGcCommand *gc_command, GError **error)
 {
 	ArvGc *genicam;
 	GError *local_error = NULL;
@@ -127,6 +128,16 @@ arv_gc_command_execute (ArvGcCommand *gc_command, GError **error)
 	arv_debug_genicam ("[GcCommand::execute] %s (0x%" G_GINT64_MODIFIER "x)",
 			 arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_command)),
 			 command_value);
+}
+
+void
+arv_gc_command_execute (ArvGcCommand *gc_command, GError **error)
+{
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_lock_genicam (gc_command);
+	_arv_gc_command_execute_unlocked (gc_command, error);
+	arv_gc_node_unlock_genicam (genicam);
 }
 
 static ArvGcFeatureNode *

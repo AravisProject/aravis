@@ -193,6 +193,10 @@ ARV_API void		arv_camera_get_boolean_gi		(ArvCamera *camera, const char *feature
 
 ARV_API void		arv_camera_set_string			(ArvCamera *camera, const char *feature, const char *value, GError **error);
 ARV_API const char *	arv_camera_get_string			(ArvCamera *camera, const char *feature, GError **error);
+ARV_API char *		arv_camera_dup_string			(ArvCamera *camera, const char *feature, GError **error);
+
+ARV_API void		arv_camera_lock				(ArvCamera *camera);
+ARV_API void		arv_camera_unlock			(ArvCamera *camera);
 
 ARV_API void		arv_camera_set_integer			(ArvCamera *camera, const char *feature, gint64 value, GError **error);
 ARV_API gint64		arv_camera_get_integer			(ArvCamera *camera, const char *feature, GError **error);

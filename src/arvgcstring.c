@@ -25,6 +25,7 @@
  * @short_description: String interface
  */
 
+#include <arvgcprivate.h>
 #include <arvgcstring.h>
 #include <arvmisc.h>
 #include <arvgcfeaturenodeprivate.h>
@@ -46,8 +47,8 @@ G_DEFINE_INTERFACE (ArvGcString, arv_gc_string, G_TYPE_OBJECT)
  * Returns: the string value.
  */
 
-const char *
-arv_gc_string_get_value (ArvGcString *gc_string, GError **error)
+static const char *
+_arv_gc_string_get_value_unlocked (ArvGcString *gc_string, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_GC_STRING (gc_string), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
@@ -56,6 +57,19 @@ arv_gc_string_get_value (ArvGcString *gc_string, GError **error)
                 return NULL;
 
 	return ARV_GC_STRING_GET_IFACE (gc_string)->get_value (gc_string, error);
+}
+
+const char *
+arv_gc_string_get_value (ArvGcString *gc_string, GError **error)
+{
+	ArvGc *genicam;
+	const char *value;
+
+	genicam = arv_gc_node_lock_genicam (gc_string);
+	value = _arv_gc_string_get_value_unlocked (gc_string, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
 /**
@@ -67,8 +81,8 @@ arv_gc_string_get_value (ArvGcString *gc_string, GError **error)
  * Set @value as the new @gc_string value.
  */
 
-void
-arv_gc_string_set_value (ArvGcString *gc_string, const char *value, GError **error)
+static void
+_arv_gc_string_set_value_unlocked (ArvGcString *gc_string, const char *value, GError **error)
 {
 	g_return_if_fail (ARV_IS_GC_STRING (gc_string));
 	g_return_if_fail (error == NULL || *error == NULL);
@@ -79,6 +93,16 @@ arv_gc_string_set_value (ArvGcString *gc_string, const char *value, GError **err
 	ARV_GC_STRING_GET_IFACE (gc_string)->set_value (gc_string, value, error);
 }
 
+void
+arv_gc_string_set_value (ArvGcString *gc_string, const char *value, GError **error)
+{
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_lock_genicam (gc_string);
+	_arv_gc_string_set_value_unlocked (gc_string, value, error);
+	arv_gc_node_unlock_genicam (genicam);
+}
+
 /**
  * arv_gc_string_get_max_length:
  * @gc_string: an object implementing #ArvGcString
@@ -87,8 +111,8 @@ arv_gc_string_set_value (ArvGcString *gc_string, const char *value, GError **err
  * Returns: the maximum length @gc_string can store, excluding the NULL terminal character.
  */
 
-gint64
-arv_gc_string_get_max_length (ArvGcString *gc_string, GError **error)
+static gint64
+_arv_gc_string_get_max_length_unlocked (ArvGcString *gc_string, GError **error)
 {
 	ArvGcStringInterface *string_interface;
 
@@ -101,4 +125,17 @@ arv_gc_string_get_max_length (ArvGcString *gc_string, GError **error)
 		return string_interface->get_max_length (gc_string, error);
 	else
 		return 0;
+}
+
+gint64
+arv_gc_string_get_max_length (ArvGcString *gc_string, GError **error)
+{
+	ArvGc *genicam;
+	gint64 value;
+
+	genicam = arv_gc_node_lock_genicam (gc_string);
+	value = _arv_gc_string_get_max_length_unlocked (gc_string, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }

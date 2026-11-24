@@ -25,6 +25,7 @@
  * @short_description: Integer interface
  */
 
+#include <arvgcprivate.h>
 #include <arvgcinteger.h>
 #include <arvgcfeaturenodeprivate.h>
 #include <arvgc.h>
@@ -38,8 +39,8 @@ arv_gc_integer_default_init (ArvGcIntegerInterface *gc_integer_iface)
 
 G_DEFINE_INTERFACE (ArvGcInteger, arv_gc_integer, G_TYPE_OBJECT)
 
-gint64
-arv_gc_integer_get_value (ArvGcInteger *gc_integer, GError **error)
+static gint64
+_arv_gc_integer_get_value_unlocked (ArvGcInteger *gc_integer, GError **error)
 {
 	g_return_val_if_fail (ARV_IS_GC_INTEGER (gc_integer), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
@@ -50,8 +51,21 @@ arv_gc_integer_get_value (ArvGcInteger *gc_integer, GError **error)
 	return ARV_GC_INTEGER_GET_IFACE (gc_integer)->get_value (gc_integer, error);
 }
 
-void
-arv_gc_integer_set_value (ArvGcInteger *gc_integer, gint64 value, GError **error)
+gint64
+arv_gc_integer_get_value (ArvGcInteger *gc_integer, GError **error)
+{
+	ArvGc *genicam;
+	gint64 value;
+
+	genicam = arv_gc_node_lock_genicam (gc_integer);
+	value = _arv_gc_integer_get_value_unlocked (gc_integer, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
+}
+
+static void
+_arv_gc_integer_set_value_unlocked (ArvGcInteger *gc_integer, gint64 value, GError **error)
 {
 	ArvGc *genicam;
 	ArvRangeCheckPolicy policy;
@@ -107,8 +121,18 @@ arv_gc_integer_set_value (ArvGcInteger *gc_integer, gint64 value, GError **error
 	ARV_GC_INTEGER_GET_IFACE (gc_integer)->set_value (gc_integer, value, error);
 }
 
-gint64
-arv_gc_integer_get_min (ArvGcInteger *gc_integer, GError **error)
+void
+arv_gc_integer_set_value (ArvGcInteger *gc_integer, gint64 value, GError **error)
+{
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_lock_genicam (gc_integer);
+	_arv_gc_integer_set_value_unlocked (gc_integer, value, error);
+	arv_gc_node_unlock_genicam (genicam);
+}
+
+static gint64
+_arv_gc_integer_get_min_unlocked (ArvGcInteger *gc_integer, GError **error)
 {
 	ArvGcIntegerInterface *integer_interface;
 
@@ -127,7 +151,20 @@ arv_gc_integer_get_min (ArvGcInteger *gc_integer, GError **error)
 }
 
 gint64
-arv_gc_integer_get_max (ArvGcInteger *gc_integer, GError **error)
+arv_gc_integer_get_min (ArvGcInteger *gc_integer, GError **error)
+{
+	ArvGc *genicam;
+	gint64 value;
+
+	genicam = arv_gc_node_lock_genicam (gc_integer);
+	value = _arv_gc_integer_get_min_unlocked (gc_integer, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
+}
+
+static gint64
+_arv_gc_integer_get_max_unlocked (ArvGcInteger *gc_integer, GError **error)
 {
 	ArvGcIntegerInterface *integer_interface;
 
@@ -146,7 +183,20 @@ arv_gc_integer_get_max (ArvGcInteger *gc_integer, GError **error)
 }
 
 gint64
-arv_gc_integer_get_inc (ArvGcInteger *gc_integer, GError **error)
+arv_gc_integer_get_max (ArvGcInteger *gc_integer, GError **error)
+{
+	ArvGc *genicam;
+	gint64 value;
+
+	genicam = arv_gc_node_lock_genicam (gc_integer);
+	value = _arv_gc_integer_get_max_unlocked (gc_integer, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
+}
+
+static gint64
+_arv_gc_integer_get_inc_unlocked (ArvGcInteger *gc_integer, GError **error)
 {
 	ArvGcIntegerInterface *integer_interface;
 
@@ -162,6 +212,19 @@ arv_gc_integer_get_inc (ArvGcInteger *gc_integer, GError **error)
 		     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)));
 
 	return 1;
+}
+
+gint64
+arv_gc_integer_get_inc (ArvGcInteger *gc_integer, GError **error)
+{
+	ArvGc *genicam;
+	gint64 value;
+
+	genicam = arv_gc_node_lock_genicam (gc_integer);
+	value = _arv_gc_integer_get_inc_unlocked (gc_integer, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
 /**
@@ -203,7 +266,8 @@ arv_gc_integer_get_unit	(ArvGcInteger *gc_integer)
 	return NULL;
 }
 
-void arv_gc_integer_impose_min (ArvGcInteger *gc_integer, gint64 minimum, GError **error)
+static void
+_arv_gc_integer_impose_min_unlocked (ArvGcInteger *gc_integer, gint64 minimum, GError **error)
 {
 	ArvGcIntegerInterface *integer_interface;
 
@@ -219,7 +283,18 @@ void arv_gc_integer_impose_min (ArvGcInteger *gc_integer, gint64 minimum, GError
 			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)));
 }
 
-void arv_gc_integer_impose_max (ArvGcInteger *gc_integer, gint64 maximum, GError **error)
+void
+arv_gc_integer_impose_min (ArvGcInteger *gc_integer, gint64 minimum, GError **error)
+{
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_lock_genicam (gc_integer);
+	_arv_gc_integer_impose_min_unlocked (gc_integer, minimum, error);
+	arv_gc_node_unlock_genicam (genicam);
+}
+
+static void
+_arv_gc_integer_impose_max_unlocked (ArvGcInteger *gc_integer, gint64 maximum, GError **error)
 {
 	ArvGcIntegerInterface *integer_interface;
 
@@ -233,4 +308,14 @@ void arv_gc_integer_impose_max (ArvGcInteger *gc_integer, gint64 maximum, GError
 	else
 		g_set_error (error, ARV_GC_ERROR, ARV_GC_ERROR_PROPERTY_NOT_DEFINED, "[%s] <Max> node not found",
 			     arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (gc_integer)));
+}
+
+void
+arv_gc_integer_impose_max (ArvGcInteger *gc_integer, gint64 maximum, GError **error)
+{
+	ArvGc *genicam;
+
+	genicam = arv_gc_node_lock_genicam (gc_integer);
+	_arv_gc_integer_impose_max_unlocked (gc_integer, maximum, error);
+	arv_gc_node_unlock_genicam (genicam);
 }

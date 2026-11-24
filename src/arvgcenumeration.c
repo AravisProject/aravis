@@ -25,6 +25,7 @@
  * @short_description: Class for Enumeration nodes
  */
 
+#include <arvgcprivate.h>
 #include <arvgcenumeration.h>
 #include <arvgcenumentry.h>
 #include <arvgcinteger.h>
@@ -117,8 +118,8 @@ arv_gc_enumeration_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
  * Since: 0.8.0
  */
 
-gint64 *
-arv_gc_enumeration_dup_available_int_values (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
+static gint64 *
+_arv_gc_enumeration_dup_available_int_values_unlocked (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
 {
 	gint64 *values;
 	const GSList *entries, *iter;
@@ -196,6 +197,19 @@ arv_gc_enumeration_dup_available_int_values (ArvGcEnumeration *enumeration, guin
 	g_slist_free (available_entries);
 
 	return values;
+}
+
+gint64 *
+arv_gc_enumeration_dup_available_int_values (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
+{
+	ArvGc *genicam;
+	gint64 *value;
+
+	genicam = arv_gc_node_lock_genicam (enumeration);
+	value = _arv_gc_enumeration_dup_available_int_values_unlocked (enumeration, n_values, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
 static const char **
@@ -286,10 +300,23 @@ _dup_available_string_values (ArvGcEnumeration *enumeration, gboolean display_na
  * Since: 0.8.0
  */
 
+static const char **
+_arv_gc_enumeration_dup_available_string_values_unlocked (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
+{
+	return _dup_available_string_values (enumeration, FALSE, n_values, error);
+}
+
 const char **
 arv_gc_enumeration_dup_available_string_values (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
 {
-	return _dup_available_string_values (enumeration, FALSE, n_values, error);
+	ArvGc *genicam;
+	const char **value;
+
+	genicam = arv_gc_node_lock_genicam (enumeration);
+	value = _arv_gc_enumeration_dup_available_string_values_unlocked (enumeration, n_values, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
 /**
@@ -306,10 +333,23 @@ arv_gc_enumeration_dup_available_string_values (ArvGcEnumeration *enumeration, g
  * Since: 0.8.0
  */
 
+static const char **
+_arv_gc_enumeration_dup_available_display_names_unlocked (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
+{
+	return _dup_available_string_values (enumeration, TRUE, n_values, error);
+}
+
 const char **
 arv_gc_enumeration_dup_available_display_names (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
 {
-	return _dup_available_string_values (enumeration, TRUE, n_values, error);
+	ArvGc *genicam;
+	const char **value;
+
+	genicam = arv_gc_node_lock_genicam (enumeration);
+	value = _arv_gc_enumeration_dup_available_display_names_unlocked (enumeration, n_values, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
 static gint64
@@ -335,14 +375,27 @@ _get_int_value (ArvGcEnumeration *enumeration, GError **error)
 	return value;
 }
 
-gint64
-arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration, GError **error)
+static gint64
+_arv_gc_enumeration_get_int_value_unlocked (ArvGcEnumeration *enumeration, GError **error)
 {
 
         if (!arv_gc_feature_node_check_read_access (ARV_GC_FEATURE_NODE (enumeration), error))
                 return 0;
 
         return _get_int_value (enumeration, error);
+}
+
+gint64
+arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration, GError **error)
+{
+	ArvGc *genicam;
+	gint64 value;
+
+	genicam = arv_gc_node_lock_genicam (enumeration);
+	value = _arv_gc_enumeration_get_int_value_unlocked (enumeration, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
 static gboolean
@@ -407,13 +460,26 @@ _set_int_value (ArvGcEnumeration *enumeration, gint64 value, GError **error)
 	return FALSE;
 }
 
-gboolean
-arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value, GError **error)
+static gboolean
+_arv_gc_enumeration_set_int_value_unlocked (ArvGcEnumeration *enumeration, gint64 value, GError **error)
 {
         if (!arv_gc_feature_node_check_write_access (ARV_GC_FEATURE_NODE (enumeration), error))
                 return FALSE;
 
         return _set_int_value (enumeration, value, error);
+}
+
+gboolean
+arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value, GError **error)
+{
+	ArvGc *genicam;
+	gboolean success;
+
+	genicam = arv_gc_node_lock_genicam (enumeration);
+	success = _arv_gc_enumeration_set_int_value_unlocked (enumeration, value, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return success;
 }
 
 static const char *
@@ -461,13 +527,26 @@ _get_string_value (ArvGcEnumeration *enumeration, GError **error)
 	return NULL;
 }
 
-const char *
-arv_gc_enumeration_get_string_value (ArvGcEnumeration *enumeration, GError **error)
+static const char *
+_arv_gc_enumeration_get_string_value_unlocked (ArvGcEnumeration *enumeration, GError **error)
 {
         if (!arv_gc_feature_node_check_read_access (ARV_GC_FEATURE_NODE (enumeration), error))
                 return NULL;
 
         return _get_string_value (enumeration, error);
+}
+
+const char *
+arv_gc_enumeration_get_string_value (ArvGcEnumeration *enumeration, GError **error)
+{
+	ArvGc *genicam;
+	const char *value;
+
+	genicam = arv_gc_node_lock_genicam (enumeration);
+	value = _arv_gc_enumeration_get_string_value_unlocked (enumeration, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
 static gboolean
@@ -513,13 +592,26 @@ _set_string_value (ArvGcEnumeration *enumeration, const char *value, GError **er
 	return FALSE;
 }
 
-gboolean
-arv_gc_enumeration_set_string_value (ArvGcEnumeration *enumeration, const char *value, GError **error)
+static gboolean
+_arv_gc_enumeration_set_string_value_unlocked (ArvGcEnumeration *enumeration, const char *value, GError **error)
 {
         if (!arv_gc_feature_node_check_write_access (ARV_GC_FEATURE_NODE (enumeration), error))
                 return FALSE;
 
         return _set_string_value (enumeration, value, error);
+}
+
+gboolean
+arv_gc_enumeration_set_string_value (ArvGcEnumeration *enumeration, const char *value, GError **error)
+{
+	ArvGc *genicam;
+	gboolean success;
+
+	genicam = arv_gc_node_lock_genicam (enumeration);
+	success = _arv_gc_enumeration_set_string_value_unlocked (enumeration, value, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return success;
 }
 
 /**

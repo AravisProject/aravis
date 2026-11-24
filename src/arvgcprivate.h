@@ -27,4 +27,7 @@
 
 ARV_API guint64            arv_gc_register_cache_error_add         (ArvGc *genicam, guint64 n_errors);
 
+ArvGc *			arv_gc_node_lock_genicam		(void *node);
+void			arv_gc_node_unlock_genicam		(ArvGc *genicam);
+
 #endif
