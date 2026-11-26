@@ -30,6 +30,9 @@
 #include <arvfakedevice.h>
 #include <arvstreamprivate.h>
 #include <arvbufferprivate.h>
+#include <arvdeviceprivate.h>
+#include <arveventprivate.h>
+#include <arvgvcpprivate.h>
 #include <arvdebug.h>
 #include <arvmisc.h>
 
@@ -39,6 +42,8 @@ typedef struct {
 	ArvFakeCamera *fake_camera;
 	ArvStreamCallback callback;
 	void *callback_data;
+
+	ArvDevice *device;
 
 	gboolean cancel;
 
@@ -91,6 +96,28 @@ arv_fake_stream_thread (void *data)
 						       NULL);
 
 			arv_fake_camera_fill_buffer (thread_data->fake_camera, buffer, NULL);
+
+#if ARAVIS_HAS_EVENT
+			if (arv_fake_camera_get_event_notification (thread_data->fake_camera,
+								    ARV_FAKE_CAMERA_EVENT_EXPOSURE_END)) {
+				ArvGvcpPacket *packet;
+				ArvEvent *event;
+				size_t packet_size;
+
+				/* Use the same event record layout than the GigEVision fake camera, which allows to
+				 * use the same Genicam data */
+				packet = arv_gvcp_packet_new_eventdata_cmd (ARV_FAKE_CAMERA_EVENT_EXPOSURE_END, 0,
+									    buffer->priv->frame_id,
+									    buffer->priv->timestamp_ns,
+									    NULL, 0, FALSE, 0, &packet_size);
+				event = arv_event_new (ARV_FAKE_CAMERA_EVENT_EXPOSURE_END,
+						       buffer->priv->timestamp_ns, buffer->priv->frame_id, 0,
+						       packet->data, packet_size - sizeof (ArvGvcpHeader));
+				arv_device_queue_event (thread_data->device, event);
+				g_object_unref (event);
+				g_free (packet);
+			}
+#endif
 
                         thread_data->n_transferred_bytes += buffer->priv->allocated_size;
 
@@ -195,6 +222,8 @@ arv_fake_stream_constructed (GObject *object)
 		      NULL);
 
 	thread_data->fake_camera = arv_fake_device_get_fake_camera (fake_device);
+	/* The stream holds a reference to its device */
+	thread_data->device = ARV_DEVICE (fake_device);
 
 	thread_data->cancel = FALSE;
 

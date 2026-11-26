@@ -27,6 +27,7 @@
 
 #include <arvgvdeviceprivate.h>
 #include <arvdeviceprivate.h>
+#include <arveventprivate.h>
 #include <arvgc.h>
 #include <arvgccommand.h>
 #include <arvgcboolean.h>
@@ -80,6 +81,11 @@ typedef struct {
 
 	void *heartbeat_thread;
 	void *heartbeat_data;
+
+#if ARAVIS_HAS_EVENT
+	void *message_thread;
+	void *message_data;
+#endif
 
 	ArvGc *genicam;
 
@@ -508,6 +514,238 @@ arv_gv_device_heartbeat_thread (void *data)
 
 	return NULL;
 }
+
+#if ARAVIS_HAS_EVENT
+
+/* Message channel, for event notifications */
+
+typedef struct {
+	ArvGvDevice *gv_device;
+
+	GSocket *socket;
+	guint16 port;
+
+	GCancellable *cancellable;
+} ArvGvDeviceMessageData;
+
+static void
+_message_data_free (ArvGvDeviceMessageData *message_data)
+{
+	if (message_data == NULL)
+		return;
+
+	g_clear_object (&message_data->socket);
+	g_clear_object (&message_data->cancellable);
+	g_free (message_data);
+}
+
+static void
+_message_handle_packet (ArvGvDeviceMessageData *message_data,
+			ArvGvcpPacket *packet, size_t packet_size,
+			GSocketAddress *remote_address,
+			gboolean *has_last_packet_id, guint16 *last_packet_id)
+{
+	ArvGvcpCommand command;
+	ArvGvcpEventInfos infos;
+	guint16 packet_id;
+	size_t offset = 0;
+
+	if (packet_size < sizeof (ArvGvcpHeader) ||
+	    arv_gvcp_packet_get_packet_type (packet, packet_size) != ARV_GVCP_PACKET_TYPE_CMD)
+		return;
+
+	command = arv_gvcp_packet_get_command (packet, packet_size);
+	if (command != ARV_GVCP_COMMAND_EVENT_CMD &&
+	    command != ARV_GVCP_COMMAND_EVENTDATA_CMD) {
+		arv_debug_device ("[GvDevice::message] Unexpected command 0x%04x", command);
+		return;
+	}
+
+	arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
+
+	packet_id = arv_gvcp_packet_get_packet_id (packet, packet_size);
+
+	/* Acknowledge before handling the events, in order to avoid useless retransmissions by the device */
+	if ((arv_gvcp_packet_get_packet_flags (packet, packet_size) & ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED) != 0) {
+		ArvGvcpPacket *ack_packet;
+		size_t ack_packet_size;
+		GError *local_error = NULL;
+
+		ack_packet = arv_gvcp_packet_new_event_ack (command, packet_id, &ack_packet_size);
+		g_socket_send_to (message_data->socket, remote_address,
+				  (const char *) ack_packet, ack_packet_size, NULL, &local_error);
+		if (local_error != NULL) {
+			arv_warning_device ("[GvDevice::message] Failed to send event acknowledge: %s",
+					    local_error->message);
+			g_clear_error (&local_error);
+		}
+		arv_gvcp_packet_free (ack_packet);
+	}
+
+	/* Retransmitted packets have the same id */
+	if (*has_last_packet_id && *last_packet_id == packet_id) {
+		arv_debug_device ("[GvDevice::message] Ignore retransmitted packet %u", packet_id);
+		return;
+	}
+	*has_last_packet_id = TRUE;
+	*last_packet_id = packet_id;
+
+	/* The whole event record, header included, is exposed to the Genicam event port */
+	while (arv_gvcp_packet_get_next_event (packet, packet_size, &offset, &infos)) {
+		ArvEvent *event;
+
+		event = arv_event_new (infos.event_id, infos.timestamp, infos.block_id, infos.stream_channel,
+				       infos.record, infos.record_size);
+		arv_device_queue_event (ARV_DEVICE (message_data->gv_device), event);
+		g_object_unref (event);
+	}
+}
+
+static void *
+arv_gv_device_message_thread (void *data)
+{
+	ArvGvDeviceMessageData *message_data = data;
+	GPollFD poll_fds[2];
+	guint n_poll_fds;
+	gboolean has_last_packet_id = FALSE;
+	guint16 last_packet_id = 0;
+	char *buffer;
+
+	buffer = g_malloc (ARV_GV_DEVICE_BUFFER_SIZE);
+
+	poll_fds[0].fd = g_socket_get_fd (message_data->socket);
+	poll_fds[0].events = G_IO_IN;
+	poll_fds[0].revents = 0;
+	n_poll_fds = 1;
+
+	arv_gpollfd_prepare_all (poll_fds, 1);
+
+	if (g_cancellable_make_pollfd (message_data->cancellable, &poll_fds[1]))
+		n_poll_fds = 2;
+
+	while (!g_cancellable_is_cancelled (message_data->cancellable)) {
+		int n_events;
+
+		/* Fallback to a periodic check of the cancellable if a pollfd is not available */
+		n_events = g_poll (poll_fds, n_poll_fds, n_poll_fds == 2 ? -1 : 100);
+
+		if (n_events > 0 && (poll_fds[0].revents & G_IO_IN) != 0) {
+			GSocketAddress *remote_address = NULL;
+			gssize count;
+
+			arv_gpollfd_clear_one (&poll_fds[0], message_data->socket);
+
+			count = g_socket_receive_from (message_data->socket, &remote_address,
+						       buffer, ARV_GV_DEVICE_BUFFER_SIZE, NULL, NULL);
+			if (count > 0)
+				_message_handle_packet (message_data, (ArvGvcpPacket *) buffer, count,
+							remote_address, &has_last_packet_id, &last_packet_id);
+
+			g_clear_object (&remote_address);
+		}
+	}
+
+	if (n_poll_fds == 2)
+		g_cancellable_release_fd (message_data->cancellable);
+	arv_gpollfd_finish_all (poll_fds, 1);
+
+	g_free (buffer);
+
+	return NULL;
+}
+
+static void
+_open_message_channel (ArvGvDevice *gv_device)
+{
+	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
+	ArvGvDeviceMessageData *message_data;
+	GSocketAddress *local_address;
+	GError *local_error = NULL;
+	const guint8 *address_bytes;
+	guint32 n_message_channels = 0;
+	guint32 address;
+
+	arv_gv_device_read_register (ARV_DEVICE (gv_device), ARV_GVBS_N_MESSAGE_CHANNELS_OFFSET,
+				     &n_message_channels, NULL);
+	if (n_message_channels < 1) {
+		arv_info_device ("[GvDevice::new] No message channel");
+		return;
+	}
+
+	message_data = g_new0 (ArvGvDeviceMessageData, 1);
+	message_data->gv_device = gv_device;
+	message_data->socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM,
+					     G_SOCKET_PROTOCOL_UDP, &local_error);
+	if (message_data->socket != NULL) {
+		local_address = arv_socket_bind_with_range (message_data->socket, priv->interface_address, 0,
+							    FALSE, &local_error);
+		g_clear_object (&local_address);
+
+		/* Get the actual port number of the bound socket */
+		if (local_error == NULL)
+			local_address = g_socket_get_local_address (message_data->socket, &local_error);
+		if (local_address != NULL) {
+			message_data->port = g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (local_address));
+			g_object_unref (local_address);
+		}
+	}
+
+	if (local_error != NULL) {
+		arv_warning_device ("[GvDevice::new] Failed to create message channel socket: %s",
+				    local_error->message);
+		g_clear_error (&local_error);
+		_message_data_free (message_data);
+		return;
+	}
+
+	address_bytes = g_inet_address_to_bytes (priv->interface_address);
+	memcpy (&address, address_bytes, sizeof (address));
+
+	if (!arv_gv_device_write_register (ARV_DEVICE (gv_device),
+					   ARV_GVBS_MESSAGE_CHANNEL_0_DESTINATION_ADDRESS_OFFSET,
+					   g_ntohl (address), &local_error) ||
+	    !arv_gv_device_write_register (ARV_DEVICE (gv_device),
+					   ARV_GVBS_MESSAGE_CHANNEL_0_PORT_OFFSET,
+					   message_data->port, &local_error)) {
+		arv_warning_device ("[GvDevice::new] Failed to configure message channel: %s",
+				    local_error != NULL ? local_error->message : "Unknown error");
+		g_clear_error (&local_error);
+		_message_data_free (message_data);
+		return;
+	}
+
+	arv_info_device ("[GvDevice::new] Message channel port = %u", message_data->port);
+
+	message_data->cancellable = g_cancellable_new ();
+
+	priv->message_data = message_data;
+	priv->message_thread = g_thread_new ("arv_gv_message", arv_gv_device_message_thread, message_data);
+}
+
+static void
+_close_message_channel (ArvGvDevice *gv_device)
+{
+	ArvGvDevicePrivate *priv = arv_gv_device_get_instance_private (gv_device);
+	ArvGvDeviceMessageData *message_data = priv->message_data;
+
+	if (message_data == NULL)
+		return;
+
+	/* Stop the device from sending messages */
+	if (priv->io_data != NULL && priv->io_data->is_controller)
+		arv_gv_device_write_register (ARV_DEVICE (gv_device), ARV_GVBS_MESSAGE_CHANNEL_0_PORT_OFFSET, 0, NULL);
+
+	if (priv->message_thread != NULL) {
+		g_cancellable_cancel (message_data->cancellable);
+		g_thread_join (priv->message_thread);
+		priv->message_thread = NULL;
+	}
+
+	_message_data_free (message_data);
+	priv->message_data = NULL;
+}
+
+#endif
 
 /* ArvGvDevice implemenation */
 
@@ -2077,6 +2315,13 @@ arv_gv_device_constructed (GObject *object)
 	arv_info_device ("[GvDevice::new] Device endianness = %s", priv->is_big_endian_device ? "big" : "little");
 	arv_info_device ("[GvDevice::new] Packet resend     = %s", priv->is_packet_resend_supported ? "yes" : "no");
 	arv_info_device ("[GvDevice::new] Write memory      = %s", priv->is_write_memory_supported ? "yes" : "no");
+	arv_info_device ("[GvDevice::new] Events            = %s",
+			 (capabilities & ARV_GVBS_GVCP_CAPABILITY_EVENT) != 0 ? "yes" : "no");
+
+#if ARAVIS_HAS_EVENT
+	if (io_data->is_controller && (capabilities & ARV_GVBS_GVCP_CAPABILITY_EVENT) != 0)
+		_open_message_channel (gv_device);
+#endif
 
 	document = ARV_DOM_DOCUMENT (priv->genicam);
 	register_description = ARV_GC_REGISTER_DESCRIPTION_NODE (arv_dom_document_get_document_element (document));
@@ -2106,6 +2351,10 @@ arv_gv_device_finalize (GObject *object)
 	ArvGvDeviceIOData *io_data;
 
         arv_info_device ("[GVDevice::finalize]");
+
+#if ARAVIS_HAS_EVENT
+	_close_message_channel (gv_device);
+#endif
 
 	if (priv->heartbeat_thread != NULL) {
 		ArvGvDeviceHeartbeatData *heartbeat_data;

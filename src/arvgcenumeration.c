@@ -25,6 +25,7 @@
  * @short_description: Class for Enumeration nodes
  */
 
+#include <arvgcprivate.h>
 #include <arvgcenumeration.h>
 #include <arvgcenumentry.h>
 #include <arvgcinteger.h>
@@ -120,7 +121,8 @@ arv_gc_enumeration_pre_remove_child (ArvDomNode *self, ArvDomNode *child)
 gint64 *
 arv_gc_enumeration_dup_available_int_values (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
 {
-	gint64 *values;
+	ArvGc *genicam;
+	gint64 *values = NULL;
 	const GSList *entries, *iter;
 	GSList *available_entries = NULL;
 	unsigned int i;
@@ -133,67 +135,54 @@ arv_gc_enumeration_dup_available_int_values (ArvGcEnumeration *enumeration, guin
 	g_return_val_if_fail (ARV_IS_GC_ENUMERATION (enumeration), NULL);
 	g_return_val_if_fail (error == NULL || *error == NULL, NULL);
 
+	genicam = arv_gc_node_lock_genicam (enumeration);
+
 	entries = arv_gc_enumeration_get_entries (enumeration);
 
-	*n_values = 0;
 	for (iter = entries; iter != NULL; iter = iter->next) {
 		gboolean is_available;
 
 		is_available = arv_gc_feature_node_is_available (iter->data, &local_error);
 
-		if (local_error != NULL) {
-			g_propagate_prefixed_error (error, local_error, "[%s] ",
-                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
-			*n_values = 0;
-			g_slist_free (available_entries);
-
-			return NULL;
-		}
-
-		if (is_available) {
+		if (local_error == NULL && is_available) {
 			gboolean is_implemented;
 
 			is_implemented = arv_gc_feature_node_is_implemented (iter->data, &local_error);
 
-			if (local_error != NULL) {
-                                g_propagate_prefixed_error (error, local_error, "[%s] ",
-                                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
-                                *n_values = 0;
-                                g_slist_free (available_entries);
-
-				return NULL;
-			}
-
-			if (is_implemented) {
+			if (local_error == NULL && is_implemented) {
 				(*n_values)++;
 				available_entries = g_slist_prepend (available_entries, iter->data);
 			}
 		}
+
+		if (local_error != NULL)
+			goto out;
 	}
 
-	if (*n_values == 0) {
-		g_slist_free (available_entries);
-		return NULL;
-	}
+	if (*n_values == 0)
+		goto out;
 
 	values = g_new (gint64, *n_values);
 	for (iter = available_entries, i = 0; iter != NULL; iter = iter->next) {
 
 		values[i] = arv_gc_enum_entry_get_value (iter->data, &local_error);
 
-		if (local_error != NULL) {
-                        g_propagate_prefixed_error (error, local_error, "[%s] ",
-                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
-                        *n_values = 0;
-                        g_slist_free (available_entries);
-                        g_free (values);
-
-			return NULL;
-		}
+		if (local_error != NULL)
+			goto out;
 		i++;
 	}
 
+out:
+	if (local_error != NULL) {
+		g_propagate_prefixed_error (error, local_error, "[%s] ",
+					    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (enumeration)));
+		*n_values = 0;
+		g_clear_pointer (&values, g_free);
+	}
+
 	g_slist_free (available_entries);
+
+	arv_gc_node_unlock_genicam (genicam);
 
 	return values;
 }
@@ -289,7 +278,14 @@ _dup_available_string_values (ArvGcEnumeration *enumeration, gboolean display_na
 const char **
 arv_gc_enumeration_dup_available_string_values (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
 {
-	return _dup_available_string_values (enumeration, FALSE, n_values, error);
+	ArvGc *genicam;
+	const char **values;
+
+	genicam = arv_gc_node_lock_genicam (enumeration);
+	values = _dup_available_string_values (enumeration, FALSE, n_values, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return values;
 }
 
 /**
@@ -309,7 +305,14 @@ arv_gc_enumeration_dup_available_string_values (ArvGcEnumeration *enumeration, g
 const char **
 arv_gc_enumeration_dup_available_display_names (ArvGcEnumeration *enumeration, guint *n_values, GError **error)
 {
-	return _dup_available_string_values (enumeration, TRUE, n_values, error);
+	ArvGc *genicam;
+	const char **values;
+
+	genicam = arv_gc_node_lock_genicam (enumeration);
+	values = _dup_available_string_values (enumeration, TRUE, n_values, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return values;
 }
 
 static gint64
@@ -338,11 +341,17 @@ _get_int_value (ArvGcEnumeration *enumeration, GError **error)
 gint64
 arv_gc_enumeration_get_int_value (ArvGcEnumeration *enumeration, GError **error)
 {
+	ArvGc *genicam;
+	gint64 value = 0;
 
-        if (!arv_gc_feature_node_check_read_access (ARV_GC_FEATURE_NODE (enumeration), error))
-                return 0;
+	genicam = arv_gc_node_lock_genicam (enumeration);
 
-        return _get_int_value (enumeration, error);
+        if (arv_gc_feature_node_check_read_access (ARV_GC_FEATURE_NODE (enumeration), error))
+		value = _get_int_value (enumeration, error);
+
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
 static gboolean
@@ -410,10 +419,17 @@ _set_int_value (ArvGcEnumeration *enumeration, gint64 value, GError **error)
 gboolean
 arv_gc_enumeration_set_int_value (ArvGcEnumeration *enumeration, gint64 value, GError **error)
 {
-        if (!arv_gc_feature_node_check_write_access (ARV_GC_FEATURE_NODE (enumeration), error))
-                return FALSE;
+	ArvGc *genicam;
+	gboolean success = FALSE;
 
-        return _set_int_value (enumeration, value, error);
+	genicam = arv_gc_node_lock_genicam (enumeration);
+
+        if (arv_gc_feature_node_check_write_access (ARV_GC_FEATURE_NODE (enumeration), error))
+		success = _set_int_value (enumeration, value, error);
+
+	arv_gc_node_unlock_genicam (genicam);
+
+	return success;
 }
 
 static const char *
@@ -464,10 +480,17 @@ _get_string_value (ArvGcEnumeration *enumeration, GError **error)
 const char *
 arv_gc_enumeration_get_string_value (ArvGcEnumeration *enumeration, GError **error)
 {
-        if (!arv_gc_feature_node_check_read_access (ARV_GC_FEATURE_NODE (enumeration), error))
-                return NULL;
+	ArvGc *genicam;
+	const char *value = NULL;
 
-        return _get_string_value (enumeration, error);
+	genicam = arv_gc_node_lock_genicam (enumeration);
+
+        if (arv_gc_feature_node_check_read_access (ARV_GC_FEATURE_NODE (enumeration), error))
+		value = _get_string_value (enumeration, error);
+
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
 static gboolean
@@ -516,10 +539,17 @@ _set_string_value (ArvGcEnumeration *enumeration, const char *value, GError **er
 gboolean
 arv_gc_enumeration_set_string_value (ArvGcEnumeration *enumeration, const char *value, GError **error)
 {
-        if (!arv_gc_feature_node_check_write_access (ARV_GC_FEATURE_NODE (enumeration), error))
-                return FALSE;
+	ArvGc *genicam;
+	gboolean success = FALSE;
 
-        return _set_string_value (enumeration, value, error);
+	genicam = arv_gc_node_lock_genicam (enumeration);
+
+        if (arv_gc_feature_node_check_write_access (ARV_GC_FEATURE_NODE (enumeration), error))
+		success = _set_string_value (enumeration, value, error);
+
+	arv_gc_node_unlock_genicam (genicam);
+
+	return success;
 }
 
 /**

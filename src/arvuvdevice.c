@@ -29,6 +29,8 @@
 #include <arvuvdeviceprivate.h>
 #include <arvuvinterfaceprivate.h>
 #include <arvuvcpprivate.h>
+#include <arvdeviceprivate.h>
+#include <arveventprivate.h>
 #include <arvgc.h>
 #include <arvdebug.h>
 #include <arvenumtypes.h>
@@ -79,6 +81,11 @@ enum
 
 #define ARV_UV_DEVICE_N_TRIES_MAX	5
 
+#define ARV_UV_DEVICE_N_EVENT_TRANSFERS			4
+#define ARV_UV_DEVICE_EVENT_TRANSFER_SIZE_DEFAULT	1024
+#define ARV_UV_DEVICE_EVENT_TRANSFER_SIZE_MAX		65536
+#define ARV_UV_DEVICE_EVENT_STOP_TIMEOUT_US		1000000
+
 typedef struct {
 	char *vendor;
 	char *product;
@@ -108,6 +115,10 @@ typedef struct {
 	guint8 control_endpoint_out;
 	guint8 control_endpoint_in;
 	guint8 data_endpoint;
+	gboolean has_event_interface;
+	guint event_interface;
+	guint8 event_endpoint;
+	guint8 event_endpoint_type;
 	gboolean disconnected;
 
 	ArvUvUsbMode usb_mode;
@@ -117,6 +128,15 @@ typedef struct {
 	GThread* event_thread;
 
         GMutex transfer_mutex;
+
+#if ARAVIS_HAS_EVENT
+	gboolean is_event_interface_claimed;
+	guint64 eirm_address;
+	struct libusb_transfer *event_transfers[ARV_UV_DEVICE_N_EVENT_TRANSFERS];
+	guint8 *event_buffers[ARV_UV_DEVICE_N_EVENT_TRANSFERS];
+	gint n_pending_event_transfers;
+	gint event_transfers_stopping;
+#endif
 } ArvUvDevicePrivate;
 
 struct _ArvUvDevice {
@@ -968,6 +988,25 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
                                                                                 interdesc->bInterfaceNumber;
 								}
 								if (interdesc->bInterfaceProtocol ==
+                                                                    ARV_UV_INTERFACE_EVENT_PROTOCOL) {
+									for (int edx = 0;
+                                                                             edx < interdesc->bNumEndpoints;
+                                                                             edx++) {
+										endpoint = interdesc->endpoint[edx];
+										if ((endpoint.bEndpointAddress &
+                                                                                     LIBUSB_ENDPOINT_IN) != 0) {
+											priv->event_endpoint =
+                                                                                                endpoint.bEndpointAddress;
+											priv->event_endpoint_type =
+                                                                                                endpoint.bmAttributes &
+                                                                                                LIBUSB_TRANSFER_TYPE_MASK;
+											priv->event_interface =
+                                                                                                interdesc->bInterfaceNumber;
+											priv->has_event_interface = TRUE;
+										}
+									}
+								}
+								if (interdesc->bInterfaceProtocol ==
                                                                     ARV_UV_INTERFACE_DATA_PROTOCOL) {
 									endpoint = interdesc->endpoint[0];
 									priv->data_endpoint = endpoint.bEndpointAddress;
@@ -1003,6 +1042,174 @@ _open_usb_device (ArvUvDevice *uv_device, GError **error)
 
 	return TRUE;
 }
+
+#if ARAVIS_HAS_EVENT
+
+static void LIBUSB_CALL
+_event_transfer_cb (struct libusb_transfer *transfer)
+{
+	ArvUvDevice *uv_device = transfer->user_data;
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+
+	if (transfer->status == LIBUSB_TRANSFER_COMPLETED) {
+		ArvUvcpEventInfos infos;
+		size_t offset = 0;
+
+		/* The whole event, header included, is exposed to the Genicam event port */
+		while (arv_uvcp_packet_get_next_event (transfer->buffer, transfer->actual_length, &offset, &infos)) {
+			ArvEvent *event;
+
+			arv_debug_device ("[UvDevice::event] Event 0x%04x, timestamp %" G_GUINT64_FORMAT,
+					  infos.event_id, infos.timestamp);
+
+			event = arv_event_new (infos.event_id, infos.timestamp, 0, ARV_EVENT_STREAM_CHANNEL_NONE,
+					       infos.record, infos.record_size);
+			arv_device_queue_event (ARV_DEVICE (uv_device), event);
+			g_object_unref (event);
+		}
+
+		if (offset == 0 && transfer->actual_length > 0)
+			arv_debug_device ("[UvDevice::event] Invalid event packet (%d bytes)", transfer->actual_length);
+	} else if (transfer->status != LIBUSB_TRANSFER_CANCELLED &&
+		   transfer->status != LIBUSB_TRANSFER_TIMED_OUT) {
+		arv_debug_device ("[UvDevice::event] Transfer error (status %d)", transfer->status);
+	}
+
+	if (!g_atomic_int_get (&priv->event_transfers_stopping) &&
+	    transfer->status != LIBUSB_TRANSFER_CANCELLED &&
+	    transfer->status != LIBUSB_TRANSFER_NO_DEVICE &&
+	    libusb_submit_transfer (transfer) == LIBUSB_SUCCESS)
+		return;
+
+	g_atomic_int_dec_and_test (&priv->n_pending_event_transfers);
+}
+
+static void
+_start_events (ArvUvDevice *uv_device)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+	ArvDevice *device = ARV_DEVICE (uv_device);
+	guint64 sbrm_address = 0;
+	guint64 eirm_address = 0;
+	guint32 eirm_length = 0;
+	guint32 transfer_size = 0;
+	guint32 control;
+	int result;
+	int i;
+
+	if (!priv->has_event_interface) {
+		arv_info_device ("[UvDevice::new] No event interface");
+		return;
+	}
+
+	if (!arv_device_read_memory (device, ARV_ABRM_SBRM_ADDRESS, sizeof (sbrm_address), &sbrm_address, NULL) ||
+	    !arv_device_read_memory (device, sbrm_address + ARV_SBRM_EIRM_ADDRESS,
+				     sizeof (eirm_address), &eirm_address, NULL) ||
+	    !arv_device_read_memory (device, sbrm_address + ARV_SBRM_EIRM_LENGTH,
+				     sizeof (eirm_length), &eirm_length, NULL)) {
+		arv_warning_device ("[UvDevice::new] Failed to read the event interface register map address");
+		return;
+	}
+
+	arv_info_device ("[UvDevice::new] EIRM_ADDRESS =     0x%016" G_GINT64_MODIFIER "x", eirm_address);
+	arv_info_device ("[UvDevice::new] EIRM_LENGTH =      0x%08x", eirm_length);
+
+	if (eirm_address == 0) {
+		arv_info_device ("[UvDevice::new] No event interface register map");
+		return;
+	}
+
+	if (eirm_length > ARV_EIRM_MAX_EVENT_TRANSFER_LENGTH &&
+	    arv_device_read_memory (device, eirm_address + ARV_EIRM_MAX_EVENT_TRANSFER_LENGTH,
+				    sizeof (transfer_size), &transfer_size, NULL))
+		arv_info_device ("[UvDevice::new] MAX_EVENT_TRANSFER_LENGTH = %u", transfer_size);
+	if (transfer_size == 0)
+		transfer_size = ARV_UV_DEVICE_EVENT_TRANSFER_SIZE_DEFAULT;
+	transfer_size = MIN (transfer_size, ARV_UV_DEVICE_EVENT_TRANSFER_SIZE_MAX);
+
+	result = libusb_claim_interface (priv->usb_device, priv->event_interface);
+	if (result != 0) {
+		arv_warning_device ("[UvDevice::new] Failed to claim USB event interface: %s",
+				    libusb_error_name (result));
+		return;
+	}
+	priv->is_event_interface_claimed = TRUE;
+	priv->eirm_address = eirm_address;
+
+	arv_info_device ("[UvDevice::new] Using event endpoint 0x%02x, interface %d",
+			 priv->event_endpoint, priv->event_interface);
+
+	for (i = 0; i < ARV_UV_DEVICE_N_EVENT_TRANSFERS; i++) {
+		priv->event_buffers[i] = g_malloc (transfer_size);
+		priv->event_transfers[i] = libusb_alloc_transfer (0);
+
+		if (priv->event_endpoint_type == LIBUSB_TRANSFER_TYPE_INTERRUPT)
+			libusb_fill_interrupt_transfer (priv->event_transfers[i], priv->usb_device,
+							priv->event_endpoint, priv->event_buffers[i], transfer_size,
+							_event_transfer_cb, uv_device, 0);
+		else
+			libusb_fill_bulk_transfer (priv->event_transfers[i], priv->usb_device,
+						   priv->event_endpoint, priv->event_buffers[i], transfer_size,
+						   _event_transfer_cb, uv_device, 0);
+
+		g_atomic_int_inc (&priv->n_pending_event_transfers);
+		result = libusb_submit_transfer (priv->event_transfers[i]);
+		if (result != LIBUSB_SUCCESS) {
+			g_atomic_int_dec_and_test (&priv->n_pending_event_transfers);
+			arv_warning_device ("[UvDevice::new] Failed to submit event transfer: %s",
+					    libusb_error_name (result));
+		}
+	}
+
+	control = GUINT32_TO_LE (ARV_EIRM_CONTROL_EVENT_ENABLE);
+	if (!arv_device_write_memory (device, eirm_address + ARV_EIRM_CONTROL, sizeof (control), &control, NULL))
+		arv_warning_device ("[UvDevice::new] Failed to enable the event interface");
+}
+
+static void
+_stop_events (ArvUvDevice *uv_device)
+{
+	ArvUvDevicePrivate *priv = arv_uv_device_get_instance_private (uv_device);
+	gint64 start_time;
+	int i;
+
+	if (!priv->is_event_interface_claimed)
+		return;
+
+	if (!priv->disconnected) {
+		guint32 control = 0;
+
+		arv_device_write_memory (ARV_DEVICE (uv_device), priv->eirm_address + ARV_EIRM_CONTROL,
+					 sizeof (control), &control, NULL);
+	}
+
+	g_atomic_int_set (&priv->event_transfers_stopping, 1);
+
+	for (i = 0; i < ARV_UV_DEVICE_N_EVENT_TRANSFERS; i++)
+		if (priv->event_transfers[i] != NULL)
+			libusb_cancel_transfer (priv->event_transfers[i]);
+
+	/* Cancelled transfers are completed by the libusb thread */
+	start_time = g_get_monotonic_time ();
+	while (g_atomic_int_get (&priv->n_pending_event_transfers) > 0 &&
+	       g_get_monotonic_time () - start_time < ARV_UV_DEVICE_EVENT_STOP_TIMEOUT_US)
+		g_usleep (1000);
+
+	if (g_atomic_int_get (&priv->n_pending_event_transfers) > 0) {
+		/* Leak the transfers rather than freeing memory still in use by libusb */
+		arv_warning_device ("[UvDevice::finalize] Event transfers not completed");
+	} else {
+		for (i = 0; i < ARV_UV_DEVICE_N_EVENT_TRANSFERS; i++) {
+			g_clear_pointer (&priv->event_transfers[i], libusb_free_transfer);
+			g_clear_pointer (&priv->event_buffers[i], g_free);
+		}
+	}
+
+	libusb_release_interface (priv->usb_device, priv->event_interface);
+	priv->is_event_interface_claimed = FALSE;
+}
+
+#endif
 
 static gpointer
 event_thread_func(void *p)
@@ -1217,6 +1424,10 @@ arv_uv_device_constructed (GObject *object)
 
 	priv->event_thread_run = 1;
 	priv->event_thread = g_thread_new ( "arv_libusb", event_thread_func, priv);
+
+#if ARAVIS_HAS_EVENT
+	_start_events (uv_device);
+#endif
 }
 
 static void
@@ -1238,6 +1449,11 @@ arv_uv_device_finalize (GObject *object)
         arv_info_device ("[UVDevice::finalize]");
 
         libusb_hotplug_deregister_callback (priv->usb, priv->hotplug_cb_handle);
+
+#if ARAVIS_HAS_EVENT
+	/* Must be done while the libusb thread is still running */
+	_stop_events (uv_device);
+#endif
 
 	priv->event_thread_run = 0;
         if (priv->event_thread)

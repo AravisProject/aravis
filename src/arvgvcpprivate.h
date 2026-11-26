@@ -123,6 +123,13 @@ G_BEGIN_DECLS
 #define ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_CONTROL	1 << 1
 #define ARV_GVBS_CONTROL_CHANNEL_PRIVILEGE_EXCLUSIVE	1 << 0
 
+#define ARV_GVBS_MESSAGE_CHANNEL_0_PORT_OFFSET			0x00000b00
+#define ARV_GVBS_MESSAGE_CHANNEL_0_PORT_MASK			0x0000ffff
+#define ARV_GVBS_MESSAGE_CHANNEL_0_DESTINATION_ADDRESS_OFFSET	0x00000b10
+#define ARV_GVBS_MESSAGE_CHANNEL_0_TRANSMISSION_TIMEOUT_OFFSET	0x00000b14
+#define ARV_GVBS_MESSAGE_CHANNEL_0_RETRY_COUNT_OFFSET		0x00000b18
+#define ARV_GVBS_MESSAGE_CHANNEL_0_SOURCE_PORT_OFFSET		0x00000b1c
+
 #define ARV_GVBS_STREAM_CHANNEL_0_PORT_OFFSET		0x00000d00
 
 #define ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_OFFSET		0x00000d04
@@ -260,6 +267,10 @@ typedef enum {
  * @ARV_GVCP_COMMAND_READ_MEMORY_ACK: read memory acknowledge
  * @ARV_GVCP_COMMAND_WRITE_MEMORY_CMD: write memory command
  * @ARV_GVCP_COMMAND_WRITE_MEMORY_ACK: write memory acknowledge
+ * @ARV_GVCP_COMMAND_EVENT_CMD: event command
+ * @ARV_GVCP_COMMAND_EVENT_ACK: event acknowledge
+ * @ARV_GVCP_COMMAND_EVENTDATA_CMD: event with data command
+ * @ARV_GVCP_COMMAND_EVENTDATA_ACK: event with data acknowledge
  * @ARV_GVCP_COMMAND_PENDING_ACK: pending command acknowledge
  */
 
@@ -278,7 +289,11 @@ typedef enum {
 	ARV_GVCP_COMMAND_READ_MEMORY_ACK =	0x0085,
 	ARV_GVCP_COMMAND_WRITE_MEMORY_CMD =	0x0086,
 	ARV_GVCP_COMMAND_WRITE_MEMORY_ACK =	0x0087,
-	ARV_GVCP_COMMAND_PENDING_ACK =		0x0089
+	ARV_GVCP_COMMAND_PENDING_ACK =		0x0089,
+	ARV_GVCP_COMMAND_EVENT_CMD =		0x00c0,
+	ARV_GVCP_COMMAND_EVENT_ACK =		0x00c1,
+	ARV_GVCP_COMMAND_EVENTDATA_CMD =	0x00c2,
+	ARV_GVCP_COMMAND_EVENTDATA_ACK =	0x00c3
 } ArvGvcpCommand;
 
 #pragma pack(push,1)
@@ -342,6 +357,44 @@ ARV_API ArvGvcpPacket *	arv_gvcp_packet_new_force_ip_cmd	(const guint8 *mac, con
 ArvGvcpPacket * 	arv_gvcp_packet_new_packet_resend_cmd 	(guint64 frame_id,
 								 guint32 first_block, guint32 last_block,
 								 gboolean extended_ids,
+								 guint16 packet_id, size_t *packet_size);
+
+/*
+ * Size of the event record header, without and with extended ids. When extended ids are not used, the first field is
+ * reserved, the block id is 16 bit wide, and the timestamp is split in its high and low parts. With extended ids, the
+ * first field is the record size, and the block id is 64 bit wide.
+ */
+
+#define ARV_GVCP_EVENT_HEADER_SIZE		16
+#define ARV_GVCP_EVENT_EXTENDED_HEADER_SIZE	24
+
+/*
+ * ArvGvcpEventInfos:
+ * @event_id: event identifier
+ * @stream_channel: stream channel index
+ * @block_id: stream block id
+ * @timestamp: event timestamp
+ * @record: whole event record, header included
+ * @record_size: size of the event record
+ */
+
+typedef struct {
+	guint16 event_id;
+	guint16 stream_channel;
+	guint64 block_id;
+	guint64 timestamp;
+	const void *record;
+	size_t record_size;
+} ArvGvcpEventInfos;
+
+ARV_API gboolean	arv_gvcp_packet_get_next_event		(const ArvGvcpPacket *packet, size_t packet_size,
+								 size_t *offset, ArvGvcpEventInfos *infos);
+ARV_API ArvGvcpPacket *	arv_gvcp_packet_new_eventdata_cmd	(guint16 event_id, guint16 stream_channel,
+								 guint64 block_id, guint64 timestamp,
+								 const void *data, size_t data_size,
+								 gboolean extended_ids,
+								 guint16 packet_id, size_t *packet_size);
+ARV_API ArvGvcpPacket *	arv_gvcp_packet_new_event_ack		(ArvGvcpCommand command,
 								 guint16 packet_id, size_t *packet_size);
 
 const char *		arv_gvcp_packet_type_to_string 		(ArvGvcpPacketType value);

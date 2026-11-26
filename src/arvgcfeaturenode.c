@@ -29,6 +29,7 @@
  */
 
 #include <arvgcfeaturenodeprivate.h>
+#include <arvgcprivate.h>
 #include <arvgcpropertynode.h>
 #include <arvgc.h>
 #include <arvgcboolean.h>
@@ -319,6 +320,7 @@ gboolean
 arv_gc_feature_node_is_implemented (ArvGcFeatureNode *gc_feature_node, GError **error)
 {
 	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (gc_feature_node);
+	ArvGc *genicam;
 	gboolean value;
 	GError *local_error = NULL;
 
@@ -329,7 +331,9 @@ arv_gc_feature_node_is_implemented (ArvGcFeatureNode *gc_feature_node, GError **
 		return TRUE;
 
 
+	genicam = arv_gc_node_lock_genicam (gc_feature_node);
 	value = arv_gc_property_node_get_int64 (priv->is_implemented, &local_error) != 0;
+	arv_gc_node_unlock_genicam (genicam);
 
 	if (local_error != NULL) {
                 g_propagate_prefixed_error (error, local_error, "[%s] ",
@@ -344,6 +348,7 @@ gboolean
 arv_gc_feature_node_is_available (ArvGcFeatureNode *gc_feature_node, GError **error)
 {
 	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (gc_feature_node);
+	ArvGc *genicam;
 	gboolean value;
 	GError *local_error = NULL;
 
@@ -353,7 +358,9 @@ arv_gc_feature_node_is_available (ArvGcFeatureNode *gc_feature_node, GError **er
 	if (priv->is_available == NULL)
 		return TRUE;
 
+	genicam = arv_gc_node_lock_genicam (gc_feature_node);
 	value = arv_gc_property_node_get_int64 (priv->is_available, &local_error) != 0;
+	arv_gc_node_unlock_genicam (genicam);
 
 	if (local_error != NULL) {
                 g_propagate_prefixed_error (error, local_error, "[%s] ",
@@ -368,6 +375,7 @@ gboolean
 arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error)
 {
 	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (gc_feature_node);
+	ArvGc *genicam;
 	gboolean locked;
 	GError *local_error = NULL;
 
@@ -376,7 +384,9 @@ arv_gc_feature_node_is_locked (ArvGcFeatureNode *gc_feature_node, GError **error
 	if (priv->is_locked == NULL)
 		return FALSE;
 
+	genicam = arv_gc_node_lock_genicam (gc_feature_node);
 	locked = arv_gc_property_node_get_int64 (priv->is_locked, &local_error) != 0;
+	arv_gc_node_unlock_genicam (genicam);
 
 	if (local_error != NULL) {
                 g_propagate_prefixed_error (error, local_error, "[%s] ",
@@ -524,7 +534,9 @@ arv_gc_feature_node_set_value_from_string (ArvGcFeatureNode *self, const char *s
  *
  * Retrieve the node value a string.
  *
- * <warning><para>Please note the string content is still owned by the @node object, which means the returned pointer may not be still valid after a new call to this function.</para></warning>
+ * The string content is still owned by the @node object, which means the returned pointer may not be valid anymore
+ * after a new call to this function. This function is not thread safe: the string may be changed by a feature access
+ * from another thread. Use [method@ArvGcFeatureNode.dup_value_as_string] instead.
  *
  * Returns: (transfer none): a string representation of the node value, %NULL if not applicable.
  */
@@ -533,10 +545,14 @@ const char *
 arv_gc_feature_node_get_value_as_string (ArvGcFeatureNode *self, GError **error)
 {
 	ArvGcFeatureNodePrivate *priv = arv_gc_feature_node_get_instance_private (self);
+	ArvGc *genicam;
         GError *local_error = NULL;
         const char *value = NULL;
 
 	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (self), NULL);
+
+	/* Protects the string buffer */
+	genicam = arv_gc_node_lock_genicam (self);
 
 	if (ARV_IS_GC_ENUMERATION (self)) {
                 value = arv_gc_enumeration_get_string_value (ARV_GC_ENUMERATION (self), &local_error);
@@ -558,8 +574,37 @@ arv_gc_feature_node_get_value_as_string (ArvGcFeatureNode *self, GError **error)
                              "Don't know how to set value from string");
         }
 
+	arv_gc_node_unlock_genicam (genicam);
+
         if (local_error != NULL)
                 g_propagate_error (error, local_error);
+
+	return value;
+}
+
+/**
+ * arv_gc_feature_node_dup_value_as_string:
+ * @gc_feature_node: a #ArvGcFeatureNode
+ * @error: return location for a GError, or NULL
+ *
+ * Thread safe version of [method@ArvGcFeatureNode.get_value_as_string].
+ *
+ * Returns: (transfer full): a newly allocated string representation of the node value, %NULL if not applicable.
+ *
+ * Since: 0.10.0
+ */
+
+char *
+arv_gc_feature_node_dup_value_as_string (ArvGcFeatureNode *self, GError **error)
+{
+	ArvGc *genicam;
+	char *value;
+
+	g_return_val_if_fail (ARV_IS_GC_FEATURE_NODE (self), NULL);
+
+	genicam = arv_gc_node_lock_genicam (self);
+	value = g_strdup (arv_gc_feature_node_get_value_as_string (self, error));
+	arv_gc_node_unlock_genicam (genicam);
 
 	return value;
 }

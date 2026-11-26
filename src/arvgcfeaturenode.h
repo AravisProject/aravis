@@ -67,6 +67,7 @@ ARV_API ArvGcAccessMode		arv_gc_feature_node_get_actual_access_mode	(ArvGcFeatur
 ARV_API void			arv_gc_feature_node_set_value_from_string	(ArvGcFeatureNode *gc_feature_node, const char *string,
 										 GError **error);
 ARV_API const char *		arv_gc_feature_node_get_value_as_string		(ArvGcFeatureNode *gc_feature_node, GError **error);
+ARV_API char *			arv_gc_feature_node_dup_value_as_string		(ArvGcFeatureNode *gc_feature_node, GError **error);
 
 G_END_DECLS
 

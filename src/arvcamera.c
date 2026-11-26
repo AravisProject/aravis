@@ -174,6 +174,9 @@ arv_camera_create_stream (ArvCamera *camera, ArvStreamCallback callback, gpointe
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
  *
+ * The returned string is owned by the Genicam data. This function is not thread safe, as the string may be
+ * changed, or freed, by a feature access from another thread. Use [method@ArvCamera.dup_vendor_name] instead.
+ *
  * Returns: the camera vendor name.
  *
  * Since: 0.8.0
@@ -186,9 +189,30 @@ arv_camera_get_vendor_name (ArvCamera *camera, GError **error)
 }
 
 /**
+ * arv_camera_dup_vendor_name:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Thread safe version of [method@ArvCamera.get_vendor_name].
+ *
+ * Returns: (transfer full): a newly allocated copy of the camera vendor name.
+ *
+ * Since: 0.10.0
+ */
+
+char *
+arv_camera_dup_vendor_name (ArvCamera *camera, GError **error)
+{
+	return arv_camera_dup_string (camera, "DeviceVendorName", error);
+}
+
+/**
  * arv_camera_get_model_name:
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
+ *
+ * The returned string is owned by the Genicam data. This function is not thread safe, as the string may be
+ * changed, or freed, by a feature access from another thread. Use [method@ArvCamera.dup_model_name] instead.
  *
  * Returns: the camera model name.
  *
@@ -202,9 +226,30 @@ arv_camera_get_model_name (ArvCamera *camera, GError **error)
 }
 
 /**
+ * arv_camera_dup_model_name:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Thread safe version of [method@ArvCamera.get_model_name].
+ *
+ * Returns: (transfer full): a newly allocated copy of the camera model name.
+ *
+ * Since: 0.10.0
+ */
+
+char *
+arv_camera_dup_model_name (ArvCamera *camera, GError **error)
+{
+	return arv_camera_dup_string (camera, "DeviceModelName", error);
+}
+
+/**
  * arv_camera_get_device_serial_number:
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
+ *
+ * The returned string is owned by the Genicam data. This function is not thread safe, as the string may be
+ * changed, or freed, by a feature access from another thread. Use [method@ArvCamera.dup_device_serial_number] instead.
  *
  * Returns: the camera device serial number.
  *
@@ -225,9 +270,37 @@ arv_camera_get_device_serial_number (ArvCamera *camera, GError **error)
 }
 
 /**
+ * arv_camera_dup_device_serial_number:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Thread safe version of [method@ArvCamera.get_device_serial_number].
+ *
+ * Returns: (transfer full): a newly allocated copy of the camera device serial number.
+ *
+ * Since: 0.10.0
+ */
+
+char *
+arv_camera_dup_device_serial_number (ArvCamera *camera, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	if (priv->has_serial_number)
+	    return arv_camera_dup_string (camera, "DeviceSerialNumber", error);
+
+	return arv_camera_dup_device_id (camera, error);
+}
+
+/**
  * arv_camera_get_device_id:
  * @camera: a #ArvCamera
  * @error: a #GError placeholder, %NULL to ignore
+ *
+ * The returned string is owned by the Genicam data. This function is not thread safe, as the string may be
+ * changed, or freed, by a feature access from another thread. Use [method@ArvCamera.dup_device_id] instead.
  *
  * Returns: the camera device ID.
  *
@@ -238,6 +311,24 @@ const char *
 arv_camera_get_device_id (ArvCamera *camera, GError **error)
 {
 	return arv_camera_get_string (camera, "DeviceID", error);
+}
+
+/**
+ * arv_camera_dup_device_id:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Thread safe version of [method@ArvCamera.get_device_id].
+ *
+ * Returns: (transfer full): a newly allocated copy of the camera device id.
+ *
+ * Since: 0.10.0
+ */
+
+char *
+arv_camera_dup_device_id (ArvCamera *camera, GError **error)
+{
+	return arv_camera_dup_string (camera, "DeviceID", error);
 }
 
 /* Image format control */
@@ -325,6 +416,8 @@ arv_camera_set_region (ArvCamera *camera, gint x, gint y, gint width, gint heigh
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
+	arv_camera_lock (camera);
+
         if (priv->has_region_offset) {
                 if (x >= 0)
                         arv_camera_set_integer (camera, "OffsetX", 0, &local_error);
@@ -343,6 +436,8 @@ arv_camera_set_region (ArvCamera *camera, gint x, gint y, gint width, gint heigh
                 if (y >= 0 && local_error == NULL)
                         arv_camera_set_integer (camera, "OffsetY", y, &local_error);
         }
+
+	arv_camera_unlock (camera);
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -370,6 +465,8 @@ arv_camera_get_region (ArvCamera *camera, gint *x, gint *y, gint *width, gint *h
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
+	arv_camera_lock (camera);
+
 	if (x != NULL)
 		*x = priv->has_region_offset ? arv_camera_get_integer (camera, "OffsetX", &local_error) : 0;
 	if (y != NULL && local_error == NULL)
@@ -378,6 +475,8 @@ arv_camera_get_region (ArvCamera *camera, gint *x, gint *y, gint *width, gint *h
 		*width = arv_camera_get_integer (camera, "Width", &local_error);
 	if (height != NULL && local_error == NULL)
 		*height = arv_camera_get_integer (camera, "Height", &local_error);
+
+	arv_camera_unlock (camera);
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -539,10 +638,14 @@ arv_camera_set_binning (ArvCamera *camera, gint dx, gint dy, GError **error)
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
+	arv_camera_lock (camera);
+
 	if (dx > 0)
 		arv_camera_set_integer (camera, "BinningHorizontal", dx, &local_error);
 	if (dy > 0 && local_error == NULL)
 		arv_camera_set_integer (camera, "BinningVertical", dy, &local_error);
+
+	arv_camera_unlock (camera);
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -567,10 +670,14 @@ arv_camera_get_binning (ArvCamera *camera, gint *dx, gint *dy, GError **error)
 
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 
+	arv_camera_lock (camera);
+
 	if (dx != NULL)
 		*dx = arv_camera_get_integer (camera, "BinningHorizontal", &local_error);
 	if (dy != NULL && local_error == NULL)
 		*dy = arv_camera_get_integer (camera, "BinningVertical", &local_error);
+
+	arv_camera_unlock (camera);
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -1404,6 +1511,8 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
         g_return_if_fail (ARV_IS_CAMERA (camera));
         g_return_if_fail (source != NULL);
 
+	arv_camera_lock (camera);
+
         if (arv_camera_get_frame_rate_enable(camera, &local_error)) {
                 if (local_error == NULL) {
                         arv_camera_set_frame_rate_enable (camera, FALSE, &local_error);
@@ -1476,6 +1585,8 @@ arv_camera_set_trigger (ArvCamera *camera, const char *source, GError **error)
                 if (local_error == NULL)
                         arv_camera_set_string_if_different (camera, "TriggerSource", source, &local_error);
         }
+
+	arv_camera_unlock (camera);
 
         if (local_error != NULL)
                 g_propagate_error (error, local_error);
@@ -1575,6 +1686,8 @@ arv_camera_clear_triggers (ArvCamera* camera, GError **error)
 
         g_return_if_fail (ARV_IS_CAMERA (camera));
 
+	arv_camera_lock (camera);
+
         if (arv_camera_is_feature_available(camera, "TriggerSelector", &local_error)) {
                 const char **triggers;
                 guint n_triggers;
@@ -1589,6 +1702,8 @@ arv_camera_clear_triggers (ArvCamera* camera, GError **error)
                 g_free (triggers);
         } else
                 arv_camera_set_string_if_different (camera, "TriggerMode", "Off", &local_error);
+
+	arv_camera_unlock (camera);
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -2022,6 +2137,9 @@ arv_camera_get_gain_auto (ArvCamera *camera, GError **error)
  *
  * Configures Gain Selector feature.
  *
+ * When the camera is used from several threads, the selection and the access to the selected features must
+ * be protected using [method@ArvCamera.lock].
+ *
  * Since: 0.8.27
  **/
 
@@ -2135,6 +2253,9 @@ arv_camera_get_black_level (ArvCamera *camera, GError **error)
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Configures Black Level Selector feature.
+ *
+ * When the camera is used from several threads, the selection and the access to the selected features must
+ * be protected using [method@ArvCamera.lock].
  *
  * Since: 0.8.27
  **/
@@ -2279,6 +2400,9 @@ arv_camera_dup_available_components (ArvCamera *camera, guint *n_components, GEr
  *
  * Select and enable or disable the given @component.
  *
+ * When the camera is used from several threads, the selection and the access to the selected features must
+ * be protected using [method@ArvCamera.lock].
+ *
  * Returns: %TRUE if the component is enabled
  *
  * Since: 0.8.25
@@ -2293,6 +2417,8 @@ arv_camera_select_component (ArvCamera *camera, const char *component,
         gboolean is_enabled = !(flags == ARV_COMPONENT_SELECTION_FLAGS_DISABLE);
 
         g_return_val_if_fail (ARV_IS_CAMERA(camera), FALSE);
+
+	arv_camera_lock (camera);
 
         if (flags == ARV_COMPONENT_SELECTION_FLAGS_EXCLUSIVE_ENABLE ||
             flags == ARV_COMPONENT_SELECTION_FLAGS_ENABLE_ALL) {
@@ -2321,6 +2447,8 @@ arv_camera_select_component (ArvCamera *camera, const char *component,
 
         if (local_error == NULL && flags == ARV_COMPONENT_SELECTION_FLAGS_NONE)
                 is_enabled = arv_camera_get_boolean(camera, "ComponentEnable", &local_error);
+
+	arv_camera_unlock (camera);
 
         if (local_error != NULL) {
                 g_propagate_error(error, local_error);
@@ -2738,6 +2866,9 @@ arv_camera_set_string (ArvCamera *camera, const char *feature, const char *value
  * @feature: feature name
  * @error: a #GError placeholder, %NULL to ignore
  *
+ * The returned string is owned by the Genicam data. This function is not thread safe, as the string may be
+ * changed, or freed, by a feature access from another thread. Use [method@ArvCamera.dup_string] instead.
+ *
  * Returns: the string feature value, %NULL on error.
  *
  * Since: 0.8.0
@@ -2752,6 +2883,68 @@ arv_camera_get_string (ArvCamera *camera, const char *feature, GError **error)
 
 	return arv_device_get_string_feature_value (priv->device, feature, error);
 }
+/**
+ * arv_camera_dup_string:
+ * @camera: a #ArvCamera
+ * @feature: feature name
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Thread safe version of [method@ArvCamera.get_string].
+ *
+ * Returns: (transfer full): a newly allocated copy of the string feature value, %NULL on error.
+ *
+ * Since: 0.10.0
+ */
+
+char *
+arv_camera_dup_string (ArvCamera *camera, const char *feature, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), NULL);
+
+	return arv_device_dup_string_feature_value (priv->device, feature, error);
+}
+
+/**
+ * arv_camera_lock:
+ * @camera: a #ArvCamera
+ *
+ * Locks the access to the camera Genicam data, in order to make a sequence of feature accesses atomic. See
+ * [method@ArvDevice.lock_genicam].
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_camera_lock (ArvCamera *camera)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_lock_genicam (priv->device);
+}
+
+/**
+ * arv_camera_unlock:
+ * @camera: a #ArvCamera
+ *
+ * Unlocks the access to the camera Genicam data, see [method@ArvCamera.lock].
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_camera_unlock (ArvCamera *camera)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	arv_device_unlock_genicam (priv->device);
+}
+
 
 static void
 arv_camera_set_string_if_different (ArvCamera *camera, const char *feature, const char *value, GError **error)
@@ -3401,6 +3594,9 @@ arv_camera_gv_get_n_stream_channels (ArvCamera *camera, GError **error)
  * @error: a #GError placeholder, %NULL to ignore
  *
  * Select the current stream channel. Negative @channel_id is ignored.
+ *
+ * When the camera is used from several threads, the selection and the access to the selected features must
+ * be protected using [method@ArvCamera.lock].
  *
  * Since: 0.8.0
  */
@@ -4109,9 +4305,13 @@ arv_camera_set_chunk_state (ArvCamera *camera, const char *chunk, gboolean is_en
 	g_return_if_fail (ARV_IS_CAMERA (camera));
 	g_return_if_fail (chunk != NULL && chunk[0] != '\0');
 
+	arv_camera_lock (camera);
+
 	arv_camera_set_string (camera, "ChunkSelector", chunk, &local_error);
 	if (local_error == NULL)
 		arv_camera_set_boolean (camera, "ChunkEnable", is_enabled, &local_error);
+
+	arv_camera_unlock (camera);
 
 	if (local_error != NULL)
 		g_propagate_error (error, local_error);
@@ -4135,17 +4335,23 @@ gboolean
 arv_camera_get_chunk_state (ArvCamera *camera, const char *chunk, GError **error)
 {
 	GError *local_error = NULL;
+	gboolean is_enabled = FALSE;
 
 	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
 	g_return_val_if_fail (chunk != NULL && chunk[0] != '\0', FALSE);
 
-	arv_camera_set_string (camera, "ChunkSelector", chunk, &local_error);
-	if (local_error != NULL) {
-		g_propagate_error (error, local_error);
-		return FALSE;
-	}
+	arv_camera_lock (camera);
 
-	return arv_camera_get_boolean (camera, "ChunkEnable", error);
+	arv_camera_set_string (camera, "ChunkSelector", chunk, &local_error);
+	if (local_error == NULL)
+		is_enabled = arv_camera_get_boolean (camera, "ChunkEnable", &local_error);
+
+	arv_camera_unlock (camera);
+
+	if (local_error != NULL)
+		g_propagate_error (error, local_error);
+
+	return is_enabled;
 }
 
 /**
@@ -4188,6 +4394,8 @@ arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list, GError **error
 		return;
         }
 
+	arv_camera_lock (camera);
+
 	arv_camera_set_chunk_mode (camera, TRUE, &local_error);
 
         if (local_error == NULL) {
@@ -4226,6 +4434,8 @@ arv_camera_set_chunks (ArvCamera *camera, const char *chunk_list, GError **error
                 g_free (available_chunks);
         }
 
+	arv_camera_unlock (camera);
+
 	g_strfreev (chunks);
 
 	if (local_error != NULL) {
@@ -4254,6 +4464,167 @@ arv_camera_create_chunk_parser (ArvCamera *camera)
 
 	return arv_device_create_chunk_parser (priv->device);
 }
+
+#if ARAVIS_HAS_EVENT
+
+/**
+ * arv_camera_are_events_available:
+ * @camera: a #ArvCamera
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: %TRUE if event notifications are available.
+ *
+ * Since: 0.10.0
+ */
+
+gboolean
+arv_camera_are_events_available (ArvCamera *camera, GError **error)
+{
+	ArvCameraPrivate *priv = arv_camera_get_instance_private (camera);
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+
+        if (!arv_camera_is_feature_available (camera, "EventNotification", error))
+                return FALSE;
+        return ARV_IS_GC_ENUMERATION (arv_device_get_feature (priv->device, "EventSelector"));
+}
+
+/**
+ * arv_camera_set_event_notification:
+ * @camera: a #ArvCamera
+ * @event: event name, as listed by the EventSelector feature
+ * @is_enabled: wether to enable the notification of this event
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Enables or disables the notification of an event. Notifications are delivered by the
+ * [signal@ArvDevice::device-event] signal and the callback set using [method@ArvDevice.set_event_callback].
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_camera_set_event_notification (ArvCamera *camera, const char *event, gboolean is_enabled, GError **error)
+{
+	GError *local_error = NULL;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+	g_return_if_fail (event != NULL && event[0] != '\0');
+
+	arv_camera_lock (camera);
+
+	arv_camera_set_string (camera, "EventSelector", event, &local_error);
+	if (local_error == NULL)
+		arv_camera_set_string (camera, "EventNotification", is_enabled ? "On" : "Off", &local_error);
+
+	arv_camera_unlock (camera);
+
+	if (local_error != NULL)
+		g_propagate_error (error, local_error);
+}
+
+/**
+ * arv_camera_get_event_notification:
+ * @camera: a #ArvCamera
+ * @event: event name, as listed by the EventSelector feature
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Returns: %TRUE if the notification of @event is enabled.
+ *
+ * Since: 0.10.0
+ */
+
+gboolean
+arv_camera_get_event_notification (ArvCamera *camera, const char *event, GError **error)
+{
+	GError *local_error = NULL;
+	const char *notification = NULL;
+
+	g_return_val_if_fail (ARV_IS_CAMERA (camera), FALSE);
+	g_return_val_if_fail (event != NULL && event[0] != '\0', FALSE);
+
+	arv_camera_lock (camera);
+
+	arv_camera_set_string (camera, "EventSelector", event, &local_error);
+	/* EventNotification is an enumeration, its string value is an entry name, which is not changed later */
+	if (local_error == NULL)
+		notification = arv_camera_get_string (camera, "EventNotification", &local_error);
+
+	arv_camera_unlock (camera);
+
+	if (local_error != NULL) {
+		g_propagate_error (error, local_error);
+		return FALSE;
+	}
+
+	return notification != NULL && g_strcmp0 (notification, "Off") != 0;
+}
+
+/**
+ * arv_camera_set_events:
+ * @camera: a #ArvCamera
+ * @event_list: (nullable): event names, as a comma or space separated list
+ * @error: a #GError placeholder, %NULL to ignore
+ *
+ * Convenience function for enabling the notification of a set of events. The notification of the events not listed
+ * is disabled. If @event_list is %NULL or empty, all event notifications are disabled.
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_camera_set_events (ArvCamera *camera, const char *event_list, GError **error)
+{
+	GError *local_error = NULL;
+	const char **available_events;
+	char **events = NULL;
+	guint i, j;
+	guint n_values = 0;
+
+	g_return_if_fail (ARV_IS_CAMERA (camera));
+
+	if (event_list != NULL) {
+		char *striped_event_list;
+
+		striped_event_list = g_strdup (event_list);
+		arv_str_strip (striped_event_list, " ,:;", ',');
+		events = g_strsplit_set (striped_event_list, " ,:;", -1);
+		g_free (striped_event_list);
+	}
+
+	arv_camera_lock (camera);
+
+	available_events = arv_camera_dup_available_enumerations_as_strings (camera, "EventSelector",
+									     &n_values, &local_error);
+
+	for (j = 0; events != NULL && events[j] != NULL && local_error == NULL; j++) {
+		gboolean found = FALSE;
+
+		if (events[j][0] == '\0')
+			continue;
+		for (i = 0; i < n_values && !found; i++)
+			found = g_strcmp0 (available_events[i], events[j]) == 0;
+		if (!found)
+			g_set_error (&local_error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND,
+				     "%s not found in available events", events[j]);
+	}
+
+	for (i = 0; i < n_values && local_error == NULL; i++) {
+		gboolean found;
+
+		found = events != NULL && g_strv_contains ((const char * const *) events, available_events[i]);
+		arv_camera_set_event_notification (camera, available_events[i], found, &local_error);
+	}
+
+	arv_camera_unlock (camera);
+
+	g_free (available_events);
+	g_strfreev (events);
+
+	if (local_error != NULL)
+		g_propagate_error (error, local_error);
+}
+
+#endif
 
 /**
  * arv_camera_new:
