@@ -74,6 +74,12 @@ typedef struct {
 	guint32 frame_id;
 	double trigger_frequency;
 
+	GMutex timestamp_mutex;
+	ArvFakeCameraTimestampClock timestamp_clock;
+	gint64 timestamp_offset_ns;
+	double timestamp_drift_ppm;
+	gint64 timestamp_anchor_ns;	/* host clock at the last (re)synchronization */
+
 	GMutex fill_pattern_mutex;
 
 	ArvFakeCameraFillPattern fill_pattern_callback;
@@ -760,6 +766,35 @@ arv_fake_camera_set_fill_pattern (ArvFakeCamera *camera,
  * Fill a buffer with data from the fake camera.
  */
 
+static gint64
+_get_host_time_ns (ArvFakeCameraTimestampClock clock, gint64 monotonic_ns)
+{
+	if (clock == ARV_FAKE_CAMERA_TIMESTAMP_CLOCK_REALTIME)
+		return g_get_real_time () * 1000;
+
+	return monotonic_ns;
+}
+
+/* Simulated device clock: the host clock plus an offset, running faster or
+ * slower by drift_ppm since the last (re)synchronization. */
+
+static guint64
+_get_device_timestamp_ns (ArvFakeCamera *camera, gint64 monotonic_ns)
+{
+	gint64 host_ns;
+	gint64 timestamp_ns;
+
+	g_mutex_lock (&camera->priv->timestamp_mutex);
+	host_ns = _get_host_time_ns (camera->priv->timestamp_clock, monotonic_ns);
+	timestamp_ns = host_ns + camera->priv->timestamp_offset_ns;
+	if (camera->priv->timestamp_drift_ppm != 0.0)
+		timestamp_ns += (gint64) ((double) (host_ns - camera->priv->timestamp_anchor_ns) *
+					  camera->priv->timestamp_drift_ppm / 1e6);
+	g_mutex_unlock (&camera->priv->timestamp_mutex);
+
+	return timestamp_ns > 0 ? timestamp_ns : 0;
+}
+
 void
 arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *packet_size)
 {
@@ -792,8 +827,8 @@ arv_fake_camera_fill_buffer (ArvFakeCamera *camera, ArvBuffer *buffer, guint32 *
 	buffer->priv->payload_type = ARV_BUFFER_PAYLOAD_TYPE_IMAGE;
 	buffer->priv->chunk_endianness = G_BIG_ENDIAN;
 	buffer->priv->status = ARV_BUFFER_STATUS_SUCCESS;
-	buffer->priv->timestamp_ns = g_get_monotonic_time () * 1000;
-	buffer->priv->system_timestamp_ns = buffer->priv->timestamp_ns;
+	buffer->priv->system_timestamp_ns = g_get_monotonic_time () * 1000;
+	buffer->priv->timestamp_ns = _get_device_timestamp_ns (camera, buffer->priv->system_timestamp_ns);
 	buffer->priv->frame_id = camera->priv->frame_id;
 
         buffer->priv->parts[0].data_offset = 0;
@@ -884,6 +919,58 @@ arv_fake_camera_set_trigger_frequency (ArvFakeCamera *camera, double frequency)
 	g_return_if_fail (frequency > 0.0);
 
 	camera->priv->trigger_frequency = frequency;
+}
+
+/**
+ * arv_fake_camera_set_timestamp_clock:
+ * @camera: a #ArvFakeCamera
+ * @clock: host clock the device clock derives from
+ * @offset_ns: offset of the device clock to the host clock, in ns
+ * @drift_ppm: rate error of the device clock, in parts per million (positive: faster)
+ *
+ * Simulate the device clock that timestamps the frames: @clock plus @offset_ns,
+ * drifting by @drift_ppm from now on. The default is the host monotonic time,
+ * no offset and no drift. The system timestamp of the buffers stays the host
+ * monotonic time. A device timestamp below zero is clamped to 0.
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_fake_camera_set_timestamp_clock (ArvFakeCamera *camera, ArvFakeCameraTimestampClock clock,
+				     gint64 offset_ns, double drift_ppm)
+{
+	g_return_if_fail (ARV_IS_FAKE_CAMERA (camera));
+	g_return_if_fail (drift_ppm > -1e6);
+
+	g_mutex_lock (&camera->priv->timestamp_mutex);
+	camera->priv->timestamp_clock = clock;
+	camera->priv->timestamp_offset_ns = offset_ns;
+	camera->priv->timestamp_drift_ppm = drift_ppm;
+	camera->priv->timestamp_anchor_ns = _get_host_time_ns (clock, g_get_monotonic_time () * 1000);
+	g_mutex_unlock (&camera->priv->timestamp_mutex);
+}
+
+/**
+ * arv_fake_camera_resync_timestamp:
+ * @camera: a #ArvFakeCamera
+ *
+ * Simulate a synchronization of the device clock (e.g. a PTP step): the drift
+ * accumulated so far is dropped, the device clock is back at the host clock
+ * plus the offset and keeps drifting from now on.
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_fake_camera_resync_timestamp (ArvFakeCamera *camera)
+{
+	g_return_if_fail (ARV_IS_FAKE_CAMERA (camera));
+
+	g_mutex_lock (&camera->priv->timestamp_mutex);
+	camera->priv->timestamp_anchor_ns = _get_host_time_ns (camera->priv->timestamp_clock,
+							       g_get_monotonic_time () * 1000);
+	g_mutex_unlock (&camera->priv->timestamp_mutex);
 }
 
 gboolean
@@ -1107,6 +1194,8 @@ arv_fake_camera_init (ArvFakeCamera *fake_camera)
 	fake_camera->priv = arv_fake_camera_get_instance_private (fake_camera);
 
 	fake_camera->priv->trigger_frequency = 25.0;
+	g_mutex_init (&fake_camera->priv->timestamp_mutex);
+	fake_camera->priv->timestamp_clock = ARV_FAKE_CAMERA_TIMESTAMP_CLOCK_MONOTONIC;
 	fake_camera->priv->frame_id = 65400; /* Trigger circular counter bugs sooner */
 }
 
@@ -1124,6 +1213,7 @@ arv_fake_camera_finalize (GObject *object)
 	g_mutex_unlock (&fake_camera->priv->fill_pattern_mutex);
 
 	g_mutex_clear (&fake_camera->priv->fill_pattern_mutex);
+	g_mutex_clear (&fake_camera->priv->timestamp_mutex);
 	g_clear_pointer (&fake_camera->priv->memory, g_free);
 	g_clear_pointer (&fake_camera->priv->genicam_xml, g_free);
         g_clear_pointer (&fake_camera->priv->genicam_xml_url, g_free);

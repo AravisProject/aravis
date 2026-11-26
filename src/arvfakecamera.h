@@ -86,6 +86,21 @@ ARV_API void			arv_set_fake_camera_genicam_filename (const char *filename);
 #define ARV_FAKE_CAMERA_REGISTER_GAIN_RAW		0x110
 #define ARV_FAKE_CAMERA_REGISTER_GAIN_MODE		0x114
 
+/**
+ * ArvFakeCameraTimestampClock:
+ * @ARV_FAKE_CAMERA_TIMESTAMP_CLOCK_MONOTONIC: host monotonic time (default)
+ * @ARV_FAKE_CAMERA_TIMESTAMP_CLOCK_REALTIME: host real time
+ *
+ * Host clock the simulated device clock of a fake camera derives from.
+ *
+ * Since: 0.10.0
+ */
+
+typedef enum {
+	ARV_FAKE_CAMERA_TIMESTAMP_CLOCK_MONOTONIC,
+	ARV_FAKE_CAMERA_TIMESTAMP_CLOCK_REALTIME
+} ArvFakeCameraTimestampClock;
+
 #define ARV_TYPE_FAKE_CAMERA             (arv_fake_camera_get_type ())
 ARV_API G_DECLARE_FINAL_TYPE (ArvFakeCamera, arv_fake_camera, ARV, FAKE_CAMERA, GObject)
 
@@ -120,6 +135,10 @@ ARV_API void			arv_fake_camera_set_fill_pattern	(ArvFakeCamera *camera,
 									 void *fill_pattern_data,
                                                                          GDestroyNotify destroy);
 ARV_API void			arv_fake_camera_set_trigger_frequency	(ArvFakeCamera *camera, double frequency);
+ARV_API void			arv_fake_camera_set_timestamp_clock	(ArvFakeCamera *camera,
+									 ArvFakeCameraTimestampClock clock,
+									 gint64 offset_ns, double drift_ppm);
+ARV_API void			arv_fake_camera_resync_timestamp	(ArvFakeCamera *camera);
 ARV_API gboolean		arv_fake_camera_is_in_free_running_mode (ArvFakeCamera *camera);
 ARV_API gboolean		arv_fake_camera_is_in_software_trigger_mode (ArvFakeCamera *camera);
 ARV_API gboolean		arv_fake_camera_check_and_acknowledge_software_trigger (ArvFakeCamera *camera);

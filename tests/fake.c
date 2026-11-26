@@ -811,6 +811,62 @@ set_features_from_string_test (void)
 	g_object_unref (device);
 }
 
+static void
+timestamp_clock_test (void)
+{
+	ArvFakeCamera *fake_camera;
+	ArvBuffer *buffer;
+	gint64 offset_ns = -5 * (gint64) G_TIME_SPAN_SECOND * 1000;
+	gint64 host_0, host_1, host_2;
+	gint64 device_0, device_1, device_2;
+
+	fake_camera = arv_fake_camera_new ("TestClock");
+	g_assert (ARV_IS_FAKE_CAMERA (fake_camera));
+	buffer = arv_buffer_new (arv_fake_camera_get_payload (fake_camera), NULL);
+
+	/* Default: the device clock is the host monotonic time */
+	arv_fake_camera_fill_buffer (fake_camera, buffer, NULL);
+	g_assert_cmpuint (arv_buffer_get_timestamp (buffer), ==, arv_buffer_get_system_timestamp (buffer));
+
+	/* 5 s behind the host clock, running 1 % (10000 ppm) faster */
+	arv_fake_camera_set_timestamp_clock (fake_camera, ARV_FAKE_CAMERA_TIMESTAMP_CLOCK_MONOTONIC,
+					     offset_ns, 10000.0);
+	arv_fake_camera_fill_buffer (fake_camera, buffer, NULL);
+	host_0 = arv_buffer_get_system_timestamp (buffer);
+	device_0 = arv_buffer_get_timestamp (buffer);
+	g_assert_cmpint (ABS (device_0 - (host_0 + offset_ns)), <, 1000000);
+
+	g_usleep (200000);
+	arv_fake_camera_fill_buffer (fake_camera, buffer, NULL);
+	host_1 = arv_buffer_get_system_timestamp (buffer);
+	device_1 = arv_buffer_get_timestamp (buffer);
+	g_assert_cmpint (ABS ((device_1 - device_0) - (host_1 - host_0) * 101 / 100), <, 10000);
+
+	/* A resync drops the accumulated drift */
+	arv_fake_camera_resync_timestamp (fake_camera);
+	arv_fake_camera_fill_buffer (fake_camera, buffer, NULL);
+	host_2 = arv_buffer_get_system_timestamp (buffer);
+	device_2 = arv_buffer_get_timestamp (buffer);
+	g_assert_cmpint (ABS (device_2 - (host_2 + offset_ns)), <, 1000000);
+
+	/* Real time as the device clock; the system timestamp stays monotonic */
+	arv_fake_camera_set_timestamp_clock (fake_camera, ARV_FAKE_CAMERA_TIMESTAMP_CLOCK_REALTIME, 0, 0.0);
+	arv_fake_camera_fill_buffer (fake_camera, buffer, NULL);
+	g_assert_cmpint (ABS ((gint64) arv_buffer_get_timestamp (buffer) - g_get_real_time () * 1000), <,
+			 100000000);
+	g_assert_cmpint (ABS ((gint64) arv_buffer_get_system_timestamp (buffer) - g_get_monotonic_time () * 1000), <,
+			 100000000);
+
+	/* A device clock below zero is clamped to 0 */
+	arv_fake_camera_set_timestamp_clock (fake_camera, ARV_FAKE_CAMERA_TIMESTAMP_CLOCK_MONOTONIC,
+					     -(g_get_monotonic_time () * 1000) - 1000000000, 0.0);
+	arv_fake_camera_fill_buffer (fake_camera, buffer, NULL);
+	g_assert_cmpuint (arv_buffer_get_timestamp (buffer), ==, 0);
+
+	g_object_unref (buffer);
+	g_object_unref (fake_camera);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -834,6 +890,7 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fake/camera-device", camera_device_test);
 	g_test_add_func ("/fake/camera-trigger-selector", camera_trigger_selector_test);
 	g_test_add_func ("/fake/set-features-from-string", set_features_from_string_test);
+	g_test_add_func ("/fake/timestamp-clock", timestamp_clock_test);
 
 	result = g_test_run();
 
