@@ -64,8 +64,7 @@ arv_gc_string_reg_node_get_string_value (ArvGcString *self, GError **error)
 	if (local_error != NULL) {
 		/* Don't return a buffer left uninitialized by a failed register read */
 		g_clear_pointer (&priv->string, g_free);
-		g_propagate_prefixed_error (error, local_error, "[%s] ",
-                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+		g_propagate_error (error, local_error);
 	}
 
 	return priv->string;
@@ -98,8 +97,7 @@ arv_gc_string_reg_node_set_string_value (ArvGcString *self, const char *value, G
 	}
 
 	if (local_error != NULL)
-		g_propagate_prefixed_error (error, local_error, "[%s] ",
-                                            arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+		g_propagate_error (error, local_error);
 }
 
 static gint64

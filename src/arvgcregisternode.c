@@ -221,8 +221,7 @@ _get_address (ArvGcRegisterNode *self, GError **error)
 
 		length = _get_length (self, &local_error);
 		if (local_error != NULL) {
-			g_propagate_prefixed_error (error, local_error, "[%s] ",
-                                                    arv_gc_feature_node_get_name (ARV_GC_FEATURE_NODE (self)));
+			g_propagate_error (error, local_error);
 			return 0;
 		}
 
