@@ -1,3 +1,25 @@
+Stable release 0.8.37
+=====================
+
+  * gst: chunk data as GstCustomMeta (Markus)
+  * gst: add-reference-timestamp-meta property (Daniel)
+  * gst: sparse stream support (stj)
+  * gst: allow to set features on a live pipeline (Emmanuel)
+  * gst: don't recycle ArvBuffer before the GstBuffer release (Emmanuel)
+  * gigevision: validate pending acknowledgements (jcfurey)
+  * gigevision: use the loopback interface for local cameras (Emmanuel)
+  * gigevision: more cameras to the legacy endianness lists (Sébastien, Elliot,
+    Andrea, Emmanuel)
+  * gv_fake_camera: fix spurious stall in frame pacing (Rey)
+  * usb3vision: libusb return value check (Richard)
+  * arv-tool: add force-ip command (Michael)
+  * viewer: 14 bit packed Bayer formats (Gaurav)
+  * fake_camera: XML fixes (汎用兔)
+  * all: use monotonic time (Emmanuel)
+  * meson: MSVC build fix (Nathan)
+  * tests: gst plugin and packet loss tests (David, Emmanuel)
+  * doc: gst plugin section (Emmanuel)
+
 Stable release 0.8.36
 =====================
 
