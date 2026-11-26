@@ -1,3 +1,40 @@
+Development release 0.9.3
+=========================
+
+  * gentl producer: acquisition implementation and compatibility fixes (Jeff)
+  * gentl consumer: multipart payload type support, signal and event handling
+    fixes (Xiaoqiang)
+  * gentl consumer: always update the device list before opening a device
+    (Antonio)
+  * gentl: registration consistency, memory leak fix, don't use EMVA headers
+    (Emmanuel)
+  * gst: chunk data as GstCustomMeta (Markus)
+  * gst: add-reference-timestamp-meta property (Daniel)
+  * gst: sparse stream support (stj)
+  * gst: allow to set features on a live pipeline (Emmanuel)
+  * gst: don't recycle ArvBuffer before the GstBuffer release (Emmanuel)
+  * gigevision: validate pending acknowledgements (jcfurey)
+  * gigevision: extra stream packet size validation (Michael)
+  * gigevision: use the loopback interface for local cameras (Emmanuel)
+  * gigevision: more cameras to the legacy endianness lists (Sébastien, Elliot,
+    Andrea, Emmanuel)
+  * gv_fake_camera: fix spurious stall in frame pacing (Rey)
+  * usb3vision: libusb return value checks (Richard, Emmanuel)
+  * usb3vision: fallback for unavailable libusb device memory helpers (Jeff)
+  * usb3vision: payload size check before streaming (Matthias)
+  * v4l2: mono8 support, pixel format and line size fixes (Dima)
+  * camera: only write trigger features if different (Marco)
+  * genicam: fix uninitialized string on register read error (Emmanuel)
+  * interface: device registration consistency (Emmanuel)
+  * arv-tool: add force-ip command (Michael)
+  * viewer: 14 bit packed Bayer formats (Gaurav)
+  * fake_camera: XML fixes (汎用兔)
+  * all: use monotonic time (Emmanuel)
+  * meson: MSVC build fix (Nathan)
+  * po: Georgian translation (Ekaterine)
+  * tests: GenTL, gst plugin and packet loss tests (Jeff, David, Emmanuel)
+  * doc: gst plugin section (Emmanuel)
+
 Development release 0.9.2
 =========================
 
