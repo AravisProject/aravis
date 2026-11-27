@@ -12,9 +12,12 @@ if get_option('tests')
       '--error-exitcode=1'
     ],
     env:['DEBUGINFOD_URLS=', 'ARV_TEST_IGNORE_BUFFER='],
-    exclude_suites:['python'],
+    exclude_suites:['python', 'bench'],
     timeout_multiplier:5
   )
+
+  # The stream bench is a measurement, not a test: run it with 'meson test --suite bench' or directly.
+  add_test_setup ('default', exclude_suites: ['bench'], is_default: true)
 
 	tests = [
 		['evaluator',	['main'],    []],
@@ -25,8 +28,6 @@ if get_option('tests')
 		['genicam',	['main'],
                 ['-DGENICAM_FILENAME="@0@/tests/data/genicam.xml"'.format (meson.project_source_root ())]],
 		['fake',	['main'],
-                ['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.project_source_root ())]],
-		['fakegv',	['network'],
                 ['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.project_source_root ())]]
 	]
 
@@ -37,6 +38,21 @@ if get_option('tests')
 				  dependencies: aravis_dependencies,
 				  include_directories: [library_inc])
 		test (t[0], exe, suite: t[1], timeout: 60)
+	endforeach
+
+	# The GigE Vision fake camera tests, once per receive path: the default (on Apple the recvmsg_x loop, fast
+	# fail and a connected stream socket), the standard loop, upstream frame logic, and an unconnected socket.
+	# Every instance binds 127.0.0.1:3956, so none may run in parallel with another.
+	fakegv = executable ('fakegv', 'fakegv.c',
+			     c_args: ['-DGENICAM_FILENAME="@0@/src/arv-fake-camera.xml"'.format (meson.project_source_root ())],
+			     link_with: aravis_library,
+			     dependencies: aravis_dependencies,
+			     include_directories: [library_inc])
+	foreach t: [['fakegv', []],
+		    ['fakegv-rx-batch-0', ['ARV_GV_STREAM_RX_BATCH=0']],
+		    ['fakegv-no-fast-fail', ['ARV_GV_STREAM_FAST_FAIL=0']],
+		    ['fakegv-no-connect', ['ARV_GV_STREAM_CONNECT=0']]]
+		test (t[0], fakegv, suite: 'network', env: t[1], timeout: 180, is_parallel: false)
 	endforeach
 
 	if get_option ('gentl-producer')
@@ -81,6 +97,18 @@ if get_option('tests')
         configure_file (input: 'pylaunch-dbg.in', output: 'pylaunch-dbg', configuration: py_script_config_data)
         configure_file (input: 'jslaunch.in', output: 'jslaunch', configuration: py_script_config_data)
         configure_file (input: 'jslaunch-dbg.in', output: 'jslaunch-dbg', configuration: py_script_config_data)
+
+	if host_machine.system() != 'windows'
+		# POSIX only: getrusage, getloadavg and SIGINT to the child sender
+		bench = executable ('arv-gv-stream-bench', 'arvgvstreambench.c',
+				    c_args: ['-DARV_FAKE_GV_CAMERA_PATH="@0@"'.format (meson.project_build_root () / 'src' /
+										    'arv-fake-gv-camera-@0@'.format (aravis_api_version))],
+				    link_with: aravis_library,
+				    dependencies: aravis_dependencies,
+				    include_directories: [library_inc])
+		test ('gvstreambench', bench, suite: 'bench', args: ['--duration', '3', '--frame-rate', '50'],
+		      timeout: 300, is_parallel: false)
+	endif
 
 	if introspection_enabled
 		pymod = import ('python')

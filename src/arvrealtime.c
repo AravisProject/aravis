@@ -354,12 +354,138 @@ arv_make_thread_high_priority (int priority)
 	return TRUE;
 }
 
+#elif defined(__APPLE__)
+
+#include <mach/mach.h>
+#include <mach/mach_time.h>
+#include <mach/thread_policy.h>
+#include <pthread.h>
+#include <pthread/qos.h>
+#include <stdlib.h>
+
+#define ARV_RT_PERIOD_US_DEFAULT	0
+#define ARV_RT_COMPUTATION_US_DEFAULT	500
+#define ARV_RT_CONSTRAINT_US_DEFAULT	1000
+
+static guint64
+_get_env_us (const char *name, guint64 default_value)
+{
+	const char *env;
+	char *end = NULL;
+	guint64 value;
+
+	env = g_getenv (name);
+	if (env == NULL)
+		return default_value;
+
+	value = g_ascii_strtoull (env, &end, 10);
+	if (end == env || *end != '\0') {
+		arv_warning_misc ("Invalid %s '%s', using %" G_GUINT64_FORMAT " us", name, env, default_value);
+		return default_value;
+	}
+
+	return value;
+}
+
+static uint32_t
+_us_to_mach_absolute_time (guint64 us, const mach_timebase_info_data_t *timebase)
+{
+	guint64 ticks;
+
+	/* An ARV_RT_*_US of "-1" parses as G_MAXUINT64, and us * 1000 * denom would wrap to anything. No policy
+	 * value above 1 s makes sense (the kernel refuses a computation above 50 ms). */
+	us = MIN (us, G_USEC_PER_SEC);
+	ticks = us * 1000 * timebase->denom / timebase->numer;
+
+	return ticks > G_MAXUINT32 ? G_MAXUINT32 : (uint32_t) ticks;
+}
+
+/*
+ * arv_make_thread_realtime, Apple implementation:
+ *
+ * Puts the calling thread in the Mach THREAD_TIME_CONSTRAINT_POLICY, which needs no privilege.
+ * Mach has no priority level for this policy, so @priority is ignored. The policy is a promise of
+ * how much CPU the thread needs: period 0 (aperiodic), computation 500 us within a constraint of
+ * 1000 us. ARV_RT_PERIOD_US, ARV_RT_COMPUTATION_US and ARV_RT_CONSTRAINT_US override them for
+ * experiments. The kernel refuses a computation below 50 us or above 50 ms, and a constraint below
+ * the computation. A real-time thread that runs for about 100 quanta without blocking is demoted
+ * to timeshare for a while; its counter is reset every time it blocks.
+ */
+
+gboolean
+arv_make_thread_realtime (int priority)
+{
+	thread_time_constraint_policy_data_t policy;
+	mach_timebase_info_data_t timebase;
+	kern_return_t result;
+	guint64 period_us;
+	guint64 computation_us;
+	guint64 constraint_us;
+
+	period_us = _get_env_us ("ARV_RT_PERIOD_US", ARV_RT_PERIOD_US_DEFAULT);
+	computation_us = _get_env_us ("ARV_RT_COMPUTATION_US", ARV_RT_COMPUTATION_US_DEFAULT);
+	constraint_us = _get_env_us ("ARV_RT_CONSTRAINT_US", ARV_RT_CONSTRAINT_US_DEFAULT);
+
+	if (mach_timebase_info (&timebase) != KERN_SUCCESS || timebase.numer == 0) {
+		arv_warning_misc ("mach_timebase_info failed, thread not made realtime");
+		return FALSE;
+	}
+
+	policy.period = _us_to_mach_absolute_time (period_us, &timebase);
+	policy.computation = _us_to_mach_absolute_time (computation_us, &timebase);
+	policy.constraint = _us_to_mach_absolute_time (constraint_us, &timebase);
+	policy.preemptible = TRUE;
+
+	result = thread_policy_set (pthread_mach_thread_np (pthread_self ()),
+				    THREAD_TIME_CONSTRAINT_POLICY,
+				    (thread_policy_t) &policy,
+				    THREAD_TIME_CONSTRAINT_POLICY_COUNT);
+	if (result != KERN_SUCCESS) {
+		arv_warning_misc ("thread_policy_set (THREAD_TIME_CONSTRAINT_POLICY, period %" G_GUINT64_FORMAT
+				  " us, computation %" G_GUINT64_FORMAT " us, constraint %" G_GUINT64_FORMAT
+				  " us) failed: %s (%d)",
+				  period_us, computation_us, constraint_us, mach_error_string (result), result);
+		return FALSE;
+	}
+
+	arv_info_misc ("Thread made realtime (Mach time constraint policy: period %" G_GUINT64_FORMAT
+		       " us, computation %" G_GUINT64_FORMAT " us, constraint %" G_GUINT64_FORMAT " us)",
+		       period_us, computation_us, constraint_us);
+
+	return TRUE;
+}
+
+/*
+ * arv_make_thread_high_priority, Apple implementation:
+ *
+ * Sets the calling thread's QoS class to QOS_CLASS_USER_INTERACTIVE. There is no nice level per
+ * thread on Mach, so @nice_level is ignored; the QoS class mostly influences core placement
+ * (performance cores) and a modest priority increase.
+ */
+
+gboolean
+arv_make_thread_high_priority (int nice_level)
+{
+	int result;
+
+	result = pthread_set_qos_class_self_np (QOS_CLASS_USER_INTERACTIVE, 0);
+	if (result != 0) {
+		arv_warning_misc ("pthread_set_qos_class_self_np (QOS_CLASS_USER_INTERACTIVE) failed: %s",
+				  g_strerror (result));
+		return FALSE;
+	}
+
+	arv_info_misc ("Thread made high-priority (QOS_CLASS_USER_INTERACTIVE)");
+
+	return TRUE;
+}
+
 #else
 
 gboolean
 arv_make_thread_realtime (int priority)
 {
-	arv_info_misc ("SCHED API not supported on OSX");
+	arv_info_misc ("SCHED API not supported on this platform");
 
 	return FALSE;
 }
@@ -367,7 +493,7 @@ arv_make_thread_realtime (int priority)
 gboolean
 arv_make_thread_high_priority (int nice_level)
 {
-	arv_info_misc ("RtKit not supported on OSX");
+	arv_info_misc ("RtKit not supported on this platform");
 
 	return FALSE;
 }

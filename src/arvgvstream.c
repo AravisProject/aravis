@@ -38,6 +38,7 @@
 #include <arvmisc.h>
 #include <arvmiscprivate.h>
 #include <arvnetworkprivate.h>
+#include <arvrealtime.h>
 #include <arvstr.h>
 #include <arvenumtypes.h>
 #include <stddef.h>
@@ -58,9 +59,33 @@
 #include <sys/mman.h>
 #endif
 
+#ifdef __APPLE__
+#include <mach/mach.h>
+#include <pthread.h>
+#include <sys/sysctl.h>
+#include <sys/event.h>
+#include <sys/socket.h>
+#include <sys/uio.h>
+#include <dlfcn.h>
+#include <stdlib.h>
+#include <unistd.h>
+#endif
+
 #define ARV_GV_STREAM_DISCARD_LATE_FRAME_THRESHOLD	100
+#define ARV_GV_STREAM_THREAD_STATS_PERIOD_US		100000
 #define ARV_GV_STREAM_BUFFER_SIZE_PROTOCOL_OVERHEAD     1024 /* Some room for protocol overhead (IP + UDP + GV) */
 #define ARV_GV_STREAM_MIN_BUFFER_SIZE                   20 * 1024
+#define ARV_GV_STREAM_SOCKET_BUFFER_FLOOR               (1024 * 1024)
+#define ARV_GV_STREAM_SOCKET_BUFFER_MAX_REQUEST         (64 * 1024 * 1024) /* "max" where the limit can't be read */
+#define ARV_GV_STREAM_RX_BATCH_DEFAULT                  64
+#define ARV_GV_STREAM_RX_BATCH_MAX                      256  /* kern.ipc.maxrecvmsgx */
+#define ARV_GV_STREAM_RX_LOWAT_PACKETS_DEFAULT          16
+#define ARV_GV_STREAM_RX_ACTIVE_WAIT_US                 1000 /* longest wait while a stream is active */
+#define ARV_GV_STREAM_RX_ACTIVE_US                      100000 /* active: frames open or a packet this recently */
+#define ARV_GV_STREAM_RELEARN_IDLE_US                   1000000 /* connected socket silent this long: learn again */
+#define ARV_GV_STREAM_MAX_FOREIGN_SOURCES               64     /* unqualified senders before connecting is given up */
+#define ARV_GV_STREAM_RX_MAX_ERRORS                     100    /* consecutive recvmsg_x failures before _loop */
+#define ARV_GV_STREAM_FAST_FAIL_REORDER_PACKETS         16     /* first packet ids that may still see their leader */
 
 enum {
 	ARV_GV_STREAM_PROPERTY_0,
@@ -122,6 +147,16 @@ typedef struct {
 	guint n_packet_resend_requests;
 	gboolean resend_ratio_reached;
 
+	/* The trailer was processed: n_packets is the device's count, not the buffer size estimate */
+	gboolean trailer_received;
+	/* When the device first answered a resend request with a status packet (disable_resend_request) */
+	guint64 disable_resend_us;
+
+	/* Fast-fail bookkeeping of _missing_packet_check: every missing packet up to max_checked_packet has its
+	 * deadline, and next_check_us is the earliest of them (G_MAXUINT64 when none is pending). */
+	gint32 max_checked_packet;
+	guint64 next_check_us;
+
 	gboolean extended_ids;
 } ArvGvStreamFrameData;
 
@@ -151,6 +186,11 @@ struct _ArvGvStreamThreadData {
 	guint packet_timeout_us;
 	guint frame_retention_us;
 
+	/* ARV_GV_STREAM_FAST_FAIL, read once at construction: once packets are lost, do not start frames that cannot
+	 * complete, release hopeless ones promptly, bound the missing packet scans and ask for a lost tail as soon as
+	 * the next frame shows the sender is done. Exposed as the "fast_fail" info (0 or 1). */
+	guint64 fast_fail;
+
 	guint64 timestamp_tick_frequency;
 	guint scps_packet_size;
 
@@ -159,6 +199,16 @@ struct _ArvGvStreamThreadData {
 	GSList *frames;
 	gboolean first_packet;
 	guint64 last_frame_id;
+
+	/* Fast fail: the frame dropped without a buffer (skipped, or no input buffer at its first packet), whose
+	 * remaining packets are ignored without looking for a buffer again, and the packet count of the latest frame,
+	 * the estimate of the next one's. The record lasts until the next frame starts (or the thread restarts):
+	 * from then on the dropped frame's stragglers are late packets, and the same frame id coming round again
+	 * (a 16 bit id wraps every 65535 frames, and a device may restart its ids) is a new frame. */
+	gboolean has_dropped_frame;
+	guint64 dropped_frame_id;
+	gboolean dropped_frame_underrun;
+	guint last_n_packets;
 
 	gboolean use_packet_socket;
 
@@ -186,13 +236,58 @@ struct _ArvGvStreamThreadData {
         guint64 n_transferred_bytes;
         guint64 n_ignored_bytes;
 
+	/* Receive path diagnostics */
+
+	guint64 socket_buffer_size_granted;	/* "socket_buffer_size": SO_RCVBUF read back, 0 if never set */
+	guint64 n_underrun_frames;		/* distinct frames that found no input buffer */
+	guint64 n_skipped_frames;		/* fast-fail: frames dropped without taking a buffer */
+	guint64 last_underrun_frame_id;
+	gboolean has_underrun_frame;
+	guint64 n_rx_wakeups;			/* poll returned with the socket readable */
+	guint64 n_rx_batches;			/* receive calls returning at least one packet */
+	guint64 n_rx_max_batch;			/* most packets returned by one receive call */
+	guint64 stream_thread_cpu_us;		/* user + system CPU time of the stream thread (Apple only) */
+	guint64 thread_priority_mode;		/* 0 default, 1 high (QoS), 2 realtime: what was achieved */
+	guint64 stream_thread_min_priority;	/* lowest scheduler priority observed (Apple only) */
+	guint64 last_thread_stats_us;
+	guint64 rx_mode;			/* 0 legacy _loop, 1 recvmsg_x (Apple only), 2 packet socket (Linux) */
+	guint64 n_rx_truncated;			/* recvmsg_x slots that came back full, not processed */
+	guint64 n_short_packets;		/* datagrams too short for their GVSP headers, not processed */
+
+	/* Connected stream socket (ARV_GV_STREAM_CONNECT, see _connect_to_source) */
+	gboolean connect_socket;		/* connect once the sender is known from traffic */
+	guint64 socket_connected;		/* 1 while the stream socket is connected to the sender */
+	guint64 n_rx_foreign_source;		/* datagrams seen unconnected from another address, or the GVCP port */
+	guint n_learn_foreign_sources;		/* the same, since learning last (re)started */
+	guint64 n_socket_reconnects;		/* connections dissolved to learn the sender again */
+	guint64 last_datagram_us;		/* time of the last datagram received */
+	guint32 device_address_be;		/* device IPv4 address, network order, for the raw source check */
+	guint64 n_resend_send_errors;		/* PACKETRESEND commands the socket refused to send */
+	GSocket *resend_socket;			/* sends PACKETRESEND while the stream socket is connected */
+
 	ArvHistogram *histogram;
 	guint32 statistic_count;
 
 	ArvGvStreamSocketBuffer socket_buffer_option;
 	int socket_buffer_size;
 	int current_socket_buffer_size;
+	int last_attempted_socket_buffer_size;	/* never retried: a refused size is refused every time */
+	int configured_socket_buffer_size;	/* obtained by _configure_socket_buffer, the floor for _update_socket */
 };
+
+/* Tells arv_gv_stream_start_thread that the receive loop is running. Once per thread start: a receive loop that
+ * gives up and hands over to another (_loop_darwin to _loop) does not signal again. */
+
+static void
+_signal_thread_started (ArvGvStreamThreadData *thread_data)
+{
+	g_mutex_lock (&thread_data->thread_started_mutex);
+	if (!thread_data->thread_started) {
+		thread_data->thread_started = TRUE;
+		g_cond_signal (&thread_data->thread_started_cond);
+	}
+	g_mutex_unlock (&thread_data->thread_started_mutex);
+}
 
 static void
 _send_packet_request (ArvGvStreamThreadData *thread_data,
@@ -203,6 +298,8 @@ _send_packet_request (ArvGvStreamThreadData *thread_data,
 {
 	ArvGvcpPacket *packet;
 	size_t packet_size;
+	GSocket *socket;
+	GError *error = NULL;
 
 	thread_data->packet_id = arv_gvcp_next_packet_id (thread_data->packet_id);
 
@@ -215,16 +312,281 @@ _send_packet_request (ArvGvStreamThreadData *thread_data,
 
 	arv_gvcp_packet_debug (packet, ARV_DEBUG_LEVEL_DEBUG);
 
-	g_socket_send_to (thread_data->socket, thread_data->device_socket_address, (const char *) packet, packet_size,
-			  NULL, NULL);
+	/* A connected stream socket can't send to the GVCP port (EISCONN): the request goes out on its own
+	 * socket, bound to the same interface address */
+	socket = thread_data->resend_socket != NULL ? thread_data->resend_socket : thread_data->socket;
+
+	if (g_socket_send_to (socket, thread_data->device_socket_address, (const char *) packet, packet_size,
+			      NULL, &error) < 0) {
+		thread_data->n_resend_send_errors++;
+		if (thread_data->n_resend_send_errors == 1)
+			arv_warning_stream_thread ("[GvStream::send_packet_request] Can't send a packet resend"
+						   " request (%s); further failures are counted in"
+						   " n_resend_send_errors", error != NULL ? error->message : "unknown");
+		g_clear_error (&error);
+	}
 
 	arv_gvcp_packet_free (packet);
+}
+
+/* ARV_GV_STREAM_CONNECT (1 or 0; unset: on for Apple, off elsewhere). On macOS the kernel charges far more
+ * per datagram for an unconnected UDP socket receiving from a non-loopback address than for a connected one
+ * (standalone benchmark, 8968-byte datagrams, recvmsg_x batches of 64: 8.4 to 11.8 us against 1.4 to 2.0 us
+ * per datagram, and the unconnected receiver lost packets). The stream socket is therefore connected to the
+ * sender, which is learnt from the first valid datagram received from the device address, not from the
+ * ArvGevSCSP register: a device that reports a wrong source port there would otherwise see every packet
+ * filtered out. Datagrams queued before connect() stay readable (checked on macOS 26, loopback and
+ * bridge101). After connect(), the kernel drops datagrams from any other address or port.
+ *
+ * The sender is learnt again (_disconnect_from_source) at every stream thread start, and when the connected
+ * socket has received nothing for ARV_GV_STREAM_RELEARN_IDLE_US (1 s): a device that comes back from a reboot,
+ * or picks a new source port for an acquisition, would otherwise be filtered out by the kernel for the life of
+ * the stream, showing only as "no packets". A normal stream is never silent for 1 s; a slow triggered one can
+ * be, and then pays one learning step (a few datagrams received unconnected) per gap, losing nothing.
+ * n_socket_reconnects counts these.
+ *
+ * While unconnected, a valid datagram from another address, or from the device's GVCP port, is counted in
+ * n_rx_foreign_source and processed as before. After ARV_GV_STREAM_MAX_FOREIGN_SOURCES (64) of them in one
+ * learning phase, connecting is given up for this stream (one warning), so that a sender that never qualifies
+ * does not make every datagram pay for its source address. The check compares the raw sockaddr_in, without
+ * allocating.
+ *
+ * Returns TRUE when no further source address is needed: the socket is connected, or connecting failed or was
+ * given up and is not retried. */
+
+static gboolean
+_connect_to_source (ArvGvStreamThreadData *thread_data, const struct sockaddr *native, gsize native_size)
+{
+	const struct sockaddr_in *source;
+	GSocketAddress *source_address;
+	GError *error = NULL;
+
+	if (native == NULL || native_size < sizeof (struct sockaddr_in) || native->sa_family != AF_INET)
+		return FALSE;
+
+	source = (const struct sockaddr_in *) native;
+
+	/* GVSP never comes from the GVCP port: a reply from there (a device answering a resend request sent
+	 * from this socket before the connection) must not become the only accepted source */
+	if (source->sin_addr.s_addr != thread_data->device_address_be ||
+	    source->sin_port == g_htons (ARV_GVCP_PORT)) {
+		thread_data->n_rx_foreign_source++;
+		thread_data->n_learn_foreign_sources++;
+		if (thread_data->n_learn_foreign_sources >= ARV_GV_STREAM_MAX_FOREIGN_SOURCES) {
+			arv_warning_stream_thread ("[GvStream::connect_to_source] %u datagrams from a source other"
+						   " than the device's stream port, the stream socket stays"
+						   " unconnected", thread_data->n_learn_foreign_sources);
+			thread_data->connect_socket = FALSE;
+			return TRUE;
+		}
+		return FALSE;
+	}
+
+	/* The resend socket first: without it, a connected stream socket could not send resend requests. It is
+	 * kept when the socket is disconnected, and reused when it connects again. */
+	if (thread_data->resend_socket == NULL) {
+		GSocket *resend_socket;
+
+		resend_socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP,
+					      &error);
+		if (resend_socket != NULL) {
+			GSocketAddress *resend_address;
+
+			g_socket_set_blocking (resend_socket, FALSE);
+			/* Same interface address as the stream socket, any port of the configured GV port range */
+			resend_address = arv_socket_bind_with_range (resend_socket, thread_data->interface_address, 0,
+								     FALSE, &error);
+			if (resend_address == NULL)
+				g_clear_object (&resend_socket);
+			g_clear_object (&resend_address);
+		}
+		if (resend_socket == NULL) {
+			arv_warning_stream_thread ("[GvStream::connect_to_source] Can't create the resend socket"
+						   " (%s), the stream socket stays unconnected",
+						   error != NULL ? error->message : "unknown");
+			g_clear_error (&error);
+			thread_data->connect_socket = FALSE;
+			return TRUE;
+		}
+		thread_data->resend_socket = resend_socket;
+	}
+
+	source_address = g_socket_address_new_from_native ((gpointer) native, native_size);
+	if (source_address == NULL || !g_socket_connect (thread_data->socket, source_address, NULL, &error)) {
+		arv_warning_stream_thread ("[GvStream::connect_to_source] Can't connect the stream socket (%s),"
+					   " it stays unconnected", error != NULL ? error->message : "unknown");
+		g_clear_error (&error);
+		g_clear_object (&source_address);
+		thread_data->connect_socket = FALSE;
+		return TRUE;
+	}
+	g_object_unref (source_address);
+
+	thread_data->socket_connected = 1;
+
+	arv_info_stream_thread ("[GvStream::connect_to_source] Stream socket connected to the sender port %u"
+				" (ArvGevSCSP reads %u)", g_ntohs (source->sin_port), thread_data->source_stream_port);
+
+	return TRUE;
+}
+
+/* Dissolves the association made by _connect_to_source, so that the next valid datagram from the device teaches
+ * the sender again. BSD: connect() to an AF_UNSPEC address disconnects a UDP socket; Darwin then fails the
+ * reconnection to that address with EAFNOSUPPORT, which is the documented success, Linux returns 0. Winsock
+ * disconnects on a connect() to the any address. Darwin keeps the local port (and widens the local address to
+ * INADDR_ANY until the next connect(), checked on macOS 26). Linux does not: a socket whose port the kernel picked,
+ * as the stream socket's (bound to port 0), is unhashed and its port becomes 0, so that it receives nothing more
+ * (checked on Linux 7.2); the socket is then bound again to the port the device sends to. */
+
+static void
+_disconnect_from_source (ArvGvStreamThreadData *thread_data, const char *reason)
+{
+	int fd = g_socket_get_fd (thread_data->socket);
+	int result;
+	int errsv;
+#ifdef G_OS_WIN32
+	struct sockaddr_in any;
+
+	memset (&any, 0, sizeof (any));
+	any.sin_family = AF_INET;
+	result = connect (fd, (struct sockaddr *) &any, sizeof (any));
+	errsv = result == 0 ? 0 : WSAGetLastError ();
+#else
+	struct sockaddr unspecified;
+
+	memset (&unspecified, 0, sizeof (unspecified));
+	unspecified.sa_family = AF_UNSPEC;
+#ifdef __APPLE__
+	unspecified.sa_len = sizeof (unspecified);
+#endif
+	result = connect (fd, &unspecified, sizeof (unspecified));
+	errsv = result == 0 ? 0 : errno;
+	if (result != 0 && errsv == EAFNOSUPPORT)
+		result = 0;
+
+	if (result == 0) {
+		struct sockaddr_in local;
+		socklen_t local_size = sizeof (local);
+
+		if (getsockname (fd, (struct sockaddr *) &local, &local_size) == 0 &&
+		    local.sin_family == AF_INET && g_ntohs (local.sin_port) != thread_data->stream_port) {
+			local.sin_port = g_htons (thread_data->stream_port);
+			if (bind (fd, (struct sockaddr *) &local, sizeof (local)) != 0) {
+				arv_warning_stream_thread ("[GvStream::disconnect_from_source] The stream socket lost"
+							   " its port %u when disconnected and can't bind it again (%s)",
+							   thread_data->stream_port, g_strerror (errno));
+				thread_data->connect_socket = FALSE;
+				return;
+			}
+		}
+	}
+#endif
+
+	if (result != 0) {
+		/* Still connected to the old sender: never retried, and nothing more is learnt */
+		arv_warning_stream_thread ("[GvStream::disconnect_from_source] Can't disconnect the stream socket"
+					   " (%s): it stays connected to the sender it learnt", g_strerror (errsv));
+		thread_data->connect_socket = FALSE;
+		return;
+	}
+
+	thread_data->socket_connected = 0;
+	thread_data->n_learn_foreign_sources = 0;
+	thread_data->n_socket_reconnects++;
+
+	arv_info_stream_thread ("[GvStream::disconnect_from_source] Stream socket disconnected (%s), learning the"
+				" sender again", reason);
+}
+
+/* Called when the receive loop wakes without data */
+
+static inline void
+_check_source_idle (ArvGvStreamThreadData *thread_data, guint64 time_us)
+{
+	if (G_UNLIKELY (thread_data->socket_connected && thread_data->connect_socket &&
+			time_us - thread_data->last_datagram_us >= ARV_GV_STREAM_RELEARN_IDLE_US))
+		_disconnect_from_source (thread_data, "no datagram for 1 s");
+}
+
+static guint64
+_read_socket_buffer_size (int fd)
+{
+#ifdef G_OS_WIN32
+	DWORD size = 0;
+#else
+	gint size = 0;
+#endif
+	socklen_t optlen = sizeof (size);
+
+	if (getsockopt (fd, SOL_SOCKET, SO_RCVBUF, (char *) &size, &optlen) != 0)
+		return 0;
+#ifndef G_OS_WIN32
+	/* DWORD is unsigned */
+	if (size < 0)
+		return 0;
+#endif
+
+	return size;
+}
+
+/* SO_RCVBUF as read back, in the units of a request: Linux stores and reports twice the size it was asked for (the
+ * other half is its bookkeeping overhead), and clamps the request to net.core.rmem_max before doubling it. Compared
+ * with requested sizes, the raw value would make a clamped request look granted. */
+
+static int
+_granted_in_request_units (int granted_size)
+{
+#ifdef __linux__
+	return granted_size / 2;
+#else
+	return granted_size;
+#endif
+}
+
+/* Samples the stream thread's CPU time and scheduler priority, at most every
+ * ARV_GV_STREAM_THREAD_STATS_PERIOD_US unless forced. Only implemented on Apple,
+ * where a real-time thread demoted by the kernel's fail-safe shows up as a drop
+ * of the observed priority. Must be called from the stream thread. */
+
+static void
+_sample_thread_stats (ArvGvStreamThreadData *thread_data, guint64 time_us, gboolean force)
+{
+#ifdef __APPLE__
+	thread_basic_info_data_t basic_info;
+	thread_extended_info_data_t extended_info;
+	mach_msg_type_number_t count;
+	thread_act_t thread;
+
+	if (!force && time_us - thread_data->last_thread_stats_us < ARV_GV_STREAM_THREAD_STATS_PERIOD_US)
+		return;
+
+	thread_data->last_thread_stats_us = time_us;
+
+	/* pthread_mach_thread_np does not add a port reference, unlike mach_thread_self */
+	thread = pthread_mach_thread_np (pthread_self ());
+
+	count = THREAD_BASIC_INFO_COUNT;
+	if (thread_info (thread, THREAD_BASIC_INFO, (thread_info_t) &basic_info, &count) == KERN_SUCCESS)
+		thread_data->stream_thread_cpu_us =
+			(guint64) basic_info.user_time.seconds * 1000000 + basic_info.user_time.microseconds +
+			(guint64) basic_info.system_time.seconds * 1000000 + basic_info.system_time.microseconds;
+
+	count = THREAD_EXTENDED_INFO_COUNT;
+	if (thread_info (thread, THREAD_EXTENDED_INFO, (thread_info_t) &extended_info, &count) == KERN_SUCCESS &&
+	    extended_info.pth_curpri >= 0) {
+		if (thread_data->stream_thread_min_priority == 0 ||
+		    (guint64) extended_info.pth_curpri < thread_data->stream_thread_min_priority)
+			thread_data->stream_thread_min_priority = extended_info.pth_curpri;
+	}
+#endif
 }
 
 static void
 _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 {
 	int buffer_size = thread_data->current_socket_buffer_size;
+	int granted_size = 0;
+	gboolean result;
 	int fd;
 
 	if (thread_data->socket_buffer_option == ARV_GV_STREAM_SOCKET_BUFFER_FIXED &&
@@ -249,17 +611,139 @@ _update_socket (ArvGvStreamThreadData *thread_data, ArvBuffer *buffer)
 
         buffer_size = MAX (buffer_size, ARV_GV_STREAM_MIN_BUFFER_SIZE);
 
-	if (buffer_size != thread_data->current_socket_buffer_size) {
-		gboolean result;
+	/* Never shrink the buffer obtained at thread start */
+	if (buffer_size <= thread_data->configured_socket_buffer_size)
+		return;
 
-		result = arv_socket_set_recv_buffer_size (fd, buffer_size);
-		if (result) {
-			thread_data->current_socket_buffer_size = buffer_size;
-			arv_info_stream_thread ("[GvStream::update_socket] Socket buffer size set to %d", buffer_size);
-		} else {
-			arv_warning_stream_thread ("[GvStream::update_socket] Failed to set socket buffer size to %d (%d)",
-						   buffer_size, errno);
+	/* This runs for every new frame: a size that was already tried, whether it was granted or not,
+	 * is not tried again. */
+	if (buffer_size == thread_data->current_socket_buffer_size ||
+	    buffer_size == thread_data->last_attempted_socket_buffer_size)
+		return;
+
+	thread_data->last_attempted_socket_buffer_size = buffer_size;
+
+	result = arv_socket_set_recv_buffer_size_full (fd, buffer_size, &granted_size);
+	if (granted_size > 0)
+		thread_data->socket_buffer_size_granted = granted_size;
+
+	if (result) {
+		thread_data->current_socket_buffer_size = buffer_size;
+		if (_granted_in_request_units (granted_size) < buffer_size)
+			arv_warning_stream_thread ("[GvStream::update_socket] Socket buffer size %d requested,"
+						   " the kernel granted %d; you might see missing packets",
+						   buffer_size, granted_size);
+		else
+			arv_info_stream_thread ("[GvStream::update_socket] Socket buffer size set to %d (granted %d)",
+						buffer_size, granted_size);
+	} else {
+		arv_warning_stream_thread ("[GvStream::update_socket] Failed to set socket buffer size to %d (%s),"
+					   " current size %d",
+					   buffer_size, g_strerror (errno), granted_size);
+	}
+}
+
+static int
+_get_max_socket_buffer_size (void)
+{
+#ifdef __APPLE__
+	int max_size = 0;
+	size_t length = sizeof (max_size);
+
+	if (sysctlbyname ("kern.ipc.maxsockbuf", &max_size, &length, NULL, 0) == 0 && max_size > 0)
+		return max_size;
+
+	arv_warning_stream_thread ("[GvStream::configure_socket_buffer] Can't read kern.ipc.maxsockbuf (%s)",
+				   g_strerror (errno));
+#endif
+	/* Linux clamps silently to net.core.rmem_max; the granted size is read back */
+	return ARV_GV_STREAM_SOCKET_BUFFER_MAX_REQUEST;
+}
+
+/* Sizes the socket receive buffer once, before any receive loop runs.
+ *
+ * ARV_GV_STREAM_SOCKET_BUFFER_SIZE: a byte count, "max" (as large as the kernel grants), or "0" /
+ * "default" to leave the OS default. Unset: "max" on Apple, where the default (786,896 bytes,
+ * under a millisecond of a 10GigE stream) loses most packets of a fast camera; elsewhere the
+ * socket-buffer-size property if socket-buffer is FIXED, otherwise nothing.
+ *
+ * On macOS a request above kern.ipc.maxsockbuf is clamped silently the first time and refused with
+ * ENOBUFS when the buffer is already at the maximum, so the granted size is always read back. */
+
+static void
+_configure_socket_buffer (ArvGvStreamThreadData *thread_data)
+{
+	const char *env;
+	const char *source = "ARV_GV_STREAM_SOCKET_BUFFER_SIZE";
+	gboolean use_max = FALSE;
+	gint64 request = 0;
+	int granted_size = 0;
+	gboolean result = FALSE;
+	int fd;
+
+	fd = g_socket_get_fd (thread_data->socket);
+	env = g_getenv ("ARV_GV_STREAM_SOCKET_BUFFER_SIZE");
+
+	if (env == NULL) {
+#ifdef __APPLE__
+		use_max = TRUE;
+#else
+		/* A fixed socket-buffer-size is known now. Left to _update_socket, it would only be applied when the
+		 * first frame starts, after that frame's first burst has met the OS default buffer. */
+		if (thread_data->socket_buffer_option != ARV_GV_STREAM_SOCKET_BUFFER_FIXED ||
+		    thread_data->socket_buffer_size <= 0)
+			return;
+		request = thread_data->socket_buffer_size;
+		source = "socket-buffer-size";
+#endif
+	} else if (g_ascii_strcasecmp (env, "max") == 0) {
+		use_max = TRUE;
+	} else if (g_ascii_strcasecmp (env, "default") == 0 || g_strcmp0 (env, "0") == 0) {
+		arv_info_stream_thread ("[GvStream::configure_socket_buffer] Socket buffer left at the OS default"
+					" (%" G_GUINT64_FORMAT " bytes)", _read_socket_buffer_size (fd));
+		return;
+	} else {
+		char *end = NULL;
+
+		request = g_ascii_strtoll (env, &end, 10);
+		if (end == env || *end != '\0' || request <= 0 || request > G_MAXINT) {
+			arv_warning_stream_thread ("[GvStream::configure_socket_buffer] Invalid"
+						   " ARV_GV_STREAM_SOCKET_BUFFER_SIZE '%s' (expected a byte count,"
+						   " 'max', '0' or 'default'); socket buffer left at the OS default",
+						   env);
+			return;
 		}
+	}
+
+	if (use_max) {
+		request = _get_max_socket_buffer_size ();
+
+		for (;;) {
+			result = arv_socket_set_recv_buffer_size_full (fd, request, &granted_size);
+			if (result && _granted_in_request_units (granted_size) >= ARV_GV_STREAM_SOCKET_BUFFER_FLOOR)
+				break;
+			if (request <= ARV_GV_STREAM_SOCKET_BUFFER_FLOOR)
+				break;
+			request = MAX (request * 7 / 8, ARV_GV_STREAM_SOCKET_BUFFER_FLOOR);
+		}
+	} else {
+		result = arv_socket_set_recv_buffer_size_full (fd, request, &granted_size);
+	}
+
+	if (granted_size > 0)
+		thread_data->socket_buffer_size_granted = granted_size;
+
+	if (result) {
+		/* The floor is what was asked and granted, in request units (Linux reports twice the size it stores) */
+		thread_data->configured_socket_buffer_size = MIN (request, _granted_in_request_units (granted_size));
+		thread_data->current_socket_buffer_size = thread_data->configured_socket_buffer_size;
+		arv_info_stream_thread ("[GvStream::configure_socket_buffer] Socket buffer: requested %" G_GINT64_FORMAT
+					" bytes (%s), granted %d bytes",
+					request, use_max ? "max" : source, granted_size);
+	} else {
+		arv_warning_stream_thread ("[GvStream::configure_socket_buffer] Failed to set socket buffer to %"
+					   G_GINT64_FORMAT " bytes (%s), current size %d bytes",
+					   request, g_strerror (errno), granted_size);
 	}
 }
 
@@ -280,6 +764,8 @@ _compute_n_expected_packets (const ArvGvspPacket *packet, size_t allocated_size,
                         if (payload_type == ARV_BUFFER_PAYLOAD_TYPE_IMAGE ||
                             payload_type == ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA ||
                             payload_type == ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA) {
+                                if (packet_size <= ARV_GVSP_PAYLOAD_PACKET_PROTOCOL_OVERHEAD (extended_ids))
+                                        return 0;
                                 block_size = packet_size - ARV_GVSP_PAYLOAD_PACKET_PROTOCOL_OVERHEAD (extended_ids);
                                 return (allocated_size + block_size - 1) / block_size + (2 /* leader + trailer */);
                         } else if (payload_type == ARV_BUFFER_PAYLOAD_TYPE_MULTIPART) {
@@ -288,6 +774,8 @@ _compute_n_expected_packets (const ArvGvspPacket *packet, size_t allocated_size,
                                 unsigned int i;
 
                                 n_parts = arv_gvsp_leader_packet_get_multipart_n_parts(packet, packet_size);
+                                if (packet_size <= ARV_GVSP_MULTIPART_PACKET_PROTOCOL_OVERHEAD (extended_ids))
+                                        return 0;
                                 block_size = packet_size - ARV_GVSP_MULTIPART_PACKET_PROTOCOL_OVERHEAD (extended_ids);
 
                                 for (i = 0; i < n_parts; i++) {
@@ -301,9 +789,15 @@ _compute_n_expected_packets (const ArvGvspPacket *packet, size_t allocated_size,
                         }
                         break;
                 case ARV_GVSP_CONTENT_TYPE_PAYLOAD:
+                        /* Only the standard header's overhead is checked at construction: an extended id stream with
+                         * a packet size at or below the extended overhead would underflow, or divide by zero */
+                        if (packet_size <= ARV_GVSP_PAYLOAD_PACKET_PROTOCOL_OVERHEAD (extended_ids))
+                                return 0;
                         block_size = packet_size - ARV_GVSP_PAYLOAD_PACKET_PROTOCOL_OVERHEAD (extended_ids);
                         return (allocated_size + block_size - 1) / block_size + (2 /* leader + trailer */);
                 case ARV_GVSP_CONTENT_TYPE_MULTIPART:
+                        if (packet_size <= ARV_GVSP_MULTIPART_PACKET_PROTOCOL_OVERHEAD (extended_ids))
+                                return 0;
                         block_size = packet_size - ARV_GVSP_MULTIPART_PACKET_PROTOCOL_OVERHEAD (extended_ids);
                         return (allocated_size + block_size - 1) / block_size +
                                 (2 /* leader + trailer */) + (255 /* n_parts_max) */);
@@ -321,6 +815,25 @@ _compute_n_expected_packets (const ArvGvspPacket *packet, size_t allocated_size,
         }
 
         return 0;
+}
+
+/* Fast fail: a new frame is dropped without a buffer. It counts as seen (last_frame_id), so that its stragglers are
+ * late packets and the next frame is not reported as following missing ones. From the client's side it is a
+ * missing frame: it is counted in n_missing_frames, besides the gap before it if there is one, and in
+ * n_skipped_frames. It never reaches n_failures or n_timeouts, which count buffers. */
+
+static void
+_drop_frame (ArvGvStreamThreadData *thread_data, guint64 frame_id, gint64 frame_id_inc, gboolean underrun)
+{
+	if (frame_id_inc > 1)
+		thread_data->n_missing_frames++;
+	thread_data->n_missing_frames++;
+
+	thread_data->last_frame_id = frame_id;
+	thread_data->dropped_frame_id = frame_id;
+	thread_data->dropped_frame_underrun = underrun;
+	thread_data->has_dropped_frame = TRUE;
+	thread_data->n_skipped_frames++;
 }
 
 static ArvGvStreamFrameData *
@@ -364,6 +877,15 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 			frame_id_inc--;
 	}
 
+	/* Fast fail: the rest of a frame already dropped returns here, without looking for a buffer */
+	if (thread_data->fast_fail &&
+	    thread_data->has_dropped_frame &&
+	    thread_data->dropped_frame_id == frame_id) {
+		if (thread_data->dropped_frame_underrun)
+			thread_data->n_underruns++;
+		return NULL;
+	}
+
 	if (frame_id_inc < 1  && frame_id_inc > -ARV_GV_STREAM_DISCARD_LATE_FRAME_THRESHOLD) {
 		arv_info_stream_thread ("[GvStream::find_frame_data] Discard late frame %" G_GUINT64_FORMAT
 					 " (last: %" G_GUINT64_FORMAT ")",
@@ -372,9 +894,43 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 		return NULL;
 	}
 
+	/* Fast fail: the first packet of a new frame is not its leader, and the missing head cannot be requested
+	 * (resend NEVER, or more packets than the resend budget, which is what _missing_packet_check would refuse).
+	 * Such a frame can only fail, so it does not take a buffer. A first packet within
+	 * ARV_GV_STREAM_FAST_FAIL_REORDER_PACKETS (16) of the leader may only have overtaken it, and the frame is
+	 * started: under resend NEVER it completes if the head arrives late, as upstream. The budget is computed
+	 * from last_n_packets, the n_packets the latest frame was started with (its buffer size estimate), which is
+	 * the n_packets _missing_packet_check sees when it asks for a head: the trailer has not arrived then. */
+	if (thread_data->fast_fail && packet_id > ARV_GV_STREAM_FAST_FAIL_REORDER_PACKETS &&
+	    (thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER ||
+	     (thread_data->last_n_packets > 0 &&
+	      ((int) (thread_data->last_n_packets * thread_data->packet_request_ratio) <= 0 ||
+	       packet_id > thread_data->last_n_packets * thread_data->packet_request_ratio)))) {
+		arv_info_stream_thread ("[GvStream::find_frame_data] Skip frame %" G_GUINT64_FORMAT
+					" (first packet %u, head not recoverable)", frame_id, packet_id);
+		_drop_frame (thread_data, frame_id, frame_id_inc, FALSE);
+		return NULL;
+	}
+
+	/* A status packet answers a resend request for a frame already open; one for a newer frame starts nothing,
+	 * and its leader, if it claims to be one, is not read (_gvsp_packet_size_is_valid does not check it) */
+	if (G_UNLIKELY (arv_gvsp_packet_status_is_error (arv_gvsp_packet_get_status (packet, packet_size))))
+		return NULL;
+
 	buffer = arv_stream_pop_input_buffer (thread_data->stream);
 	if (buffer == NULL) {
+		/* Counts every packet of a frame that found no input buffer */
 		thread_data->n_underruns++;
+		if (!thread_data->has_underrun_frame || thread_data->last_underrun_frame_id != frame_id) {
+			thread_data->n_underrun_frames++;
+			thread_data->last_underrun_frame_id = frame_id;
+			thread_data->has_underrun_frame = TRUE;
+		}
+
+		/* Fast fail: no buffer at the first packet seen of this frame. Do not retry for every later packet,
+		 * and do not start the frame mid-way if a buffer is returned while it is being received. */
+		if (thread_data->fast_fail)
+			_drop_frame (thread_data, frame_id, frame_id_inc, TRUE);
 
 		return NULL;
 	}
@@ -398,6 +954,8 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 
 	frame->frame_id = frame_id;
 	frame->last_valid_packet = -1;
+	frame->max_checked_packet = -1;
+	frame->next_check_us = G_MAXUINT64;
 
 	frame->buffer = buffer;
 	_update_socket (thread_data, frame->buffer);
@@ -408,6 +966,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 
 	frame->packet_data = g_new0 (ArvGvStreamPacketData, n_packets);
 	frame->n_packets = n_packets;
+	thread_data->last_n_packets = n_packets;
 
 	if (thread_data->callback != NULL &&
 	    frame->buffer != NULL)
@@ -416,6 +975,7 @@ _find_frame_data (ArvGvStreamThreadData *thread_data,
 				       NULL);
 
 	thread_data->last_frame_id = frame_id;
+	thread_data->has_dropped_frame = FALSE;
 
 	if (frame_id_inc > 1) {
 		thread_data->n_missing_frames++;
@@ -552,7 +1112,9 @@ _process_payload_block (ArvGvStreamThreadData *thread_data,
 	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_FILLING)
 		return;
 
-	if (packet_id > frame->n_packets - 2 || packet_id < 1) {
+	/* Data packets are 1 to n_packets - 2. n_packets can be 1 or 2 (an ALL_IN first packet, a trailer at packet
+	 * id 0 or 1 starting or shrinking the frame), where n_packets - 2 would wrap and accept any packet id. */
+	if (frame->n_packets < 3 || packet_id > frame->n_packets - 2 || packet_id < 1) {
 		arv_gvsp_packet_debug (packet, packet_size, ARV_DEBUG_LEVEL_INFO);
 		frame->buffer->priv->status = ARV_BUFFER_STATUS_WRONG_PACKET_ID;
 		return;
@@ -564,6 +1126,15 @@ _process_payload_block (ArvGvStreamThreadData *thread_data,
 	block_offset = (packet_id - 1) * (thread_data->scps_packet_size -
                                          ARV_GVSP_PAYLOAD_PACKET_PROTOCOL_OVERHEAD (extended_ids));
 	block_end = block_size + block_offset;
+
+	/* A frame started by its trailer takes n_packets from the trailer's packet id, not from the buffer size, so a
+	 * valid packet id can still point past the buffer: clamping block_end below would make block_size negative */
+	if (block_offset >= (ptrdiff_t) frame->buffer->priv->allocated_size) {
+		arv_info_stream_thread ("[GvStream::process_data_block] Packet %u of frame %" G_GUINT64_FORMAT
+					" starts beyond the buffer", packet_id, frame->frame_id);
+		thread_data->n_size_mismatch_errors++;
+		return;
+	}
 
 	if (block_end > frame->buffer->priv->allocated_size) {
 		arv_info_stream_thread ("[GvStream::process_data_block] %" G_GINTPTR_FORMAT " unexpected bytes in packet %u "
@@ -650,6 +1221,8 @@ _process_data_trailer (ArvGvStreamThreadData *thread_data,
                 frame->n_packets = packet_id + 1;
         }
 
+	frame->trailer_received = TRUE;
+
 	if (frame->packet_data[packet_id].resend_requested) {
 		thread_data->n_resent_packets++;
 		arv_debug_stream_thread ("[GvStream::process_data_trailer] Received resent packet %u for frame %"
@@ -673,6 +1246,28 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
 
 	if ((int) (frame->n_packets * thread_data->packet_request_ratio) <= 0)
 		return;
+
+	/* Fast fail: the scan below runs only once the earliest pending deadline has passed. Packets seen missing
+	 * for the first time (above every packet id checked before) get their initial deadline here, at the same time
+	 * and with the same value the scan would give them; below max_checked_packet every missing packet already has
+	 * one. A scan that would request nothing is skipped, so the requests and their deadlines are unchanged. */
+	if (thread_data->fast_fail && packet_id < frame->n_packets) {
+		if ((gint32) packet_id > frame->max_checked_packet) {
+			for (i = MAX (frame->max_checked_packet, frame->last_valid_packet) + 1; i <= (int) packet_id; i++) {
+				if (!frame->packet_data[i].received && frame->packet_data[i].abs_timeout_us == 0) {
+					frame->packet_data[i].abs_timeout_us = time_us +
+						thread_data->initial_packet_timeout_us;
+					frame->next_check_us = MIN (frame->next_check_us,
+								    frame->packet_data[i].abs_timeout_us);
+				}
+			}
+			frame->max_checked_packet = packet_id;
+		}
+
+		/* need_resend is time_us > abs_timeout_us */
+		if (time_us <= frame->next_check_us)
+			return;
+	}
 
 	if (packet_id < frame->n_packets) {
 		int first_missing = -1;
@@ -739,11 +1334,25 @@ _missing_packet_check (ArvGvStreamThreadData *thread_data,
                                                 frame->packet_data[j].resend_requested = TRUE;
                                         }
 
+					/* The budget is cumulative: every requested packet counts, a repeated request
+					 * for the same packet included, so that packet-request-ratio bounds the resend
+					 * traffic a frame can cause. */
+					frame->n_packet_resend_requests += n_missing_packets;
 					thread_data->n_resend_requests += n_missing_packets;
 
 					first_missing = -1;
 				}
 			}
+		}
+
+		if (thread_data->fast_fail) {
+			gint32 last = MIN (frame->max_checked_packet, (gint32) frame->n_packets - 1);
+
+			frame->next_check_us = G_MAXUINT64;
+			for (i = frame->last_valid_packet + 1; i <= last; i++)
+				if (!frame->packet_data[i].received && frame->packet_data[i].abs_timeout_us != 0)
+					frame->next_check_us = MIN (frame->next_check_us,
+								    frame->packet_data[i].abs_timeout_us);
 		}
 	}
 }
@@ -753,9 +1362,9 @@ _close_frame (ArvGvStreamThreadData *thread_data,
               guint64 time_us,
               ArvGvStreamFrameData *frame)
 {
-	if (frame->buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS)
+	if (frame->buffer->priv->status == ARV_BUFFER_STATUS_SUCCESS) {
 		thread_data->n_completed_buffers++;
-	else
+	} else
 		if (frame->buffer->priv->status != ARV_BUFFER_STATUS_ABORTED)
 			thread_data->n_failures++;
 
@@ -765,9 +1374,12 @@ _close_frame (ArvGvStreamThreadData *thread_data,
 	if (frame->buffer->priv->status == ARV_BUFFER_STATUS_ABORTED)
 		thread_data->n_aborted++;
 
+	/* last_valid_packet can be beyond the end when a trailer arrived after packets above its id: n_packets
+	 * shrank under it. Adding the negative difference would wrap the counter. */
 	if (frame->buffer->priv->status != ARV_BUFFER_STATUS_SUCCESS &&
-	    frame->buffer->priv->status != ARV_BUFFER_STATUS_ABORTED)
-		thread_data->n_missing_packets += (int) frame->n_packets - (frame->last_valid_packet + 1);
+	    frame->buffer->priv->status != ARV_BUFFER_STATUS_ABORTED &&
+	    (gint64) frame->n_packets > (gint64) frame->last_valid_packet + 1)
+		thread_data->n_missing_packets += (gint64) frame->n_packets - ((gint64) frame->last_valid_packet + 1);
 
 	arv_stream_push_output_buffer (thread_data->stream, frame->buffer);
 	if (thread_data->callback != NULL)
@@ -799,9 +1411,25 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 	for (iter = thread_data->frames; iter != NULL;) {
 		frame = iter->data;
 
+		/* An incomplete frame that nothing will be requested for any more cannot complete once a newer
+		 * frame exists. Upstream closes it only under resend NEVER; fast fail also when its resend budget is
+		 * spent or the device said a packet is gone, instead of holding its buffer, and every frame behind
+		 * it, for frame-retention.
+		 *
+		 * "Gone" is only final once the trailer has been seen. Without it, the tail request runs to the end
+		 * of the buffer size estimate, and a device may answer PACKET_UNAVAILABLE for the ids beyond its real
+		 * trailer before it resends the trailer that completes the frame. So, until the trailer is seen, the
+		 * frame waits packet-timeout after the first status packet: every packet requested before it has a
+		 * deadline earlier than that. */
 		if (can_close_frame &&
-		    thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER &&
-		    iter->next != NULL) {
+		    iter->next != NULL &&
+		    (thread_data->packet_resend == ARV_GV_STREAM_PACKET_RESEND_NEVER ||
+		     (thread_data->fast_fail &&
+		      frame->last_valid_packet != frame->n_packets - 1 &&
+		      (frame->resend_ratio_reached ||
+		       (frame->disable_resend_request &&
+			(frame->trailer_received ||
+			 time_us - frame->disable_resend_us >= thread_data->packet_timeout_us)))))) {
 			frame->buffer->priv->status = ARV_BUFFER_STATUS_MISSING_PACKETS;
 			arv_info_stream_thread ("[GvStream::check_frame_completion] Incomplete frame %" G_GUINT64_FORMAT,
 						 frame->frame_id);
@@ -862,8 +1490,15 @@ _check_frame_completion (ArvGvStreamThreadData *thread_data,
 
 		can_close_frame = FALSE;
 
+		/* Upstream checks a frame's missing tail (trailer included) only after packet-timeout of silence for
+		 * it, so a lost trailer is requested ~21 ms late. With fast fail, a packet of a newer frame (or a
+		 * newer frame dropped without a buffer) means the sender is done with this one: its missing tail gets
+		 * the initial-packet-timeout deadline now. The newest frame is never checked this way, so a frame that
+		 * is still being sent is not; within a frame, reordering is covered by the same initial timeout. The
+		 * call is cheap while nothing is due (next_check_us). */
 		if (frame != current_frame &&
-		    time_us - frame->last_packet_time_us >= thread_data->packet_timeout_us) {
+		    (time_us - frame->last_packet_time_us >= thread_data->packet_timeout_us ||
+		     (thread_data->fast_fail && frame->frame_id != thread_data->last_frame_id))) {
 			_missing_packet_check (thread_data, frame, frame->n_packets - 1, time_us);
 			iter = iter->next;
 			continue;
@@ -890,6 +1525,65 @@ _flush_frames (ArvGvStreamThreadData *thread_data,
 	thread_data->frames = NULL;
 }
 
+/* Whether a datagram is long enough for every field the receiver reads from it: the GVSP header (the standard one,
+ * then, once its extended-id flag can be read, the extended one) and, for a leader, the leader with its image or
+ * multipart part information. The arv_gvsp accessors are bounds checked and read a field a short datagram does not
+ * hold as 0, so without this check such a datagram would still be processed as a packet (frame 0, packet 0), counted
+ * as received, and could start a frame or become the sender the stream socket connects to. Error status packets
+ * are header only and are exempt from the leader check; they never start a frame (_find_frame_data), which is where
+ * a leader would be read. */
+
+static inline gboolean
+_gvsp_packet_size_is_valid (const ArvGvspPacket *packet, size_t packet_size)
+{
+	size_t header_size;
+	size_t leader_size;
+
+	if (G_UNLIKELY (packet_size < sizeof (ArvGvspPacket) + sizeof (ArvGvspHeader)))
+		return FALSE;
+
+	if (G_UNLIKELY (arv_gvsp_packet_has_extended_ids (packet, packet_size))) {
+		header_size = sizeof (ArvGvspPacket) + sizeof (ArvGvspExtendedHeader);
+		if (packet_size < header_size)
+			return FALSE;
+	} else
+		header_size = sizeof (ArvGvspPacket) + sizeof (ArvGvspHeader);
+
+	if (G_LIKELY (arv_gvsp_packet_get_content_type (packet, packet_size) != ARV_GVSP_CONTENT_TYPE_LEADER) ||
+	    arv_gvsp_packet_status_is_error (arv_gvsp_packet_get_status (packet, packet_size)))
+		return TRUE;
+
+	if (packet_size < header_size + sizeof (ArvGvspLeader))
+		return FALSE;
+
+	switch (arv_gvsp_leader_packet_get_buffer_payload_type (packet, packet_size, NULL)) {
+		case ARV_BUFFER_PAYLOAD_TYPE_IMAGE:
+		case ARV_BUFFER_PAYLOAD_TYPE_EXTENDED_CHUNK_DATA:
+			leader_size = sizeof (ArvGvspImageLeader);
+			break;
+		case ARV_BUFFER_PAYLOAD_TYPE_MULTIPART: {
+			guint32 packet_infos;
+
+			/* The part count from the header itself: arv_gvsp_leader_packet_get_multipart_n_parts
+			 * answers 0 for a leader too short for its parts, which would let it through */
+			if (arv_gvsp_packet_has_extended_ids (packet, packet_size))
+				packet_infos = ((const ArvGvspExtendedHeader *) &packet->header)->packet_infos;
+			else
+				packet_infos = ((const ArvGvspHeader *) &packet->header)->packet_infos;
+
+			leader_size = sizeof (ArvGvspMultipartLeader) +
+				(size_t) (g_ntohl (packet_infos) & ARV_GVSP_PACKET_INFOS_N_PARTS_MASK) *
+				sizeof (ArvGvspPartInfos);
+			break;
+		}
+		default:
+			leader_size = sizeof (ArvGvspLeader);
+			break;
+	}
+
+	return packet_size >= header_size + leader_size;
+}
+
 static ArvGvStreamFrameData *
 _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet, size_t packet_size, guint64 time_us)
 
@@ -898,6 +1592,13 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
 	guint32 packet_id;
 	guint64 frame_id;
 	int i;
+
+	/* Every receive loop passes through here: a datagram too short to be read is counted and dropped, whatever
+	 * sent it (the stream socket accepts any sender while it is unconnected) */
+	if (G_UNLIKELY (!_gvsp_packet_size_is_valid (packet, packet_size))) {
+		thread_data->n_short_packets++;
+		return NULL;
+	}
 
 	thread_data->n_received_packets++;
 
@@ -925,6 +1626,8 @@ _process_packet (ArvGvStreamThreadData *thread_data, const ArvGvspPacket *packet
                         if (packet_status == ARV_GVSP_PACKET_STATUS_PACKET_AND_PREV_REMOVED_FROM_MEMORY ||
                             packet_status == ARV_GVSP_PACKET_STATUS_PACKET_REMOVED_FROM_MEMORY ||
                             packet_status == ARV_GVSP_PACKET_STATUS_PACKET_UNAVAILABLE) {
+                                if (!frame->disable_resend_request)
+                                        frame->disable_resend_us = time_us;
                                 frame->disable_resend_request = TRUE;
                                 thread_data->n_resend_disabled++;
                         }
@@ -1000,11 +1703,13 @@ _loop (ArvGvStreamThreadData *thread_data)
 	ArvGvStreamFrameData *frame;
 	ArvGvspPacket *packet_buffers;
 	GPollFD poll_fd[2];
-	guint64 time_us;
+	guint64 time_us = 0;
 	gboolean use_poll;
 	int i;
 	GInputVector packet_iv[ARV_GV_STREAM_NUM_BUFFERS] = { {NULL, 0}, };
 	GInputMessage packet_im[ARV_GV_STREAM_NUM_BUFFERS] = { {NULL, NULL, 0, 0, 0, NULL, NULL}, };
+	GSocketAddress *packet_addresses[ARV_GV_STREAM_NUM_BUFFERS] = { NULL, };
+	guint n_rx_errors = 0;
 	// we don't need to consider the IP and UDP header size
 	guint packet_buffer_size = thread_data->scps_packet_size - 20 - 8;
 
@@ -1027,18 +1732,17 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 	use_poll = g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1]);
 
-        g_mutex_lock (&thread_data->thread_started_mutex);
-        thread_data->thread_started = TRUE;
-        g_cond_signal (&thread_data->thread_started_cond);
-        g_mutex_unlock (&thread_data->thread_started_mutex);
+        _signal_thread_started (thread_data);
 
 	do {
                 int timeout_ms;
 		int n_events;
 		int errsv;
 
+		/* At least 1 ms: a packet timeout under 1 ms (ARV_GV_STREAM_PACKET_TIMEOUT_US) would make g_poll
+		 * return at once while frames are open, a busy loop */
 		if (thread_data->frames != NULL)
-			timeout_ms = thread_data->packet_timeout_us / 1000;
+			timeout_ms = MAX (1, thread_data->packet_timeout_us / 1000);
 		else
 			timeout_ms = ARV_GV_STREAM_POLL_TIMEOUT_US / 1000;
 
@@ -1051,7 +1755,17 @@ _loop (ArvGvStreamThreadData *thread_data)
 
 		if (poll_fd[0].revents != 0) {
                         GError *error = NULL;
+                        gboolean want_source;
                         int n_msgs;
+
+			thread_data->n_rx_wakeups++;
+
+			/* Source addresses are asked for only until the socket is connected (_connect_to_source) */
+			want_source = thread_data->connect_socket && !thread_data->socket_connected;
+			for (i = 0; i < ARV_GV_STREAM_NUM_BUFFERS; i++) {
+				packet_addresses[i] = NULL;
+				packet_im[i].address = want_source ? &packet_addresses[i] : NULL;
+			}
 
 			arv_gpollfd_clear_one (&poll_fd[0], thread_data->socket);
 			n_msgs = g_socket_receive_messages (thread_data->socket,
@@ -1062,8 +1776,27 @@ _loop (ArvGvStreamThreadData *thread_data)
 		 					    &error);
 
                         if (G_LIKELY(n_msgs > 0)) {
+                                n_rx_errors = 0;
                                 time_us = g_get_monotonic_time ();
+                                thread_data->last_datagram_us = time_us;
+                                thread_data->n_rx_batches++;
+                                if ((guint64) n_msgs > thread_data->n_rx_max_batch)
+                                        thread_data->n_rx_max_batch = n_msgs;
                                 for (i = 0; i < n_msgs; i++) {
+                                        /* GLib allocates the source addresses: _loop is the fallback path */
+                                        if (G_UNLIKELY (want_source) && packet_addresses[i] != NULL &&
+                                            _gvsp_packet_size_is_valid (packet_iv[i].buffer,
+                                                                        packet_im[i].bytes_received)) {
+                                                struct sockaddr_storage native;
+
+                                                if (g_socket_address_to_native (packet_addresses[i], &native,
+                                                                                sizeof (native), NULL) &&
+                                                    _connect_to_source (thread_data,
+                                                                        (struct sockaddr *) &native,
+                                                                        g_socket_address_get_native_size
+                                                                        (packet_addresses[i])))
+                                                        want_source = FALSE;
+                                        }
                                         frame = _process_packet (thread_data,
                                                                  packet_iv[i].buffer,
                                                                  packet_im[i].bytes_received,
@@ -1071,14 +1804,27 @@ _loop (ArvGvStreamThreadData *thread_data)
                                         _check_frame_completion (thread_data, time_us, frame);
                                 }
                         } else {
-                                arv_warning_stream_thread ("[GvStream::loop] receive_messages failed: %s",
-                                                           error != NULL ? error->message : "Unknown reason");
+                                /* Readable but failing: never spin (the thread may be real-time), and warn
+                                 * on the first failure of a run and every 1000th */
+                                if (n_rx_errors % 1000 == 0)
+                                        arv_warning_stream_thread ("[GvStream::loop] receive_messages failed: %s"
+                                                                   " (%u in a row)",
+                                                                   error != NULL ? error->message :
+                                                                   "Unknown reason", n_rx_errors + 1);
+                                n_rx_errors++;
                                 g_clear_error (&error);
+                                g_usleep (1000);
                         }
+
+			for (i = 0; i < ARV_GV_STREAM_NUM_BUFFERS; i++)
+				g_clear_object (&packet_addresses[i]);
                 } else {
                         time_us = g_get_monotonic_time ();
                         _check_frame_completion (thread_data, time_us, NULL);
+                        _check_source_idle (thread_data, time_us);
                 }
+
+		_sample_thread_stats (thread_data, time_us, FALSE);
 
 	} while (!g_cancellable_is_cancelled (thread_data->cancellable));
 
@@ -1088,6 +1834,341 @@ _loop (ArvGvStreamThreadData *thread_data)
 	arv_gpollfd_finish_all (poll_fd,1);
 	g_free (packet_buffers);
 }
+
+#ifdef __APPLE__
+
+/* recvmsg_x is a private Darwin system call wrapper exported by libsystem_kernel, not declared in the
+ * SDK. It receives up to cnt datagrams in one call and returns how many it received, or -1. Only
+ * MSG_DONTWAIT / MSG_NBIO are accepted as flags, and cnt is clamped to kern.ipc.maxrecvmsgx. On
+ * return, msg_datalen is the number of bytes copied into the message, and a datagram larger than its
+ * iovec is truncated silently. Layout from XNU bsd/sys/socket_private.h. */
+
+typedef struct {
+	void *msg_name;
+	socklen_t msg_namelen;
+	struct iovec *msg_iov;
+	int msg_iovlen;
+	void *msg_control;
+	socklen_t msg_controllen;
+	int msg_flags;
+	size_t msg_datalen;
+} ArvGvStreamMsghdrX;
+
+typedef ssize_t (*ArvGvStreamRecvmsgX) (int s, const ArvGvStreamMsghdrX *msgp, u_int cnt, int flags);
+
+static guint
+_get_env_uint (const char *name, guint default_value, guint max_value)
+{
+	const char *env;
+	char *end = NULL;
+	guint64 value;
+
+	env = g_getenv (name);
+	if (env == NULL)
+		return default_value;
+
+	value = g_ascii_strtoull (env, &end, 10);
+	if (end == env || *end != '\0') {
+		arv_warning_stream_thread ("[GvStream::loop_darwin] Invalid %s '%s' (expected an integer), using %u",
+					   name, env, default_value);
+		return default_value;
+	}
+
+	return MIN (value, max_value);
+}
+
+/* Receive loop for Apple. There, GLib's g_socket_receive_messages is one recvmsg per datagram plus a
+ * failing call that builds a GError at the end of each drain, and _loop's g_poll returned every 3 to 4
+ * datagrams of a fast stream. This loop receives up to ARV_GV_STREAM_RX_BATCH datagrams per system call with
+ * recvmsg_x, and waits in kevent with a NOTE_LOWAT low-water mark, so that a wakeup finds a batch.
+ *
+ * The thread must block when the socket is empty: it runs under the Mach time constraint policy, and
+ * the kernel demotes a real-time thread that computes without blocking. The wait is in kevent and not
+ * in a blocking receive, as a thread blocked in the receive call is woken for every datagram.
+ *
+ * While a stream is active (a frame is open, or a packet arrived in the last
+ * ARV_GV_STREAM_RX_ACTIVE_US), the wait is at most ARV_GV_STREAM_RX_ACTIVE_WAIT_US (and never longer
+ * than the packet timeouts), so that a tail of packets below the low-water mark, a lost trailer or a
+ * resend deadline is not delayed by more than that. When idle, the low-water mark is one datagram and
+ * the wait is ARV_GV_STREAM_POLL_TIMEOUT_US, as in _loop.
+ *
+ * A recvmsg_x that keeps failing (any error but EAGAIN / EINTR) would make kevent return at once, as the data is
+ * still queued, and the loop would spin: after a failure the loop waits the active wait before trying again,
+ * and after ARV_GV_STREAM_RX_MAX_ERRORS (100) consecutive failures it gives up, and the caller continues in
+ * _loop, whose receive call is a different one.
+ *
+ * Returns FALSE when it can't be set up (before signalling the thread start) or gave up after errors (after
+ * signalling it); the caller then runs _loop. */
+
+static gboolean
+_loop_darwin (ArvGvStreamThreadData *thread_data, ArvGvStreamRecvmsgX recvmsg_x_func, guint batch_size)
+{
+	ArvGvStreamMsghdrX *hdrs;
+	struct iovec *iovs;
+	struct sockaddr_storage *names;
+	gboolean want_source;
+	struct kevent changes[2];
+	struct kevent events[2];
+	GPollFD cancel_fd = {-1, 0, 0};
+	gboolean use_cancel_fd;
+	char *slots;
+	gsize slot_size;
+	guint64 time_us;
+	guint lowat_packets;
+	int lowat_bytes;
+	int current_lowat = -1;
+	gboolean kevent_error_reported = FALSE;
+	guint n_rx_errors = 0;
+	gboolean give_up = FALSE;
+	guint active_wait_us;
+	int socket_fd;
+	int kq;
+	guint i;
+
+	socket_fd = g_socket_get_fd (thread_data->socket);
+
+	kq = kqueue ();
+	if (kq < 0) {
+		arv_warning_stream_thread ("[GvStream::loop_darwin] kqueue failed (%s), using the standard loop",
+					   g_strerror (errno));
+		return FALSE;
+	}
+
+	/* The UDP payload is at most scps_packet_size - 28 bytes; the margin makes a full slot unambiguous */
+	slot_size = ((gsize) thread_data->scps_packet_size + 64 + 63) & ~((gsize) 63);
+	/* posix_memalign rather than g_aligned_alloc, which needs GLib 2.72 */
+	if (posix_memalign ((void **) &slots, 64, batch_size * slot_size) != 0) {
+		arv_warning_stream_thread ("[GvStream::loop_darwin] Can't allocate %u receive slots, using the"
+					   " standard loop", batch_size);
+		close (kq);
+		return FALSE;
+	}
+	/* Never processed before being written, but a defect elsewhere should read zeros, not old heap contents */
+	memset (slots, 0, batch_size * slot_size);
+	hdrs = g_new0 (ArvGvStreamMsghdrX, batch_size);
+	iovs = g_new0 (struct iovec, batch_size);
+	names = g_new0 (struct sockaddr_storage, batch_size);
+
+	for (i = 0; i < batch_size; i++) {
+		iovs[i].iov_base = slots + i * slot_size;
+		iovs[i].iov_len = slot_size;
+		hdrs[i].msg_iov = &iovs[i];
+		hdrs[i].msg_iovlen = 1;
+	}
+
+	lowat_packets = _get_env_uint ("ARV_GV_STREAM_RX_LOWAT_PACKETS", ARV_GV_STREAM_RX_LOWAT_PACKETS_DEFAULT,
+				       G_MAXINT / 65536);
+	/* 0 or 1: wake on the first datagram, whatever its size */
+	lowat_bytes = lowat_packets <= 1 ? 1 : (int) lowat_packets * (int) (thread_data->scps_packet_size - 20 - 8);
+
+	active_wait_us = MIN (ARV_GV_STREAM_RX_ACTIVE_WAIT_US,
+			      MIN (thread_data->packet_timeout_us, thread_data->initial_packet_timeout_us));
+	active_wait_us = MAX (active_wait_us, 100);
+
+	use_cancel_fd = g_cancellable_make_pollfd (thread_data->cancellable, &cancel_fd);
+	if (use_cancel_fd) {
+		EV_SET (&changes[0], cancel_fd.fd, EVFILT_READ, EV_ADD, 0, 0, NULL);
+		if (kevent (kq, changes, 1, NULL, 0, NULL) < 0) {
+			arv_warning_stream_thread ("[GvStream::loop_darwin] Can't watch the cancellable (%s)",
+						   g_strerror (errno));
+			g_cancellable_release_fd (thread_data->cancellable);
+			use_cancel_fd = FALSE;
+		}
+	}
+
+	thread_data->rx_mode = 1;
+
+	arv_info_stream ("[GvStream::loop_darwin] recvmsg_x method, batch %u, slot %" G_GSIZE_FORMAT
+			 " bytes, low-water mark %u packets (%d bytes), active wait %u us",
+			 batch_size, slot_size, lowat_packets, lowat_bytes, active_wait_us);
+
+        _signal_thread_started (thread_data);
+
+	time_us = g_get_monotonic_time ();
+
+	do {
+		struct timespec timeout;
+		gboolean active;
+		gboolean socket_ready = FALSE;
+		guint64 n_drained = 0;
+		guint64 wait_us;
+		int n_changes = 0;
+		int wanted_lowat;
+		int n_events;
+		int errsv;
+
+		active = thread_data->frames != NULL ||
+			time_us - thread_data->last_datagram_us < ARV_GV_STREAM_RX_ACTIVE_US;
+
+		/* When idle, wake on the first datagram */
+		wanted_lowat = active ? lowat_bytes : 1;
+		if (wanted_lowat != current_lowat) {
+			EV_SET (&changes[0], socket_fd, EVFILT_READ, EV_ADD, NOTE_LOWAT, wanted_lowat, NULL);
+			n_changes = 1;
+			current_lowat = wanted_lowat;
+		}
+
+		wait_us = active ? active_wait_us : ARV_GV_STREAM_POLL_TIMEOUT_US;
+		timeout.tv_sec = wait_us / 1000000;
+		timeout.tv_nsec = (wait_us % 1000000) * 1000;
+
+		do {
+			n_events = kevent (kq, changes, n_changes, events, G_N_ELEMENTS (events), &timeout);
+			errsv = errno;
+		} while (n_events < 0 && errsv == EINTR);
+
+		if (n_events < 0) {
+			arv_warning_stream_thread ("[GvStream::loop_darwin] kevent failed (%s)", g_strerror (errsv));
+			current_lowat = -1;
+			/* Never spin on a failing kevent */
+			g_usleep (active_wait_us);
+		}
+
+		for (i = 0; n_events > 0 && i < (guint) n_events; i++) {
+			if (G_UNLIKELY (events[i].flags & EV_ERROR)) {
+				/* A refused registration is not retried at once, which would spin: the wait
+				 * degrades to the timeouts until the low-water mark changes */
+				if (!kevent_error_reported)
+					arv_warning_stream_thread ("[GvStream::loop_darwin] kevent registration of fd %d"
+								   " failed (%s)", (int) events[i].ident,
+								   g_strerror ((int) events[i].data));
+				kevent_error_reported = TRUE;
+				continue;
+			}
+			if (events[i].ident == (uintptr_t) socket_fd && events[i].filter == EVFILT_READ)
+				socket_ready = TRUE;
+		}
+
+		if (socket_ready)
+			thread_data->n_rx_wakeups++;
+
+		/* Drain the socket, whatever woke the thread: after a timeout there may be a tail below the
+		 * low-water mark. A batch shorter than requested means the queue was empty. */
+		for (;;) {
+			ArvGvStreamFrameData *frame = NULL;
+			ssize_t n_msgs;
+
+			/* Source addresses are asked for only until the socket is connected (_connect_to_source):
+			 * the per-datagram name copy is a cost */
+			want_source = thread_data->connect_socket && !thread_data->socket_connected;
+			for (i = 0; i < batch_size; i++) {
+				hdrs[i].msg_datalen = slot_size;
+				hdrs[i].msg_flags = 0;
+				hdrs[i].msg_name = want_source ? &names[i] : NULL;
+				hdrs[i].msg_namelen = want_source ? sizeof (names[i]) : 0;
+			}
+
+			n_msgs = recvmsg_x_func (socket_fd, hdrs, batch_size, MSG_DONTWAIT);
+			if (n_msgs <= 0) {
+				int errsv = errno;
+
+				if (n_msgs < 0 && errsv != EWOULDBLOCK && errsv != EAGAIN && errsv != EINTR) {
+					n_rx_errors++;
+					if (n_rx_errors == 1)
+						arv_warning_stream_thread ("[GvStream::loop_darwin] recvmsg_x failed: %s",
+									   g_strerror (errsv));
+					if (n_rx_errors >= ARV_GV_STREAM_RX_MAX_ERRORS) {
+						arv_warning_stream_thread ("[GvStream::loop_darwin] recvmsg_x failed %u"
+									   " times in a row (%s), using the standard"
+									   " loop", n_rx_errors, g_strerror (errsv));
+						give_up = TRUE;
+					} else
+						/* The data is still queued: kevent would return at once */
+						g_usleep (active_wait_us);
+				} else
+					n_rx_errors = 0;
+				break;
+			}
+
+			n_rx_errors = 0;
+
+			time_us = g_get_monotonic_time ();
+			thread_data->last_datagram_us = time_us;
+			n_drained += n_msgs;
+
+			thread_data->n_rx_batches++;
+			if ((guint64) n_msgs > thread_data->n_rx_max_batch)
+				thread_data->n_rx_max_batch = n_msgs;
+
+			for (i = 0; i < (guint) n_msgs; i++) {
+				if (G_UNLIKELY (hdrs[i].msg_datalen >= slot_size || (hdrs[i].msg_flags & MSG_TRUNC) != 0)) {
+					/* Truncated, or possibly: never larger than scps_packet_size in a valid stream */
+					thread_data->n_rx_truncated++;
+					continue;
+				}
+
+				if (G_UNLIKELY (want_source) && hdrs[i].msg_namelen > 0 &&
+				    _gvsp_packet_size_is_valid (iovs[i].iov_base, hdrs[i].msg_datalen) &&
+				    _connect_to_source (thread_data, (struct sockaddr *) &names[i],
+							hdrs[i].msg_namelen))
+					want_source = FALSE;
+
+				frame = _process_packet (thread_data, iovs[i].iov_base, hdrs[i].msg_datalen, time_us);
+
+				/* Hand a finished frame over without waiting for the end of the batch */
+				if (frame != NULL && frame->last_valid_packet == frame->n_packets - 1) {
+					_check_frame_completion (thread_data, time_us, frame);
+					frame = NULL;
+				}
+			}
+
+			_check_frame_completion (thread_data, time_us, frame);
+			_sample_thread_stats (thread_data, time_us, FALSE);
+
+			if ((guint) n_msgs < batch_size ||
+			    g_cancellable_is_cancelled (thread_data->cancellable))
+				break;
+		}
+
+		if (n_drained == 0) {
+			time_us = g_get_monotonic_time ();
+			_check_frame_completion (thread_data, time_us, NULL);
+			_check_source_idle (thread_data, time_us);
+			_sample_thread_stats (thread_data, time_us, FALSE);
+		}
+
+	} while (!give_up && !g_cancellable_is_cancelled (thread_data->cancellable));
+
+	if (use_cancel_fd)
+		g_cancellable_release_fd (thread_data->cancellable);
+
+	close (kq);
+	g_free (names);
+	g_free (iovs);
+	g_free (hdrs);
+	free (slots);
+
+	if (give_up) {
+		thread_data->rx_mode = 0;
+		return FALSE;
+	}
+
+	return TRUE;
+}
+
+/* ARV_GV_STREAM_RX_BATCH: datagrams per recvmsg_x call, 1 to 256, default 64; 0 selects _loop. Also
+ * _loop if recvmsg_x can't be resolved. */
+
+static ArvGvStreamRecvmsgX
+_get_recvmsg_x (guint *batch_size)
+{
+	ArvGvStreamRecvmsgX recvmsg_x_func;
+
+	*batch_size = _get_env_uint ("ARV_GV_STREAM_RX_BATCH", ARV_GV_STREAM_RX_BATCH_DEFAULT,
+				     ARV_GV_STREAM_RX_BATCH_MAX);
+	if (*batch_size == 0) {
+		arv_info_stream_thread ("[GvStream::loop_darwin] ARV_GV_STREAM_RX_BATCH=0, using the standard loop");
+		return NULL;
+	}
+
+	recvmsg_x_func = (ArvGvStreamRecvmsgX) dlsym (RTLD_DEFAULT, "recvmsg_x");
+	if (recvmsg_x_func == NULL)
+		arv_warning_stream_thread ("[GvStream::loop_darwin] recvmsg_x not found, using the standard loop");
+
+	return recvmsg_x_func;
+}
+
+#endif /* __APPLE__ */
 
 
 #if ARAVIS_HAS_PACKET_SOCKET
@@ -1348,10 +2429,9 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 
 	use_poll = g_cancellable_make_pollfd (thread_data->cancellable, &poll_fd[1]);
 
-        g_mutex_lock (&thread_data->thread_started_mutex);
-        thread_data->thread_started = TRUE;
-        g_cond_signal (&thread_data->thread_started_cond);
-        g_mutex_unlock (&thread_data->thread_started_mutex);
+	thread_data->rx_mode = 2;
+
+        _signal_thread_started (thread_data);
 
 	block_id = 0;
 	do {
@@ -1369,7 +2449,7 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 			_check_frame_completion (thread_data, time_us, NULL);
 
                         if (thread_data->frames != NULL)
-                                timeout_ms = thread_data->packet_timeout_us / 1000;
+                                timeout_ms = MAX (1, thread_data->packet_timeout_us / 1000);
                         else
                                 timeout_ms = ARV_GV_STREAM_POLL_TIMEOUT_US / 1000;
 
@@ -1389,9 +2469,18 @@ _ring_buffer_loop (ArvGvStreamThreadData *thread_data)
 				const ArvGvspPacket *packet;
 				size_t size;
 
+				gint64 ip_size;
+				gint64 captured_size;
+
 				ip = (void *) (((char *) header) + header->tp_mac + ETH_HLEN);
 				packet = (void *) (((char *) ip) + sizeof (struct iphdr) + sizeof (struct udphdr));
-				size = g_ntohs (ip->tot_len) -  sizeof (struct iphdr) - sizeof (struct udphdr);
+				/* Signed: a datagram shorter than its IP and UDP headers must not underflow into a huge
+				 * size, and the size is never more than what the ring captured */
+				ip_size = (gint64) g_ntohs (ip->tot_len) -
+					(gint64) (sizeof (struct iphdr) + sizeof (struct udphdr));
+				captured_size = (gint64) header->tp_snaplen -
+					(gint64) (ETH_HLEN + sizeof (struct iphdr) + sizeof (struct udphdr));
+				size = MAX (0, MIN (ip_size, captured_size));
 
 				frame = _process_packet (thread_data, packet, size, time_us);
 
@@ -1414,13 +2503,103 @@ socket_option_error:
 map_error:
 	close (fd);
 af_packet_error:
-        g_mutex_lock (&thread_data->thread_started_mutex);
-        thread_data->thread_started = TRUE;
-        g_cond_signal (&thread_data->thread_started_cond);
-        g_mutex_unlock (&thread_data->thread_started_mutex);
+        _signal_thread_started (thread_data);
 }
 
 #endif /* ARAVIS_HAS_PACKET_SOCKET */
+
+typedef enum {
+	ARV_GV_STREAM_THREAD_PRIORITY_DEFAULT = 0,
+	ARV_GV_STREAM_THREAD_PRIORITY_HIGH = 1,
+	ARV_GV_STREAM_THREAD_PRIORITY_REALTIME = 2
+} ArvGvStreamThreadPriority;
+
+static const char *
+_thread_priority_to_string (ArvGvStreamThreadPriority mode)
+{
+	switch (mode) {
+		case ARV_GV_STREAM_THREAD_PRIORITY_HIGH:
+			return "high";
+		case ARV_GV_STREAM_THREAD_PRIORITY_REALTIME:
+			return "realtime";
+		default:
+			return "default";
+	}
+}
+
+/* Raises the priority of the calling stream thread, from ARV_GV_STREAM_THREAD_PRIORITY = default |
+ * high | realtime. Unset: realtime on Apple, default elsewhere. A refused realtime request falls
+ * back to high, and a refused high request leaves the thread as it is. What was achieved is
+ * exported as thread_priority_mode.
+ *
+ * On Apple, realtime is the Mach time constraint policy (see arv_make_thread_realtime). The kernel
+ * demotes a real-time thread that computes for about 100 quanta without blocking; _loop blocks in
+ * g_poll, and _loop_darwin in kevent, whenever the socket is empty, which resets that counter. A
+ * receive loop that never blocks (busy polling) would be demoted, which stream_thread_min_priority
+ * makes visible. */
+
+static void
+_configure_thread_priority (ArvGvStreamThreadData *thread_data)
+{
+	ArvGvStreamThreadPriority requested;
+	ArvGvStreamThreadPriority achieved = ARV_GV_STREAM_THREAD_PRIORITY_DEFAULT;
+	const char *env;
+
+#ifdef __APPLE__
+	{
+		char name[64] = "";
+
+		/* GLib names its threads on Apple, but not every build does */
+		if (pthread_getname_np (pthread_self (), name, sizeof (name)) != 0 || name[0] == '\0') {
+			pthread_setname_np ("arv_gv_stream");
+			arv_debug_stream_thread ("[GvStream::configure_thread_priority] Thread named arv_gv_stream");
+		} else {
+			arv_debug_stream_thread ("[GvStream::configure_thread_priority] Thread already named '%s'",
+						 name);
+		}
+	}
+	requested = ARV_GV_STREAM_THREAD_PRIORITY_REALTIME;
+#else
+	requested = ARV_GV_STREAM_THREAD_PRIORITY_DEFAULT;
+#endif
+
+	env = g_getenv ("ARV_GV_STREAM_THREAD_PRIORITY");
+	if (env != NULL) {
+		if (g_ascii_strcasecmp (env, "default") == 0)
+			requested = ARV_GV_STREAM_THREAD_PRIORITY_DEFAULT;
+		else if (g_ascii_strcasecmp (env, "high") == 0)
+			requested = ARV_GV_STREAM_THREAD_PRIORITY_HIGH;
+		else if (g_ascii_strcasecmp (env, "realtime") == 0)
+			requested = ARV_GV_STREAM_THREAD_PRIORITY_REALTIME;
+		else
+			arv_warning_stream_thread ("[GvStream::configure_thread_priority] Invalid"
+						   " ARV_GV_STREAM_THREAD_PRIORITY '%s' (expected default, high or"
+						   " realtime), using %s", env, _thread_priority_to_string (requested));
+	}
+
+	if (requested == ARV_GV_STREAM_THREAD_PRIORITY_REALTIME) {
+		/* The priority argument is used by the Linux implementation; Mach has no equivalent */
+		if (arv_make_thread_realtime (10))
+			achieved = ARV_GV_STREAM_THREAD_PRIORITY_REALTIME;
+		else
+			requested = ARV_GV_STREAM_THREAD_PRIORITY_HIGH;
+	}
+
+	if (requested == ARV_GV_STREAM_THREAD_PRIORITY_HIGH) {
+		if (arv_make_thread_high_priority (-10))
+			achieved = ARV_GV_STREAM_THREAD_PRIORITY_HIGH;
+	}
+
+	thread_data->thread_priority_mode = achieved;
+
+	if (env != NULL)
+		arv_info_stream_thread ("[GvStream::configure_thread_priority] Stream thread priority: %s"
+					" (ARV_GV_STREAM_THREAD_PRIORITY=%s)",
+					_thread_priority_to_string (achieved), env);
+	else
+		arv_info_stream_thread ("[GvStream::configure_thread_priority] Stream thread priority: %s"
+					" (platform default)", _thread_priority_to_string (achieved));
+}
 
 static void *
 arv_gv_stream_thread (void *data)
@@ -1429,10 +2608,27 @@ arv_gv_stream_thread (void *data)
 #if ARAVIS_HAS_PACKET_SOCKET
 	int fd;
 #endif
+#ifdef __APPLE__
+	ArvGvStreamRecvmsgX recvmsg_x_func;
+	guint rx_batch_size;
+#endif
 
 	thread_data->frames = NULL;
 	thread_data->last_frame_id = 0;
 	thread_data->first_packet = TRUE;
+	/* Frame ids and sizes seen before a restart say nothing about the frames after it */
+	thread_data->has_dropped_frame = FALSE;
+	thread_data->has_underrun_frame = FALSE;
+	thread_data->last_n_packets = 0;
+
+	/* The sender may have changed while the thread was stopped (device reboot, new source port) */
+	thread_data->last_datagram_us = g_get_monotonic_time ();
+	if (thread_data->socket_connected && thread_data->connect_socket)
+		_disconnect_from_source (thread_data, "stream thread start");
+
+	_configure_socket_buffer (thread_data);
+	/* Before the INIT callback, so that an application's own handler has the last word */
+	_configure_thread_priority (thread_data);
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_INIT, NULL);
@@ -1443,9 +2639,15 @@ arv_gv_stream_thread (void *data)
 		_ring_buffer_loop (thread_data);
 	} else
 #endif
+#ifdef __APPLE__
+	if ((recvmsg_x_func = _get_recvmsg_x (&rx_batch_size)) == NULL ||
+	    !_loop_darwin (thread_data, recvmsg_x_func, rx_batch_size))
+#endif
 		_loop (thread_data);
 
 	_flush_frames (thread_data, g_get_monotonic_time ());
+
+	_sample_thread_stats (thread_data, g_get_monotonic_time (), TRUE);
 
 	if (thread_data->callback != NULL)
 		thread_data->callback (thread_data->callback_data, ARV_STREAM_CALLBACK_TYPE_EXIT, NULL);
@@ -1639,6 +2841,100 @@ arv_gv_stream_init (ArvGvStream *gv_stream)
 	priv->thread_data = g_new0 (ArvGvStreamThreadData, 1);
 }
 
+/* ARV_GV_STREAM_CONNECT: see _connect_to_source */
+
+static gboolean
+_get_connect_option (void)
+{
+#ifdef __APPLE__
+	gboolean default_value = TRUE;
+#else
+	gboolean default_value = FALSE;
+#endif
+	const char *env;
+
+	env = g_getenv ("ARV_GV_STREAM_CONNECT");
+	if (env == NULL)
+		return default_value;
+	if (g_strcmp0 (env, "1") == 0)
+		return TRUE;
+	if (g_strcmp0 (env, "0") == 0)
+		return FALSE;
+
+	arv_warning_stream ("[GvStream::stream_new] Invalid ARV_GV_STREAM_CONNECT '%s' (expected 1 or 0), using %d",
+			    env, default_value);
+	return default_value;
+}
+
+static void
+_read_env_uint (const char *name, guint *value)
+{
+	const char *env = g_getenv (name);
+	guint64 parsed;
+	char *end = NULL;
+
+	if (env == NULL || env[0] == '\0')
+		return;
+
+	parsed = g_ascii_strtoull (env, &end, 10);
+	if (end == env || *end != '\0' || parsed > G_MAXUINT) {
+		arv_warning_stream ("[GvStream::constructed] Ignoring %s '%s' (expected a duration in µs)", name, env);
+		return;
+	}
+
+	*value = parsed;
+	arv_info_stream ("[GvStream::constructed] %s = %u", name, *value);
+}
+
+static void
+_read_env_ratio (const char *name, double *value)
+{
+	const char *env = g_getenv (name);
+	double parsed;
+	char *end = NULL;
+
+	if (env == NULL || env[0] == '\0')
+		return;
+
+	parsed = g_ascii_strtod (env, &end);
+	if (end == env || *end != '\0' || !(parsed >= 0.0 && parsed <= 2.0)) {
+		arv_warning_stream ("[GvStream::constructed] Ignoring %s '%s' (expected a ratio between 0 and 2)",
+				    name, env);
+		return;
+	}
+
+	*value = parsed;
+	arv_info_stream ("[GvStream::constructed] %s = %g", name, *value);
+}
+
+/* ARV_GV_STREAM_FAST_FAIL = 1 | 0. When unset it is on for Apple and off elsewhere, so that other platforms keep the
+ * upstream frame logic. */
+
+static gboolean
+_read_fast_fail (void)
+{
+	const char *env = g_getenv ("ARV_GV_STREAM_FAST_FAIL");
+#ifdef __APPLE__
+	gboolean fast_fail = TRUE;
+#else
+	gboolean fast_fail = FALSE;
+#endif
+
+	if (env != NULL && env[0] != '\0') {
+		if (g_strcmp0 (env, "1") == 0)
+			fast_fail = TRUE;
+		else if (g_strcmp0 (env, "0") == 0)
+			fast_fail = FALSE;
+		else
+			arv_warning_stream ("[GvStream::constructed] Ignoring ARV_GV_STREAM_FAST_FAIL '%s'"
+					    " (expected 1 or 0)", env);
+	}
+
+	arv_info_stream ("[GvStream::constructed] Fast fail %s", fast_fail ? "on" : "off");
+
+	return fast_fail;
+}
+
 static void
 arv_gv_stream_constructed (GObject *object)
 {
@@ -1701,6 +2997,16 @@ arv_gv_stream_constructed (GObject *object)
 
 	priv->thread_data->packet_id = 65300;
 
+	priv->thread_data->connect_socket = _get_connect_option ();
+
+	/* The construct properties already hold their defaults (or the caller's values); the environment overrides
+	 * them only where it is set. A later g_object_set still wins. */
+	priv->thread_data->fast_fail = _read_fast_fail ();
+	_read_env_uint ("ARV_GV_STREAM_INITIAL_PACKET_TIMEOUT_US", &priv->thread_data->initial_packet_timeout_us);
+	_read_env_uint ("ARV_GV_STREAM_PACKET_TIMEOUT_US", &priv->thread_data->packet_timeout_us);
+	_read_env_uint ("ARV_GV_STREAM_FRAME_RETENTION_US", &priv->thread_data->frame_retention_us);
+	_read_env_ratio ("ARV_GV_STREAM_PACKET_REQUEST_RATIO", &priv->thread_data->packet_request_ratio);
+
 	priv->thread_data->histogram = arv_histogram_new (3, 100, 2000, 0);
 
 	arv_histogram_set_variable_name (priv->thread_data->histogram, 0, "frame_retention");
@@ -1714,6 +3020,8 @@ arv_gv_stream_constructed (GObject *object)
 
 	priv->thread_data->socket = g_socket_new (G_SOCKET_FAMILY_IPV4, G_SOCKET_TYPE_DATAGRAM, G_SOCKET_PROTOCOL_UDP, NULL);
 	priv->thread_data->device_address = g_object_ref (device_address);
+	if (g_inet_address_get_family (device_address) == G_SOCKET_FAMILY_IPV4)
+		memcpy (&priv->thread_data->device_address_be, g_inet_address_to_bytes (device_address), 4);
 	priv->thread_data->interface_address = g_object_ref (interface_address);
 	priv->thread_data->device_socket_address = g_inet_socket_address_new (device_address, ARV_GVCP_PORT);
 	g_socket_set_blocking (priv->thread_data->socket, FALSE);
@@ -1736,6 +3044,56 @@ arv_gv_stream_constructed (GObject *object)
 	arv_info_stream ("[GvStream::stream_new] Destination stream port = %d", priv->thread_data->stream_port);
 	arv_info_stream ("[GvStream::stream_new] Source stream port = %d", priv->thread_data->source_stream_port);
 
+        /* Stream infos. Every one is a guint64; "counter" means it only grows for the life of the stream object,
+         * "state" that it is a current value. The upstream ones keep their meaning except where noted.
+         *
+         * n_completed_buffers   counter, buffers  buffers returned with status SUCCESS.
+         * n_failures            counter, buffers  buffers returned with any other status but ABORTED; with fast fail
+         *                                         this includes frames closed early (MISSING_PACKETS) because they
+         *                                         could not complete once a newer frame existed.
+         * n_underruns           counter, packets  packets that found no input buffer: with fast fail, every packet of
+         *                                         a frame dropped for that reason (until the next frame starts).
+         * n_timeouts            counter, buffers  buffers returned with status TIMEOUT.
+         * n_aborted             counter, buffers  buffers returned ABORTED (stream thread stop).
+         * n_missing_frames      counter, frames   gaps in the frame id sequence, one per gap whatever its length
+         *                                         (upstream), plus, with fast fail, one per frame skipped without a
+         *                                         buffer (n_skipped_frames): a skipped frame is missing for the
+         *                                         client although no gap precedes it.
+         * n_missing_packets     counter, packets  packets missing from failed buffers; never negative (a trailer
+         *                                         below packets already received used to wrap it).
+         * n_ignored_packets     counter, packets  valid packets not used: late frames, the rest of a skipped frame,
+         *                                         unknown content types, status packets for frames not open.
+         * n_resend_requests     counter, packets  packets asked for in PACKETRESEND commands.
+         *
+         * Added by this receiver:
+         * socket_buffer_size    state, bytes      SO_RCVBUF as read back after the last change, 0 if never set.
+         * n_underrun_frames     counter, frames   distinct frames that found no input buffer.
+         * n_skipped_frames      counter, frames   fast fail: frames dropped without taking a buffer, because no
+         *                                         buffer was free at their first packet or their head could not be
+         *                                         recovered. Also counted in n_missing_frames.
+         * fast_fail             state, 0 or 1     ARV_GV_STREAM_FAST_FAIL as read at construction.
+         * n_rx_wakeups          counter, wakeups  waits that returned with the socket readable.
+         * n_rx_batches          counter, calls    receive calls that returned at least one datagram.
+         * n_rx_max_batch        state, datagrams  most datagrams returned by one receive call.
+         * stream_thread_cpu_us  state, us         user + system CPU time of the stream thread (Apple only, 0
+         *                                         elsewhere), sampled at most every 100 ms.
+         * thread_priority_mode  state, 0 to 2     achieved stream thread priority: default, high, realtime.
+         * stream_thread_min_priority state        lowest scheduler priority observed (Apple only): a drop shows a
+         *                                         real-time thread demoted by the kernel.
+         * rx_mode               state, 0 to 2     1 while the recvmsg_x loop runs; 2 while the packet socket loop
+         *                                         runs; 0 for _loop, or after recvmsg_x failed 100 times in a row.
+         * n_rx_truncated        counter, datagrams recvmsg_x datagrams that filled their slot or came back with
+         *                                         MSG_TRUNC; not processed.
+         * n_short_packets       counter, datagrams datagrams too short for their GVSP headers (or a leader for its
+         *                                         leader); not processed, not in n_received_packets.
+         * socket_connected      state, 0 or 1     the stream socket is connected to the sender learnt from traffic.
+         * n_rx_foreign_source   counter, datagrams valid datagrams seen while learning, from an address other than
+         *                                         the device's or from its GVCP port; 64 in one learning phase
+         *                                         give up connecting.
+         * n_socket_reconnects   counter, events   connections dissolved to learn the sender again: at stream thread
+         *                                         start, or after 1 s without a datagram.
+         * n_resend_send_errors  counter, commands PACKETRESEND commands the socket refused to send.
+         */
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_completed_buffers",
                                  G_TYPE_UINT64, &priv->thread_data->n_completed_buffers);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_failures",
@@ -1772,6 +3130,40 @@ arv_gv_stream_constructed (GObject *object)
                                  G_TYPE_UINT64, &priv->thread_data->n_transferred_bytes);
         arv_stream_declare_info (ARV_STREAM (gv_stream), "n_ignored_bytes",
                                  G_TYPE_UINT64, &priv->thread_data->n_ignored_bytes);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "socket_buffer_size",
+                                 G_TYPE_UINT64, &priv->thread_data->socket_buffer_size_granted);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_underrun_frames",
+                                 G_TYPE_UINT64, &priv->thread_data->n_underrun_frames);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_skipped_frames",
+                                 G_TYPE_UINT64, &priv->thread_data->n_skipped_frames);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "fast_fail",
+                                 G_TYPE_UINT64, &priv->thread_data->fast_fail);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_rx_wakeups",
+                                 G_TYPE_UINT64, &priv->thread_data->n_rx_wakeups);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_rx_batches",
+                                 G_TYPE_UINT64, &priv->thread_data->n_rx_batches);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_rx_max_batch",
+                                 G_TYPE_UINT64, &priv->thread_data->n_rx_max_batch);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "stream_thread_cpu_us",
+                                 G_TYPE_UINT64, &priv->thread_data->stream_thread_cpu_us);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "thread_priority_mode",
+                                 G_TYPE_UINT64, &priv->thread_data->thread_priority_mode);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "stream_thread_min_priority",
+                                 G_TYPE_UINT64, &priv->thread_data->stream_thread_min_priority);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "rx_mode",
+                                 G_TYPE_UINT64, &priv->thread_data->rx_mode);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_rx_truncated",
+                                 G_TYPE_UINT64, &priv->thread_data->n_rx_truncated);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_short_packets",
+                                 G_TYPE_UINT64, &priv->thread_data->n_short_packets);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "socket_connected",
+                                 G_TYPE_UINT64, &priv->thread_data->socket_connected);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_rx_foreign_source",
+                                 G_TYPE_UINT64, &priv->thread_data->n_rx_foreign_source);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_socket_reconnects",
+                                 G_TYPE_UINT64, &priv->thread_data->n_socket_reconnects);
+        arv_stream_declare_info (ARV_STREAM (gv_stream), "n_resend_send_errors",
+                                 G_TYPE_UINT64, &priv->thread_data->n_resend_send_errors);
 }
 
 static void
@@ -1848,7 +3240,17 @@ arv_gv_stream_finalize (GObject *object)
 		g_clear_object (&thread_data->interface_address);
 		g_clear_object (&thread_data->device_socket_address);
 		g_clear_object (&thread_data->interface_socket_address);
+		arv_info_stream ("[GvStream::finalize] socket_connected       = %" G_GUINT64_FORMAT,
+				  thread_data->socket_connected);
+		arv_info_stream ("[GvStream::finalize] n_rx_foreign_source    = %" G_GUINT64_FORMAT,
+				  thread_data->n_rx_foreign_source);
+		arv_info_stream ("[GvStream::finalize] n_socket_reconnects    = %" G_GUINT64_FORMAT,
+				  thread_data->n_socket_reconnects);
+		arv_info_stream ("[GvStream::finalize] n_resend_send_errors   = %" G_GUINT64_FORMAT,
+				  thread_data->n_resend_send_errors);
+
 		g_clear_object (&thread_data->socket);
+		g_clear_object (&thread_data->resend_socket);
 
 		g_clear_pointer (&thread_data, g_free);
 	}

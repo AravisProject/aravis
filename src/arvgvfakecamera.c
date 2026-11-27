@@ -28,6 +28,7 @@
 #include <arvmisc.h>
 #include <arvmiscprivate.h>
 #include <arvnetworkprivate.h>
+#include <string.h>
 
 /**
  * SECTION: arvgvfakecamera
@@ -37,6 +38,13 @@
  */
 
 #define ARV_GV_FAKE_CAMERA_BUFFER_SIZE	65536
+
+#define ARV_GV_FAKE_CAMERA_FRAME_RETENTION_DEFAULT	4
+#define ARV_GV_FAKE_CAMERA_GVCP_POLL_INTERVAL_DEFAULT	64
+/* Maximum time between two GVCP polls while a frame is being sent */
+#define ARV_GV_FAKE_CAMERA_GVCP_POLL_PERIOD_US		1000
+/* Maximum number of control packets handled per poll */
+#define ARV_GV_FAKE_CAMERA_MAX_CONTROL_PACKETS_PER_POLL	32
 
 enum {
 	ARV_GV_FAKE_CAMERA_INPUT_SOCKET_GVCP = 0,
@@ -52,8 +60,68 @@ enum
   PROP_SERIAL_NUMBER,
   PROP_GENICAM_FILENAME,
   PROP_GVSP_LOST_PACKET_RATIO,
-  PROP_CM_DOMAIN
+  PROP_CM_DOMAIN,
+  PROP_PACKET_RESEND,
+  PROP_FRAME_RETENTION,
+  PROP_STATIC_IMAGE,
+  PROP_PACKET_RATE,
+  PROP_GVCP_POLL_INTERVAL,
+  PROP_DROP_EVERY_NTH_PACKET,
+  PROP_DROP_BURST_LENGTH,
+  PROP_DROP_BURST_FRAME_INTERVAL,
+  PROP_DROP_HEAD_LENGTH,
+  PROP_DROP_HEAD_FRAME_INTERVAL,
+  PROP_RESEND_LOST_RATIO,
+  PROP_FRAME_ID_STEP,
+  PROP_NEW_SOURCE_PORT_PER_STREAM,
+  PROP_UNAVAILABLE_BEYOND_TRAILER,
+  PROP_SENSOR_WIDTH,
+  PROP_SENSOR_HEIGHT,
+  PROP_N_SENT_FRAMES,
+  PROP_N_SENT_PACKETS,
+  PROP_N_SEND_ERRORS,
+  PROP_N_SEND_NO_BUFFER_SPACE,
+  PROP_N_DROPPED_PACKETS,
+  PROP_N_RESEND_REQUESTS,
+  PROP_N_RESEND_REQUESTED_PACKETS,
+  PROP_N_RESENT_PACKETS,
+  PROP_N_RESEND_DROPPED_PACKETS,
+  PROP_N_RESEND_UNAVAILABLE,
+  PROP_N_STREAM_STOPS,
+  PROP_SENDING_TIME_US,
+  PROP_STREAMING_TIME_US
 };
+
+/* Sender statistics. The sender thread updates its own copy and publishes it at every GVCP poll and at the end of
+ * every frame, so that a reader never needs to synchronise with the per packet path. */
+
+typedef struct {
+	guint64 n_sent_frames;
+	guint64 n_sent_packets;			/* every datagram accepted by the socket, resent and error packets included */
+	guint64 n_send_errors;
+	guint64 n_send_no_buffer_space;		/* subset of n_send_errors: ENOBUFS / ENOSPC */
+	guint64 n_dropped_packets;		/* injected loss on first transmissions */
+	guint64 n_resend_requests;		/* PACKET_RESEND commands received */
+	guint64 n_resend_requested_packets;	/* blocks covered by those commands */
+	guint64 n_resent_packets;
+	guint64 n_resend_dropped_packets;	/* resent packets dropped by resend-lost-ratio */
+	guint64 n_resend_unavailable;		/* PACKET_UNAVAILABLE error packets sent */
+	guint64 n_stream_stops;			/* streams ended, each after the last packet of its last frame */
+	guint64 sending_time_us;		/* time spent inside frames, from leader to trailer */
+	guint64 streaming_time_us;		/* time spent with an open stream */
+} ArvGvFakeCameraCounters;
+
+/* One retained frame, for answering resend requests. */
+
+typedef struct {
+	ArvBuffer *buffer;	/* image data and geometry; shared by every slot in static image mode */
+	guint16 frame_id;
+	guint64 timestamp_ns;
+	size_t payload;
+	size_t data_size;	/* payload bytes per data packet */
+	guint32 n_blocks;	/* leader + data packets + trailer */
+	gboolean valid;
+} ArvGvFakeCameraFrame;
 
 typedef struct {
 	char *interface_name;
@@ -78,6 +146,51 @@ typedef struct {
 	gboolean cancel;
 
 	double gvsp_lost_packet_ratio;
+
+	/* Configuration */
+
+	gboolean packet_resend;
+	guint frame_retention;
+	gboolean static_image;
+	guint packet_rate;
+	guint gvcp_poll_interval;
+	guint drop_every_nth_packet;
+	guint drop_burst_length;
+	guint drop_burst_frame_interval;
+	guint drop_head_length;
+	guint drop_head_frame_interval;
+	double resend_lost_ratio;
+	guint frame_id_step;
+	gboolean new_source_port_per_stream;
+	gboolean unavailable_beyond_trailer;
+	guint sensor_width;
+	guint sensor_height;
+
+	/* Sender state, owned by the sender thread */
+
+	GInputVector input_vector;
+
+	GSocketAddress *stream_address;
+	gboolean is_gvsp_connected;
+	gboolean stream_stop_pending;	/* an acquisition stop was seen while a frame was being sent */
+	gboolean send_error_reported;
+
+	ArvGvFakeCameraFrame *frames;
+	guint n_frames;
+	guint current_frame;
+	ArvBuffer *static_buffer;
+	guint16 static_frame_id;
+	gboolean has_static_frame_id;
+
+	guint64 stream_packet_count;	/* first transmissions since stream start */
+	guint64 stream_frame_count;	/* frames since stream start */
+	gint64 stream_start_us;
+	gint64 last_poll_us;
+
+	ArvGvFakeCameraCounters counters;
+
+	GMutex counters_mutex;
+	ArvGvFakeCameraCounters published_counters;
 } ArvGvFakeCameraPrivate;
 
 struct _ArvGvFakeCamera {
@@ -104,6 +217,198 @@ _g_inet_socket_address_is_equal (GInetSocketAddress *a, GInetSocketAddress *b)
 
 	return g_inet_address_equal (g_inet_socket_address_get_address (a),
 				     g_inet_socket_address_get_address (b));
+}
+
+static void
+_publish_counters (ArvGvFakeCamera *gv_fake_camera)
+{
+	ArvGvFakeCameraPrivate *priv = gv_fake_camera->priv;
+
+	g_mutex_lock (&priv->counters_mutex);
+	priv->published_counters = priv->counters;
+	if (priv->stream_address != NULL)
+		priv->published_counters.streaming_time_us += g_get_monotonic_time () - priv->stream_start_us;
+	g_mutex_unlock (&priv->counters_mutex);
+}
+
+/* Send one GVSP datagram made of a header and an optional data block, without copying the data. */
+
+static gboolean
+_send_gvsp (ArvGvFakeCamera *gv_fake_camera, const void *header, size_t header_size, const void *data, size_t data_size)
+{
+	ArvGvFakeCameraPrivate *priv = gv_fake_camera->priv;
+	GOutputVector vectors[2];
+	GError *error = NULL;
+	gssize result;
+
+	vectors[0].buffer = header;
+	vectors[0].size = header_size;
+	vectors[1].buffer = data;
+	vectors[1].size = data_size;
+
+	result = g_socket_send_message (priv->gvsp_socket,
+					priv->is_gvsp_connected ? NULL : priv->stream_address,
+					vectors, data_size > 0 ? 2 : 1,
+					NULL, 0, G_SOCKET_MSG_NONE, NULL, &error);
+
+	if (G_LIKELY (result >= 0)) {
+		priv->counters.n_sent_packets++;
+		return TRUE;
+	}
+
+	priv->counters.n_send_errors++;
+	if (g_error_matches (error, G_IO_ERROR, G_IO_ERROR_NO_SPACE))
+		priv->counters.n_send_no_buffer_space++;
+
+	if (!priv->send_error_reported) {
+		arv_warning_stream_thread ("[GvFakeCamera::send_gvsp] Failed to send packet: %s"
+					   " (further send errors of this stream are only counted)",
+					   error != NULL ? error->message : "unknown error");
+		priv->send_error_reported = TRUE;
+	} else
+		arv_debug_stream_thread ("[GvFakeCamera::send_gvsp] Failed to send packet: %s",
+					 error != NULL ? error->message : "unknown error");
+
+	g_clear_error (&error);
+
+	return FALSE;
+}
+
+/* Send block @block_id of @frame: 0 is the leader, n_blocks - 1 the trailer, anything in between a data packet. */
+
+static gboolean
+_send_block (ArvGvFakeCamera *gv_fake_camera, ArvGvFakeCameraFrame *frame, guint32 block_id)
+{
+	ArvBuffer *buffer = frame->buffer;
+	guint8 header[64];
+	size_t header_size = sizeof (header);
+
+	if (block_id == 0) {
+		arv_gvsp_packet_new_image_leader (frame->frame_id, block_id,
+						  frame->timestamp_ns,
+						  arv_buffer_get_image_pixel_format (buffer),
+						  arv_buffer_get_image_width (buffer),
+						  arv_buffer_get_image_height (buffer),
+						  arv_buffer_get_image_x (buffer),
+						  arv_buffer_get_image_y (buffer),
+						  0, 0,
+						  header, sizeof (header), &header_size);
+		return _send_gvsp (gv_fake_camera, header, header_size, NULL, 0);
+	} else if (block_id == frame->n_blocks - 1) {
+		arv_gvsp_packet_new_data_trailer (frame->frame_id, block_id,
+						  arv_buffer_get_image_height (buffer),
+						  header, sizeof (header), &header_size);
+		return _send_gvsp (gv_fake_camera, header, header_size, NULL, 0);
+	} else {
+		size_t offset = (size_t) (block_id - 1) * frame->data_size;
+		size_t data_size = MIN (frame->data_size, frame->payload - offset);
+		const char *data = ((const char *) buffer->priv->data) + offset;
+
+		/* Header only: the data goes in a second vector */
+		arv_gvsp_packet_new_payload (frame->frame_id, block_id, 0, (void *) data,
+					     header, sizeof (header), &header_size);
+		return _send_gvsp (gv_fake_camera, header, header_size, data, data_size);
+	}
+}
+
+/* What a device sends when a resend request names a block it no longer has: a GVSP packet with the status field set
+ * to an error code, for the requested frame and block. ArvGvStream recognises it by the 0x8000 bit of the status
+ * and, for PACKET_UNAVAILABLE, stops requesting resends for that frame. */
+
+static void
+_send_packet_unavailable (ArvGvFakeCamera *gv_fake_camera, guint16 frame_id, guint32 block_id)
+{
+	guint8 header[64];
+	size_t header_size = sizeof (header);
+	ArvGvspPacket *packet;
+	char dummy = 0;
+
+	packet = arv_gvsp_packet_new_payload (frame_id, block_id, 0, &dummy, header, sizeof (header), &header_size);
+	packet->status = g_htons (ARV_GVSP_PACKET_STATUS_PACKET_UNAVAILABLE);
+
+	if (_send_gvsp (gv_fake_camera, header, header_size, NULL, 0))
+		gv_fake_camera->priv->counters.n_resend_unavailable++;
+}
+
+static void
+_handle_packet_resend (ArvGvFakeCamera *gv_fake_camera, ArvGvcpPacket *packet, size_t size)
+{
+	ArvGvFakeCameraPrivate *priv = gv_fake_camera->priv;
+	ArvGvFakeCameraFrame *frame = NULL;
+	gboolean extended_ids;
+	guint32 data[5];
+	guint64 frame_id;
+	guint32 first_block;
+	guint32 last_block;
+	guint32 block_id;
+	guint i;
+
+	extended_ids = (packet->header.packet_flags & ARV_GVCP_CMD_PACKET_FLAGS_EXTENDED_IDS) != 0;
+
+	if (size < sizeof (ArvGvcpHeader) + sizeof (guint32) * (extended_ids ? 5 : 3)) {
+		arv_warning_device ("[GvFakeCamera::handle_packet_resend] Truncated packet resend command");
+		return;
+	}
+
+	memcpy (data, &packet->data, sizeof (guint32) * (extended_ids ? 5 : 3));
+
+	if (extended_ids) {
+		guint64 frame_id_be;
+
+		first_block = g_ntohl (data[1]);
+		last_block = g_ntohl (data[2]);
+		memcpy (&frame_id_be, &data[3], sizeof (frame_id_be));
+		frame_id = GUINT64_FROM_BE (frame_id_be);
+	} else {
+		frame_id = g_ntohl (data[0]) & 0xffff;
+		first_block = g_ntohl (data[1]) & ARV_GVSP_PACKET_ID_MASK;
+		last_block = g_ntohl (data[2]) & ARV_GVSP_PACKET_ID_MASK;
+	}
+
+	priv->counters.n_resend_requests++;
+	if (last_block >= first_block)
+		priv->counters.n_resend_requested_packets += last_block - first_block + 1;
+
+	arv_debug_stream_thread ("[GvFakeCamera::handle_packet_resend] Resend request for frame %" G_GUINT64_FORMAT
+				 " blocks %u to %u", frame_id, first_block, last_block);
+
+	if (priv->stream_address == NULL)
+		return;
+
+	for (i = 0; i < priv->n_frames; i++) {
+		if (priv->frames[i].valid && priv->frames[i].frame_id == frame_id) {
+			frame = &priv->frames[i];
+			break;
+		}
+	}
+
+	if (frame == NULL || first_block > last_block || first_block >= frame->n_blocks) {
+		arv_info_stream_thread ("[GvFakeCamera::handle_packet_resend] Frame %" G_GUINT64_FORMAT
+					" block %u unavailable", frame_id, first_block);
+		_send_packet_unavailable (gv_fake_camera, frame_id, first_block);
+		return;
+	}
+
+	/* Some devices answer a request that runs past the trailer with PACKET_UNAVAILABLE for the blocks that do not
+	 * exist, before resending the ones that do; the 2 ms gap stands for the time a device takes to fetch them, and
+	 * puts the status packet and the resent ones in separate receive batches */
+	if (last_block >= frame->n_blocks && g_atomic_int_get (&priv->unavailable_beyond_trailer)) {
+		_send_packet_unavailable (gv_fake_camera, frame_id, frame->n_blocks);
+		g_usleep (2000);
+	}
+
+	last_block = MIN (last_block, frame->n_blocks - 1);
+
+	for (block_id = first_block; block_id <= last_block; block_id++) {
+		if (priv->resend_lost_ratio > 0.0 && g_random_double () < priv->resend_lost_ratio) {
+			priv->counters.n_resend_dropped_packets++;
+			arv_debug_stream_thread ("Drop resent GVSP packet frame: %u, block: %u", frame->frame_id, block_id);
+			continue;
+		}
+
+		if (_send_block (gv_fake_camera, frame, block_id))
+			priv->counters.n_resent_packets++;
+	}
 }
 
 static gboolean
@@ -213,6 +518,14 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 			ack_packet = arv_gvcp_packet_new_write_register_ack (1, packet_id,
 									     &ack_packet_size);
 			break;
+		case ARV_GVCP_COMMAND_PACKET_RESEND_CMD:
+			if (gv_fake_camera->priv->packet_resend) {
+				/* No acknowledge: the answer is the resent GVSP packets themselves */
+				_handle_packet_resend (gv_fake_camera, packet, size);
+				success = TRUE;
+			} else
+				arv_warning_device ("[GvFakeCamera::handle_control_packet] Unknown command");
+			break;
 		default:
 			arv_warning_device ("[GvFakeCamera::handle_control_packet] Unknown command");
 	}
@@ -243,33 +556,342 @@ _handle_control_packet (ArvGvFakeCamera *gv_fake_camera, GSocket *socket,
 	return success;
 }
 
+/* Wait at most @timeout_ms for control packets and handle them. Returns the number of poll events. */
+
+static int
+_poll_control (ArvGvFakeCamera *gv_fake_camera, gint timeout_ms)
+{
+	ArvGvFakeCameraPrivate *priv = gv_fake_camera->priv;
+	int n_events;
+
+	priv->last_poll_us = g_get_monotonic_time ();
+
+	n_events = g_poll (priv->socket_fds, priv->n_socket_fds, timeout_ms);
+	if (n_events > 0) {
+		unsigned int i;
+
+		for (i = 0; i < ARV_GV_FAKE_CAMERA_N_INPUT_SOCKETS; i++) {
+			GSocket *socket = priv->input_sockets[i];
+			int count;
+			int n_packets = 0;
+
+			if (!G_IS_SOCKET (socket))
+				continue;
+
+			arv_gpollfd_clear_one (&priv->socket_fds[i], socket);
+
+			/* The input sockets are non blocking: drain what is queued, so that a burst of resend
+			 * requests does not wait one poll each. */
+			do {
+				GSocketAddress *remote_address = NULL;
+
+				count = g_socket_receive_message (socket, &remote_address, &priv->input_vector, 1,
+								  NULL, NULL, NULL, NULL, NULL);
+				if (count > 0) {
+					if (_handle_control_packet (gv_fake_camera, socket,
+								    remote_address, priv->input_vector.buffer, count))
+						arv_info_device ("[GvFakeCamera::thread] Control packet received");
+
+					/* A stop seen here, possibly from inside _send_frame, must not be lost if a start
+					 * follows before the sender thread looks again: the stream would carry on to the
+					 * previous destination port. It is looked for after each packet, not once after
+					 * the queue is drained: the controller waits for each acknowledge, but where the
+					 * acknowledge wakes it in place of this thread, its next command is already
+					 * queued when this loop reads again, and a stop, the next stream's destination
+					 * and its start can all be handled in one call, after which the acquisition
+					 * reads as running. */
+					if (arv_fake_camera_get_control_channel_privilege (priv->camera) == 0 ||
+					    arv_fake_camera_get_acquisition_status (priv->camera) == 0)
+						priv->stream_stop_pending = TRUE;
+				}
+				g_clear_object (&remote_address);
+				n_packets++;
+			} while (count > 0 && n_packets < ARV_GV_FAKE_CAMERA_MAX_CONTROL_PACKETS_PER_POLL);
+		}
+	}
+
+	_publish_counters (gv_fake_camera);
+
+	return n_events;
+}
+
+static void
+_stream_stop (ArvGvFakeCamera *gv_fake_camera)
+{
+	ArvGvFakeCameraPrivate *priv = gv_fake_camera->priv;
+	guint i;
+
+	if (priv->stream_address == NULL)
+		return;
+
+	priv->counters.streaming_time_us += g_get_monotonic_time () - priv->stream_start_us;
+	priv->counters.n_stream_stops++;
+
+	for (i = 0; i < priv->n_frames; i++)
+		g_clear_object (&priv->frames[i].buffer);
+	g_clear_pointer (&priv->frames, g_free);
+	priv->n_frames = 0;
+	g_clear_object (&priv->static_buffer);
+
+	g_clear_object (&priv->stream_address);
+
+	_publish_counters (gv_fake_camera);
+
+	arv_info_stream_thread ("[GvFakeCamera::thread] Stop stream");
+}
+
+/* Static image mode: the frame id after @frame_id, frame-id-step further in the 16 bit id space, where 0 is not a valid
+ * id. A step of 21845 (65535 / 3) makes every third frame reuse an id, which is how a test reaches, in a few frames,
+ * what a real stream reaches when its ids wrap every 65535 frames. */
+
+static guint16
+_next_static_frame_id (ArvGvFakeCamera *gv_fake_camera, guint16 frame_id)
+{
+	guint step = MAX (1, (guint) g_atomic_int_get ((gint *) &gv_fake_camera->priv->frame_id_step));
+
+	/* frame_id - 1 + step, modulo 65535, without going below 0 for frame_id 0 */
+	return (guint16) (((guint) frame_id + 65534 + step) % 65535 + 1);
+}
+
+static gboolean _create_and_bind_input_socket (GSocket **socket_out, const char *socket_name,
+					       GInetAddress *inet_address, unsigned int port,
+					       gboolean allow_reuse, gboolean blocking);
+
+/* new-source-port-per-stream: the GVSP socket is replaced by one on a new ephemeral port, as a device does after a
+ * reboot, or on every acquisition for some. The new socket is bound before the old one is closed, so that the port
+ * differs. */
+
+static void
+_renew_gvsp_socket (ArvGvFakeCamera *gv_fake_camera)
+{
+	ArvGvFakeCameraPrivate *priv = gv_fake_camera->priv;
+	GSocketAddress *local_address;
+	GInetAddress *inet_address;
+	GSocket *socket = NULL;
+
+	local_address = g_socket_get_local_address (priv->gvsp_socket, NULL);
+	if (local_address == NULL)
+		return;
+	inet_address = g_object_ref (g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (local_address)));
+
+	if (_create_and_bind_input_socket (&socket, "GVSP", inet_address, 0, FALSE, TRUE)) {
+		g_object_unref (priv->gvsp_socket);
+		priv->gvsp_socket = socket;
+	}
+
+	g_object_unref (inet_address);
+	g_object_unref (local_address);
+}
+
+static void
+_stream_start (ArvGvFakeCamera *gv_fake_camera)
+{
+	ArvGvFakeCameraPrivate *priv = gv_fake_camera->priv;
+	GInetAddress *inet_address;
+	char *inet_address_string;
+	GError *error = NULL;
+	size_t payload;
+	guint i;
+
+	priv->stream_address = arv_fake_camera_get_stream_address (priv->camera);
+	inet_address = g_inet_socket_address_get_address (G_INET_SOCKET_ADDRESS (priv->stream_address));
+	inet_address_string = g_inet_address_to_string (inet_address);
+	arv_info_stream_thread ("[GvFakeCamera::thread] Start stream to %s (%d)",
+				inet_address_string,
+				g_inet_socket_address_get_port (G_INET_SOCKET_ADDRESS (priv->stream_address)));
+	g_free (inet_address_string);
+
+	if (g_atomic_int_get (&priv->new_source_port_per_stream))
+		_renew_gvsp_socket (gv_fake_camera);
+
+	/* A connected datagram socket skips the per packet address handling in the kernel, which roughly doubles the
+	 * achievable packet rate on macOS loopback. Fall back to unconnected sends if it fails. */
+	priv->is_gvsp_connected = g_socket_connect (priv->gvsp_socket, priv->stream_address, NULL, &error);
+	if (!priv->is_gvsp_connected) {
+		arv_info_stream_thread ("[GvFakeCamera::thread] Failed to connect GVSP socket: %s",
+					error != NULL ? error->message : "unknown error");
+		g_clear_error (&error);
+	}
+	priv->send_error_reported = FALSE;
+
+	payload = arv_fake_camera_get_payload (priv->camera);
+
+	priv->n_frames = MAX (1, priv->frame_retention);
+	priv->frames = g_new0 (ArvGvFakeCameraFrame, priv->n_frames);
+	priv->current_frame = priv->n_frames - 1;
+
+	if (priv->static_image) {
+		priv->static_buffer = arv_buffer_new (payload, NULL);
+		/* Fill the image once per stream */
+		arv_fake_camera_fill_buffer (priv->camera, priv->static_buffer, NULL);
+		if (!priv->has_static_frame_id) {
+			priv->static_frame_id = priv->static_buffer->priv->frame_id;
+			priv->has_static_frame_id = TRUE;
+		} else
+			priv->static_frame_id = _next_static_frame_id (gv_fake_camera, priv->static_frame_id);
+		for (i = 0; i < priv->n_frames; i++)
+			priv->frames[i].buffer = g_object_ref (priv->static_buffer);
+	} else {
+		for (i = 0; i < priv->n_frames; i++)
+			priv->frames[i].buffer = arv_buffer_new (payload, NULL);
+	}
+
+	priv->stream_packet_count = 0;
+	priv->stream_frame_count = 0;
+	priv->stream_start_us = g_get_monotonic_time ();
+}
+
+/* Prepare the next frame in the retention ring. Returns NULL if no frame can be sent. */
+
+static ArvGvFakeCameraFrame *
+_prepare_frame (ArvGvFakeCamera *gv_fake_camera)
+{
+	ArvGvFakeCameraPrivate *priv = gv_fake_camera->priv;
+	ArvGvFakeCameraFrame *frame;
+	guint32 gv_packet_size;
+	size_t overhead = ARV_GVSP_PACKET_PROTOCOL_OVERHEAD (FALSE);
+
+	priv->current_frame = (priv->current_frame + 1) % priv->n_frames;
+	frame = &priv->frames[priv->current_frame];
+	frame->valid = FALSE;
+
+	if (priv->static_image) {
+		guint32 value = 0;
+
+		if (priv->stream_frame_count > 0)
+			priv->static_frame_id = _next_static_frame_id (gv_fake_camera, priv->static_frame_id);
+
+		arv_fake_camera_read_register (priv->camera, ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_OFFSET, &value);
+		gv_packet_size = (value >> ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_POS) &
+			ARV_GVBS_STREAM_CHANNEL_0_PACKET_SIZE_MASK;
+
+		frame->frame_id = priv->static_frame_id;
+		frame->timestamp_ns = g_get_monotonic_time () * 1000;
+	} else {
+		arv_fake_camera_fill_buffer (priv->camera, frame->buffer, &gv_packet_size);
+		if (arv_buffer_get_status (frame->buffer) != ARV_BUFFER_STATUS_SUCCESS) {
+			arv_warning_stream_thread ("[GvFakeCamera::prepare_frame] Failed to fill frame");
+			return NULL;
+		}
+		frame->frame_id = frame->buffer->priv->frame_id;
+		frame->timestamp_ns = arv_buffer_get_timestamp (frame->buffer);
+	}
+
+	if (gv_packet_size <= overhead) {
+		arv_warning_stream_thread ("[GvFakeCamera::prepare_frame] Invalid packet size (%u)", gv_packet_size);
+		return NULL;
+	}
+
+	frame->payload = frame->buffer->priv->allocated_size;
+	frame->data_size = gv_packet_size - overhead;
+	frame->n_blocks = (frame->payload + frame->data_size - 1) / frame->data_size + 2;
+	frame->valid = TRUE;
+
+	return frame;
+}
+
+static gboolean
+_should_drop (ArvGvFakeCamera *gv_fake_camera, ArvGvFakeCameraFrame *frame, guint32 block_id)
+{
+	ArvGvFakeCameraPrivate *priv = gv_fake_camera->priv;
+	guint64 frame_number = priv->stream_frame_count + 1;	/* 1 based, within the stream */
+
+	/* Random loss, as before: one draw per packet */
+	if (g_random_double () < priv->gvsp_lost_packet_ratio)
+		return TRUE;
+
+	if (priv->drop_every_nth_packet > 0 &&
+	    (priv->stream_packet_count + 1) % priv->drop_every_nth_packet == 0)
+		return TRUE;
+
+	if (priv->drop_burst_length > 0 && priv->drop_burst_frame_interval > 0 &&
+	    frame_number % priv->drop_burst_frame_interval == 0) {
+		guint32 n_data = frame->n_blocks - 2;
+		guint32 length = MIN (priv->drop_burst_length, n_data);
+		guint32 first = 1 + (n_data - length) / 2;	/* centred in the payload */
+
+		if (block_id >= first && block_id < first + length)
+			return TRUE;
+	}
+
+	if (priv->drop_head_frame_interval > 0 &&
+	    frame_number % priv->drop_head_frame_interval == 0 &&
+	    block_id <= priv->drop_head_length)
+		return TRUE;
+
+	return FALSE;
+}
+
+static void
+_send_frame (ArvGvFakeCamera *gv_fake_camera, ArvGvFakeCameraFrame *frame)
+{
+	ArvGvFakeCameraPrivate *priv = gv_fake_camera->priv;
+	gint64 start_us;
+	double packet_period_us;
+	guint poll_interval;
+	guint n_since_poll = 0;
+	guint32 block_id;
+
+	arv_info_stream_thread ("[GvFakeCamera::thread] Send frame %u", frame->frame_id);
+
+	start_us = g_get_monotonic_time ();
+	packet_period_us = priv->packet_rate > 0 ? 1e6 / priv->packet_rate : 0.0;
+	poll_interval = priv->gvcp_poll_interval;
+
+	for (block_id = 0; block_id < frame->n_blocks; block_id++) {
+		if (poll_interval > 0 && block_id > 0 &&
+		    (n_since_poll >= poll_interval ||
+		     g_get_monotonic_time () - priv->last_poll_us >= ARV_GV_FAKE_CAMERA_GVCP_POLL_PERIOD_US)) {
+			/* Serve resend requests (and any other command) while the frame is in flight */
+			_poll_control (gv_fake_camera, 0);
+			n_since_poll = 0;
+		}
+
+		if (packet_period_us > 0.0) {
+			gint64 deadline_us = start_us + (gint64) (block_id * packet_period_us);
+			gint64 now_us;
+
+			/* Spin rather than sleep: sleeping has a granularity far coarser than a packet period */
+			while ((now_us = g_get_monotonic_time ()) < deadline_us) {
+				if (poll_interval > 0 && now_us - priv->last_poll_us >= ARV_GV_FAKE_CAMERA_GVCP_POLL_PERIOD_US) {
+					_poll_control (gv_fake_camera, 0);
+					n_since_poll = 0;
+				}
+			}
+		}
+
+		if (_should_drop (gv_fake_camera, frame, block_id)) {
+			priv->counters.n_dropped_packets++;
+			arv_debug_stream_thread ("Drop GVSP packet frame: %u, block: %u", frame->frame_id, block_id);
+		} else
+			_send_block (gv_fake_camera, frame, block_id);
+
+		priv->stream_packet_count++;
+		n_since_poll++;
+	}
+
+	priv->stream_frame_count++;
+	priv->counters.n_sent_frames++;
+	priv->counters.sending_time_us += g_get_monotonic_time () - start_us;
+
+	_publish_counters (gv_fake_camera);
+}
+
 static void *
 _thread (void *user_data)
 {
 	ArvGvFakeCamera *gv_fake_camera = user_data;
-	ArvBuffer *image_buffer = NULL;
-	GError *error = NULL;
-	GSocketAddress *stream_address = NULL;
-	void *packet_buffer;
-	size_t packet_size;
-	size_t payload = 0;
-	guint16 block_id;
-	ptrdiff_t offset;
-	guint32 gv_packet_size;
-	GInputVector input_vector;
-	int n_events;
+	ArvGvFakeCameraPrivate *priv = gv_fake_camera->priv;
 	gboolean is_streaming = FALSE;
 
-	input_vector.buffer = g_malloc0 (ARV_GV_FAKE_CAMERA_BUFFER_SIZE);
-	input_vector.size = ARV_GV_FAKE_CAMERA_BUFFER_SIZE;
-
-	packet_buffer = g_malloc (ARV_GV_FAKE_CAMERA_BUFFER_SIZE);
+	priv->input_vector.buffer = g_malloc0 (ARV_GV_FAKE_CAMERA_BUFFER_SIZE);
+	priv->input_vector.size = ARV_GV_FAKE_CAMERA_BUFFER_SIZE;
 
 	do {
 		guint64 next_timestamp_us;
 
 		if (is_streaming) {
-			arv_fake_camera_get_sleep_time_for_next_frame (gv_fake_camera->priv->camera, &next_timestamp_us);
+			arv_fake_camera_get_sleep_time_for_next_frame (priv->camera, &next_timestamp_us);
 		} else {
 			next_timestamp_us = g_get_monotonic_time () + 100000;
 		}
@@ -286,171 +908,37 @@ _thread (void *user_data)
 			else if (timeout_ms > 100)
 				timeout_ms = 100;
 
-			n_events = g_poll (gv_fake_camera->priv->socket_fds, gv_fake_camera->priv->n_socket_fds, timeout_ms);
-			if (n_events > 0) {
-				unsigned int i;
-
-				for (i = 0; i < ARV_GV_FAKE_CAMERA_N_INPUT_SOCKETS; i++) {
-					GSocket *socket = gv_fake_camera->priv->input_sockets[i];
-					int count;
-
-					if (G_IS_SOCKET (socket)) {
-						GSocketAddress *remote_address = NULL;
-
-						arv_gpollfd_clear_one (&gv_fake_camera->priv->socket_fds[i], socket);
-
-						count = g_socket_receive_message (socket, &remote_address,
-                                                                                  &input_vector, 1, NULL, NULL,
-										  NULL, NULL, NULL);
-						if (count > 0) {
-							if (_handle_control_packet (gv_fake_camera, socket,
-										    remote_address, input_vector.buffer,
-                                                                                    count))
-								arv_info_device
-                                                                        ("[GvFakeCamera::thread] Control packet received");
-						}
-						g_clear_object (&remote_address);
-					}
-				}
-
-				if (arv_fake_camera_get_control_channel_privilege (gv_fake_camera->priv->camera) == 0 ||
-				    arv_fake_camera_get_acquisition_status (gv_fake_camera->priv->camera) == 0) {
-					if (stream_address != NULL) {
-						g_object_unref (stream_address);
-						stream_address = NULL;
-						g_object_unref (image_buffer);
-						image_buffer = NULL;
-						arv_info_stream_thread ("[GvFakeCamera::thread] Stop stream");
-					}
-					is_streaming = FALSE;
-				}
+			_poll_control (gv_fake_camera, timeout_ms);
+			if (priv->stream_stop_pending) {
+				priv->stream_stop_pending = FALSE;
+				_stream_stop (gv_fake_camera);
+				is_streaming = FALSE;
 			}
-		} while (!g_atomic_int_get (&gv_fake_camera->priv->cancel) && g_get_monotonic_time () < next_timestamp_us);
+		} while (!g_atomic_int_get (&priv->cancel) && g_get_monotonic_time () < next_timestamp_us);
 
-		if (arv_fake_camera_get_control_channel_privilege (gv_fake_camera->priv->camera) != 0 &&
-		    arv_fake_camera_get_acquisition_status (gv_fake_camera->priv->camera) != 0) {
-			if (stream_address == NULL) {
-				GInetAddress *inet_address;
-				char *inet_address_string;
+		if (arv_fake_camera_get_control_channel_privilege (priv->camera) != 0 &&
+		    arv_fake_camera_get_acquisition_status (priv->camera) != 0) {
+			if (priv->stream_address == NULL)
+				_stream_start (gv_fake_camera);
 
-				stream_address = arv_fake_camera_get_stream_address (gv_fake_camera->priv->camera);
-				inet_address = g_inet_socket_address_get_address
-					(G_INET_SOCKET_ADDRESS (stream_address));
-				inet_address_string = g_inet_address_to_string (inet_address);
-				arv_info_stream_thread ("[GvFakeCamera::thread] Start stream to %s (%d)",
-							 inet_address_string,
-							 g_inet_socket_address_get_port
-							 (G_INET_SOCKET_ADDRESS (stream_address)));
-				g_free (inet_address_string);
+			if (arv_fake_camera_is_in_free_running_mode (priv->camera) ||
+			    (arv_fake_camera_is_in_software_trigger_mode (priv->camera) &&
+			     arv_fake_camera_check_and_acknowledge_software_trigger (priv->camera))) {
+				ArvGvFakeCameraFrame *frame;
 
-				payload = arv_fake_camera_get_payload (gv_fake_camera->priv->camera);
-				image_buffer = arv_buffer_new (payload, NULL);
-			}
-
-			if (arv_fake_camera_is_in_free_running_mode (gv_fake_camera->priv->camera) ||
-			    (arv_fake_camera_is_in_software_trigger_mode (gv_fake_camera->priv->camera) &&
-			     arv_fake_camera_check_and_acknowledge_software_trigger (gv_fake_camera->priv->camera))) {
-				arv_fake_camera_fill_buffer (gv_fake_camera->priv->camera, image_buffer,
-                                                             &gv_packet_size);
-
-				arv_info_stream_thread ("[GvFakeCamera::thread] Send frame %" G_GUINT64_FORMAT,
-                                                        image_buffer->priv->frame_id);
-
-				block_id = 0;
-
-                                arv_gvsp_packet_new_image_leader (image_buffer->priv->frame_id,
-                                                                  block_id,
-                                                                  arv_buffer_get_timestamp(image_buffer),
-                                                                  arv_buffer_get_image_pixel_format(image_buffer),
-                                                                  arv_buffer_get_image_width(image_buffer),
-                                                                  arv_buffer_get_image_height(image_buffer),
-                                                                  arv_buffer_get_image_x(image_buffer),
-                                                                  arv_buffer_get_image_y(image_buffer),
-                                                                  0, 0,
-                                                                  packet_buffer, ARV_GV_FAKE_CAMERA_BUFFER_SIZE,
-                                                                  &packet_size);
-
-				if (g_random_double () >= gv_fake_camera->priv->gvsp_lost_packet_ratio)
-					g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
-							packet_buffer, packet_size, NULL, &error);
-				else
-					arv_info_stream_thread
-                                                ("Drop GVSP leader packet frame: %" G_GUINT64_FORMAT,
-                                                 image_buffer->priv->frame_id);
-
-				if (error != NULL) {
-					arv_warning_stream_thread
-                                                ("[GvFakeCamera::thread] Failed to send leader for frame %"
-                                                 G_GUINT64_FORMAT ": %s", image_buffer->priv->frame_id, error->message);
-                                        g_clear_error (&error);
-                                }
-
-				block_id++;
-
-				offset = 0;
-				while (offset < payload) {
-					size_t data_size;
-
-					data_size = MIN (gv_packet_size - ARV_GVSP_PACKET_PROTOCOL_OVERHEAD (FALSE),
-							payload - offset);
-
-                                        arv_gvsp_packet_new_payload (image_buffer->priv->frame_id, block_id,
-                                                                     data_size,
-                                                                     ((char *) image_buffer->priv->data) + offset,
-                                                                     packet_buffer, ARV_GV_FAKE_CAMERA_BUFFER_SIZE,
-                                                                     &packet_size);
-
-					if (g_random_double () >= gv_fake_camera->priv->gvsp_lost_packet_ratio)
-						g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
-								packet_buffer, packet_size, NULL, &error);
-					else
-						arv_info_stream_thread
-                                                        ("Drop GVSP data packet frame:%" G_GUINT64_FORMAT
-                                                         ", block:%u", image_buffer->priv->frame_id, block_id);
-
-					if (error != NULL) {
-						arv_info_stream_thread
-                                                        ("[GvFakeCamera::thread] Failed to send frame block %d for frame"
-                                                         " %" G_GUINT64_FORMAT ": %s",
-                                                         block_id, image_buffer->priv->frame_id, error->message);
-                                                g_clear_error (&error);
-                                        }
-
-					offset += data_size;
-					block_id++;
-				}
-
-                                arv_gvsp_packet_new_data_trailer (image_buffer->priv->frame_id, block_id, arv_buffer_get_image_height(image_buffer) ,
-                                                                  packet_buffer, ARV_GV_FAKE_CAMERA_BUFFER_SIZE,
-                                                                  &packet_size);
-
-				if (g_random_double () >= gv_fake_camera->priv->gvsp_lost_packet_ratio)
-					g_socket_send_to (gv_fake_camera->priv->gvsp_socket, stream_address,
-							packet_buffer, packet_size, NULL, &error);
-				else
-					arv_info_stream_thread ("Drop GVSP trailer packet frame: %" G_GUINT64_FORMAT,
-								image_buffer->priv->frame_id);
-
-				if (error != NULL) {
-					arv_info_stream_thread
-                                                ("[GvFakeCamera::thread] Failed to send trailer for frame %"
-                                                 G_GUINT64_FORMAT ": %s", image_buffer->priv->frame_id, error->message);
-                                        g_clear_error (&error);
-                                }
+				frame = _prepare_frame (gv_fake_camera);
+				if (frame != NULL)
+					_send_frame (gv_fake_camera, frame);
 
 				is_streaming = TRUE;
 			}
 		}
 
-	} while (!g_atomic_int_get (&gv_fake_camera->priv->cancel));
+	} while (!g_atomic_int_get (&priv->cancel));
 
-	if (stream_address != NULL)
-		g_object_unref (stream_address);
-	if (image_buffer != NULL)
-		g_object_unref (image_buffer);
+	_stream_stop (gv_fake_camera);
 
-	g_free (packet_buffer);
-	g_free (input_vector.buffer);
+	g_clear_pointer (&priv->input_vector.buffer, g_free);
 
 	return NULL;
 }
@@ -645,6 +1133,31 @@ arv_gv_fake_camera_new (const char *interface_name, const char *serial_number)
 	return arv_gv_fake_camera_new_full (interface_name, serial_number, NULL);
 }
 
+/* Settings that live in the device registers. Properties are set before the camera exists during construction, so
+ * this runs again from _constructed. */
+
+static void
+_apply_device_settings (ArvGvFakeCamera *gv_fake_camera)
+{
+	ArvGvFakeCameraPrivate *priv = gv_fake_camera->priv;
+	guint32 capabilities = 0;
+
+	if (priv->camera == NULL)
+		return;
+
+	arv_fake_camera_read_register (priv->camera, ARV_GVBS_GVCP_CAPABILITY_OFFSET, &capabilities);
+	if (priv->packet_resend)
+		capabilities |= (guint32) (ARV_GVBS_GVCP_CAPABILITY_PACKET_RESEND);
+	else
+		capabilities &= ~((guint32) (ARV_GVBS_GVCP_CAPABILITY_PACKET_RESEND));
+	arv_fake_camera_write_register (priv->camera, ARV_GVBS_GVCP_CAPABILITY_OFFSET, capabilities);
+
+	if (priv->sensor_width > 0)
+		arv_fake_camera_write_register (priv->camera, ARV_FAKE_CAMERA_REGISTER_SENSOR_WIDTH, priv->sensor_width);
+	if (priv->sensor_height > 0)
+		arv_fake_camera_write_register (priv->camera, ARV_FAKE_CAMERA_REGISTER_SENSOR_HEIGHT, priv->sensor_height);
+}
+
 static void
 _set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
 {
@@ -666,6 +1179,168 @@ _set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *
 			break;
 		case PROP_GVSP_LOST_PACKET_RATIO:
 			gv_fake_camera->priv->gvsp_lost_packet_ratio = g_value_get_double (value);
+			break;
+		case PROP_PACKET_RESEND:
+			gv_fake_camera->priv->packet_resend = g_value_get_boolean (value);
+			_apply_device_settings (gv_fake_camera);
+			break;
+		case PROP_FRAME_RETENTION:
+			gv_fake_camera->priv->frame_retention = g_value_get_uint (value);
+			break;
+		case PROP_STATIC_IMAGE:
+			gv_fake_camera->priv->static_image = g_value_get_boolean (value);
+			break;
+		case PROP_PACKET_RATE:
+			gv_fake_camera->priv->packet_rate = g_value_get_uint (value);
+			break;
+		case PROP_GVCP_POLL_INTERVAL:
+			gv_fake_camera->priv->gvcp_poll_interval = g_value_get_uint (value);
+			break;
+		case PROP_DROP_EVERY_NTH_PACKET:
+			gv_fake_camera->priv->drop_every_nth_packet = g_value_get_uint (value);
+			break;
+		case PROP_DROP_BURST_LENGTH:
+			gv_fake_camera->priv->drop_burst_length = g_value_get_uint (value);
+			break;
+		case PROP_DROP_BURST_FRAME_INTERVAL:
+			gv_fake_camera->priv->drop_burst_frame_interval = g_value_get_uint (value);
+			break;
+		case PROP_DROP_HEAD_LENGTH:
+			gv_fake_camera->priv->drop_head_length = g_value_get_uint (value);
+			break;
+		case PROP_DROP_HEAD_FRAME_INTERVAL:
+			gv_fake_camera->priv->drop_head_frame_interval = g_value_get_uint (value);
+			break;
+		case PROP_RESEND_LOST_RATIO:
+			gv_fake_camera->priv->resend_lost_ratio = g_value_get_double (value);
+			break;
+		case PROP_FRAME_ID_STEP:
+			g_atomic_int_set ((gint *) &gv_fake_camera->priv->frame_id_step, g_value_get_uint (value));
+			break;
+		case PROP_NEW_SOURCE_PORT_PER_STREAM:
+			g_atomic_int_set (&gv_fake_camera->priv->new_source_port_per_stream,
+					  g_value_get_boolean (value));
+			break;
+		case PROP_UNAVAILABLE_BEYOND_TRAILER:
+			g_atomic_int_set (&gv_fake_camera->priv->unavailable_beyond_trailer,
+					  g_value_get_boolean (value));
+			break;
+		case PROP_SENSOR_WIDTH:
+			gv_fake_camera->priv->sensor_width = g_value_get_uint (value);
+			_apply_device_settings (gv_fake_camera);
+			break;
+		case PROP_SENSOR_HEIGHT:
+			gv_fake_camera->priv->sensor_height = g_value_get_uint (value);
+			_apply_device_settings (gv_fake_camera);
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
+
+static void
+_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	ArvGvFakeCamera *gv_fake_camera = ARV_GV_FAKE_CAMERA (object);
+	ArvGvFakeCameraPrivate *priv = gv_fake_camera->priv;
+	ArvGvFakeCameraCounters counters;
+
+	g_mutex_lock (&priv->counters_mutex);
+	counters = priv->published_counters;
+	g_mutex_unlock (&priv->counters_mutex);
+
+	switch (prop_id)
+	{
+		case PROP_GVSP_LOST_PACKET_RATIO:
+			g_value_set_double (value, priv->gvsp_lost_packet_ratio);
+			break;
+		case PROP_PACKET_RESEND:
+			g_value_set_boolean (value, priv->packet_resend);
+			break;
+		case PROP_FRAME_RETENTION:
+			g_value_set_uint (value, priv->frame_retention);
+			break;
+		case PROP_STATIC_IMAGE:
+			g_value_set_boolean (value, priv->static_image);
+			break;
+		case PROP_PACKET_RATE:
+			g_value_set_uint (value, priv->packet_rate);
+			break;
+		case PROP_GVCP_POLL_INTERVAL:
+			g_value_set_uint (value, priv->gvcp_poll_interval);
+			break;
+		case PROP_DROP_EVERY_NTH_PACKET:
+			g_value_set_uint (value, priv->drop_every_nth_packet);
+			break;
+		case PROP_DROP_BURST_LENGTH:
+			g_value_set_uint (value, priv->drop_burst_length);
+			break;
+		case PROP_DROP_BURST_FRAME_INTERVAL:
+			g_value_set_uint (value, priv->drop_burst_frame_interval);
+			break;
+		case PROP_DROP_HEAD_LENGTH:
+			g_value_set_uint (value, priv->drop_head_length);
+			break;
+		case PROP_DROP_HEAD_FRAME_INTERVAL:
+			g_value_set_uint (value, priv->drop_head_frame_interval);
+			break;
+		case PROP_RESEND_LOST_RATIO:
+			g_value_set_double (value, priv->resend_lost_ratio);
+			break;
+		case PROP_FRAME_ID_STEP:
+			g_value_set_uint (value, g_atomic_int_get ((gint *) &priv->frame_id_step));
+			break;
+		case PROP_NEW_SOURCE_PORT_PER_STREAM:
+			g_value_set_boolean (value, g_atomic_int_get (&priv->new_source_port_per_stream));
+			break;
+		case PROP_UNAVAILABLE_BEYOND_TRAILER:
+			g_value_set_boolean (value, g_atomic_int_get (&priv->unavailable_beyond_trailer));
+			break;
+		case PROP_SENSOR_WIDTH:
+			g_value_set_uint (value, priv->sensor_width);
+			break;
+		case PROP_SENSOR_HEIGHT:
+			g_value_set_uint (value, priv->sensor_height);
+			break;
+		case PROP_N_SENT_FRAMES:
+			g_value_set_uint64 (value, counters.n_sent_frames);
+			break;
+		case PROP_N_SENT_PACKETS:
+			g_value_set_uint64 (value, counters.n_sent_packets);
+			break;
+		case PROP_N_SEND_ERRORS:
+			g_value_set_uint64 (value, counters.n_send_errors);
+			break;
+		case PROP_N_SEND_NO_BUFFER_SPACE:
+			g_value_set_uint64 (value, counters.n_send_no_buffer_space);
+			break;
+		case PROP_N_DROPPED_PACKETS:
+			g_value_set_uint64 (value, counters.n_dropped_packets);
+			break;
+		case PROP_N_RESEND_REQUESTS:
+			g_value_set_uint64 (value, counters.n_resend_requests);
+			break;
+		case PROP_N_RESEND_REQUESTED_PACKETS:
+			g_value_set_uint64 (value, counters.n_resend_requested_packets);
+			break;
+		case PROP_N_RESENT_PACKETS:
+			g_value_set_uint64 (value, counters.n_resent_packets);
+			break;
+		case PROP_N_RESEND_DROPPED_PACKETS:
+			g_value_set_uint64 (value, counters.n_resend_dropped_packets);
+			break;
+		case PROP_N_RESEND_UNAVAILABLE:
+			g_value_set_uint64 (value, counters.n_resend_unavailable);
+			break;
+		case PROP_N_STREAM_STOPS:
+			g_value_set_uint64 (value, counters.n_stream_stops);
+			break;
+		case PROP_SENDING_TIME_US:
+			g_value_set_uint64 (value, counters.sending_time_us);
+			break;
+		case PROP_STREAMING_TIME_US:
+			g_value_set_uint64 (value, counters.streaming_time_us);
 			break;
 		default:
 			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
@@ -713,6 +1388,8 @@ static void
 arv_gv_fake_camera_init (ArvGvFakeCamera *gv_fake_camera)
 {
 	gv_fake_camera->priv = arv_gv_fake_camera_get_instance_private (gv_fake_camera);
+
+	g_mutex_init (&gv_fake_camera->priv->counters_mutex);
 }
 
 static void
@@ -723,6 +1400,7 @@ _constructed (GObject *gobject)
 	G_OBJECT_CLASS (arv_gv_fake_camera_parent_class)->constructed (gobject);
 
 	gv_fake_camera->priv->camera = arv_fake_camera_new_full (gv_fake_camera->priv->serial_number, gv_fake_camera->priv->genicam_filename);
+	_apply_device_settings (gv_fake_camera);
 	gv_fake_camera->priv->is_running = arv_gv_fake_camera_start (gv_fake_camera);
 }
 
@@ -741,6 +1419,8 @@ _finalize (GObject *object)
 	g_clear_pointer (&gv_fake_camera->priv->serial_number, g_free);
 	g_clear_pointer (&gv_fake_camera->priv->genicam_filename, g_free);
 
+	g_mutex_clear (&gv_fake_camera->priv->counters_mutex);
+
 	G_OBJECT_CLASS (arv_gv_fake_camera_parent_class)->finalize (object);
 }
 
@@ -750,6 +1430,7 @@ arv_gv_fake_camera_class_init (ArvGvFakeCameraClass *this_class)
 	GObjectClass *object_class = G_OBJECT_CLASS (this_class);
 
 	object_class->set_property = _set_property;
+	object_class->get_property = _get_property;
 	object_class->constructed = _constructed;
 	object_class->finalize = _finalize;
 
@@ -786,7 +1467,272 @@ arv_gv_fake_camera_class_init (ArvGvFakeCameraClass *this_class)
 							      "GVSP lost packet ratio",
 							      "GVSP lost packet ratio",
 							      0.0, 1.0, 0.0,
-							      G_PARAM_WRITABLE | G_PARAM_CONSTRUCT |
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_PACKET_RESEND,
+					 g_param_spec_boolean ("packet-resend",
+							      "Packet resend",
+							      "Advertise and serve GVCP PACKET_RESEND commands",
+							      FALSE,
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_FRAME_RETENTION,
+					 g_param_spec_uint ("frame-retention",
+							      "Frame retention",
+							      "Number of frames kept for resends, the frame being sent included",
+							      1, 1024, ARV_GV_FAKE_CAMERA_FRAME_RETENTION_DEFAULT,
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_STATIC_IMAGE,
+					 g_param_spec_boolean ("static-image",
+							      "Static image",
+							      "Fill the image once per stream, then only advance frame id and timestamp",
+							      FALSE,
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_PACKET_RATE,
+					 g_param_spec_uint ("packet-rate",
+							      "Packet rate",
+							      "Packets per second within a frame, 0 for a burst as fast as possible",
+							      0, G_MAXUINT, 0,
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_GVCP_POLL_INTERVAL,
+					 g_param_spec_uint ("gvcp-poll-interval",
+							      "GVCP poll interval",
+							      "Packets sent between two GVCP polls during a frame, 0 to only poll between frames",
+							      0, G_MAXUINT, ARV_GV_FAKE_CAMERA_GVCP_POLL_INTERVAL_DEFAULT,
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_DROP_EVERY_NTH_PACKET,
+					 g_param_spec_uint ("drop-every-nth-packet",
+							      "Drop every Nth packet",
+							      "Drop every Nth first transmission of the stream, 0 to disable",
+							      0, G_MAXUINT, 0,
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_DROP_BURST_LENGTH,
+					 g_param_spec_uint ("drop-burst-length",
+							      "Drop burst length",
+							      "Consecutive data packets dropped in the middle of every drop-burst-frame-interval-th frame",
+							      0, G_MAXUINT, 0,
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_DROP_BURST_FRAME_INTERVAL,
+					 g_param_spec_uint ("drop-burst-frame-interval",
+							      "Drop burst frame interval",
+							      "Drop a burst every N frames, 0 to disable",
+							      0, G_MAXUINT, 0,
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_DROP_HEAD_LENGTH,
+					 g_param_spec_uint ("drop-head-length",
+							      "Drop head length",
+							      "Data packets dropped after the leader of every drop-head-frame-interval-th frame",
+							      0, G_MAXUINT, 0,
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_DROP_HEAD_FRAME_INTERVAL,
+					 g_param_spec_uint ("drop-head-frame-interval",
+							      "Drop head frame interval",
+							      "Drop the leader and drop-head-length packets every N frames, 0 to disable",
+							      0, G_MAXUINT, 0,
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_RESEND_LOST_RATIO,
+					 g_param_spec_double ("resend-lost-ratio",
+							      "Resend lost ratio",
+							      "Probability of dropping a resent packet",
+							      0.0, 1.0, 0.0,
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_FRAME_ID_STEP,
+					 g_param_spec_uint ("frame-id-step",
+							      "Frame id step",
+							      "Static image mode: increment between consecutive frame ids, in the"
+							      " 16 bit id space without 0 (65535 values); 21845 repeats an id"
+							      " every third frame, a fast stand-in for a frame id wrap",
+							      1, 65534, 1,
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_NEW_SOURCE_PORT_PER_STREAM,
+					 g_param_spec_boolean ("new-source-port-per-stream",
+							       "New source port per stream",
+							       "Send every stream (acquisition) from a new UDP source port",
+							       FALSE,
+							       G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							       G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							       G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_UNAVAILABLE_BEYOND_TRAILER,
+					 g_param_spec_boolean ("unavailable-beyond-trailer",
+							       "Unavailable beyond trailer",
+							       "Answer a resend request that runs past the trailer with"
+							       " PACKET_UNAVAILABLE for the first missing block, before the"
+							       " resent blocks",
+							       FALSE,
+							       G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							       G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							       G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_SENSOR_WIDTH,
+					 g_param_spec_uint ("sensor-width",
+							      "Sensor width",
+							      "Sensor width in pixels, 0 for the default",
+							      0, 65535, 0,
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_SENSOR_HEIGHT,
+					 g_param_spec_uint ("sensor-height",
+							      "Sensor height",
+							      "Sensor height in pixels, 0 for the default",
+							      0, 65535, 0,
+							      G_PARAM_READWRITE | G_PARAM_CONSTRUCT |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_N_SENT_FRAMES,
+					 g_param_spec_uint64 ("n-sent-frames",
+							      "n-sent-frames",
+							      "Frames sent",
+							      0, G_MAXUINT64, 0,
+							      G_PARAM_READABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_N_SENT_PACKETS,
+					 g_param_spec_uint64 ("n-sent-packets",
+							      "n-sent-packets",
+							      "Datagrams accepted by the socket, resent and error packets included",
+							      0, G_MAXUINT64, 0,
+							      G_PARAM_READABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_N_SEND_ERRORS,
+					 g_param_spec_uint64 ("n-send-errors",
+							      "n-send-errors",
+							      "Failed sends",
+							      0, G_MAXUINT64, 0,
+							      G_PARAM_READABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_N_SEND_NO_BUFFER_SPACE,
+					 g_param_spec_uint64 ("n-send-no-buffer-space",
+							      "n-send-no-buffer-space",
+							      "Failed sends for lack of buffer space (ENOBUFS)",
+							      0, G_MAXUINT64, 0,
+							      G_PARAM_READABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_N_DROPPED_PACKETS,
+					 g_param_spec_uint64 ("n-dropped-packets",
+							      "n-dropped-packets",
+							      "First transmissions dropped by injected loss",
+							      0, G_MAXUINT64, 0,
+							      G_PARAM_READABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_N_RESEND_REQUESTS,
+					 g_param_spec_uint64 ("n-resend-requests",
+							      "n-resend-requests",
+							      "PACKET_RESEND commands received",
+							      0, G_MAXUINT64, 0,
+							      G_PARAM_READABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_N_RESEND_REQUESTED_PACKETS,
+					 g_param_spec_uint64 ("n-resend-requested-packets",
+							      "n-resend-requested-packets",
+							      "Blocks covered by PACKET_RESEND commands",
+							      0, G_MAXUINT64, 0,
+							      G_PARAM_READABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_N_RESENT_PACKETS,
+					 g_param_spec_uint64 ("n-resent-packets",
+							      "n-resent-packets",
+							      "Packets resent",
+							      0, G_MAXUINT64, 0,
+							      G_PARAM_READABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_N_RESEND_DROPPED_PACKETS,
+					 g_param_spec_uint64 ("n-resend-dropped-packets",
+							      "n-resend-dropped-packets",
+							      "Resent packets dropped by resend-lost-ratio",
+							      0, G_MAXUINT64, 0,
+							      G_PARAM_READABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_N_RESEND_UNAVAILABLE,
+					 g_param_spec_uint64 ("n-resend-unavailable",
+							      "n-resend-unavailable",
+							      "PACKET_UNAVAILABLE error packets sent",
+							      0, G_MAXUINT64, 0,
+							      G_PARAM_READABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_N_STREAM_STOPS,
+					 g_param_spec_uint64 ("n-stream-stops",
+							      "n-stream-stops",
+							      "Streams ended, each counted after the last packet of its last frame",
+							      0, G_MAXUINT64, 0,
+							      G_PARAM_READABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_SENDING_TIME_US,
+					 g_param_spec_uint64 ("sending-time-us",
+							      "sending-time-us",
+							      "Time spent sending frames, leader to trailer, in microseconds",
+							      0, G_MAXUINT64, 0,
+							      G_PARAM_READABLE |
+							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
+							      G_PARAM_STATIC_BLURB));
+	g_object_class_install_property (object_class,
+					 PROP_STREAMING_TIME_US,
+					 g_param_spec_uint64 ("streaming-time-us",
+							      "streaming-time-us",
+							      "Time spent with an open stream, in microseconds",
+							      0, G_MAXUINT64, 0,
+							      G_PARAM_READABLE |
 							      G_PARAM_STATIC_NAME | G_PARAM_STATIC_NICK |
 							      G_PARAM_STATIC_BLURB));
 }
