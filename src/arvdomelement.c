@@ -26,6 +26,7 @@
  * @short_description: Base class for DOM element nodes
  */
 
+#include <arvdomnodeprivate.h>
 #include <arvdomelement.h>
 #include <string.h>
 
@@ -61,6 +62,7 @@ arv_dom_element_set_attribute (ArvDomElement* self, const char* name, const char
 {
 	g_return_if_fail (ARV_IS_DOM_ELEMENT (self));
 	g_return_if_fail (name != NULL);
+	g_return_if_fail (!arv_dom_node_is_write_locked (ARV_DOM_NODE (self)));
 
 	ARV_DOM_ELEMENT_GET_CLASS (self)->set_attribute (self, name, attribute_value);
 

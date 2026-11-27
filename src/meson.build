@@ -97,6 +97,7 @@ library_sources = [
 	'arvstream.c',
 	'arvbuffer.c',
 	'arvchunkparser.c',
+	'arvevent.c',
 	'arvgvinterface.c',
 	'arvgvdevice.c',
 	'arvgvstream.c',
@@ -147,6 +148,7 @@ library_headers = [
 
 	'arvenums.h',
 	'arvevaluator.h',
+	'arvevent.h',
 
 	'arvfakecamera.h',
 	'arvfakedevice.h',
@@ -216,6 +218,8 @@ library_private_headers = [
 	'arvchunkparserprivate.h',
 	'arvdebugprivate.h',
 	'arvdeviceprivate.h',
+	'arvdomnodeprivate.h',
+	'arveventprivate.h',
 	'arvfakedeviceprivate.h',
 	'arvfakeinterfaceprivate.h',
 	'arvfakestreamprivate.h',
@@ -223,6 +227,7 @@ library_private_headers = [
 	'arvgcconverterprivate.h',
 	'arvgcdefaultsprivate.h',
 	'arvgcfeaturenodeprivate.h',
+	'arvgcportprivate.h',
 	'arvgcregisternodeprivate.h',
 	'arvgcswissknifeprivate.h',
 	'arvgvcpprivate.h',

@@ -26,6 +26,7 @@
  */
 
 #include <arvgccategory.h>
+#include <arvdomnodeprivate.h>
 #include <arvgcpropertynode.h>
 #include <arvgc.h>
 #include <string.h>
@@ -34,6 +35,8 @@ struct _ArvGcCategory {
 	ArvGcFeatureNode	base;
 
 	GSList *features;
+	/* TRUE if features was built while the document is write locked */
+	gint features_are_frozen;
 };
 
 struct _ArvGcCategoryClass {
@@ -69,22 +72,12 @@ _free_features (ArvGcCategory *category)
 	category->features = NULL;
 }
 
-/**
- * arv_gc_category_get_features:
- * @category: a #ArvGcCategory
- *
- * Get a list of strings with the name of the features listed in the given category node.
- *
- * Returns: (element-type utf8) (transfer none): a list of strings.
- */
-
-const GSList *
-arv_gc_category_get_features (ArvGcCategory *category)
+static void
+_build_features (ArvDomNode *self)
 {
+	ArvGcCategory *category = ARV_GC_CATEGORY (self);
 	ArvDomNode *iter;
 	ArvGcNode *node;
-
-	g_return_val_if_fail (ARV_IS_GC_CATEGORY (category), NULL);
 
 	_free_features (category);
 
@@ -102,8 +95,35 @@ arv_gc_category_get_features (ArvGcCategory *category)
                         }
                 }
         }
+}
+
+/**
+ * arv_gc_category_get_features:
+ * @category: a #ArvGcCategory
+ *
+ * Get a list of strings with the name of the features listed in the given category node.
+ *
+ * The list is owned by @category. When the Genicam data are write locked, which is the case once the device is
+ * created, the list is built at the first call and stays valid until the write lock is released, which makes this
+ * function thread safe. Otherwise the list is rebuilt, and the previous one freed, at each call.
+ *
+ * Returns: (element-type utf8) (transfer none): a list of strings.
+ */
+
+const GSList *
+arv_gc_category_get_features (ArvGcCategory *category)
+{
+	g_return_val_if_fail (ARV_IS_GC_CATEGORY (category), NULL);
+
+	arv_dom_node_lazy_build (ARV_DOM_NODE (category), &category->features_are_frozen, _build_features);
 
 	return category->features;
+}
+
+static void
+arv_gc_category_write_lock_released (ArvDomNode *self)
+{
+	g_atomic_int_set (&ARV_GC_CATEGORY (self)->features_are_frozen, FALSE);
 }
 
 ArvGcNode *
@@ -141,4 +161,5 @@ arv_gc_category_class_init (ArvGcCategoryClass *this_class)
 	object_class->finalize = arv_gc_category_finalize;
 	dom_node_class->get_node_name = arv_gc_category_get_node_name;
 	dom_node_class->can_append_child = arv_gc_category_can_append_child;
+	dom_node_class->write_lock_released = arv_gc_category_write_lock_released;
 }

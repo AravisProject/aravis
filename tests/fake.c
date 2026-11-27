@@ -690,7 +690,11 @@ camera_trigger_selector_test (void)
 	arv_dom_node_append_child (ARV_DOM_NODE (invalidator),
 				   ARV_DOM_NODE (arv_dom_document_create_text_node (ARV_DOM_DOCUMENT (genicam),
 										    "TriggerMode")));
+	/* The device Genicam data are write locked once the device is created */
+	g_assert_true (arv_dom_document_get_write_lock (ARV_DOM_DOCUMENT (genicam)));
+	arv_dom_document_set_write_lock (ARV_DOM_DOCUMENT (genicam), FALSE);
 	arv_dom_node_append_child (ARV_DOM_NODE (genicam), ARV_DOM_NODE (invalidator));
+	arv_dom_document_set_write_lock (ARV_DOM_DOCUMENT (genicam), TRUE);
 	arv_gc_invalidator_has_changed (ARV_GC_INVALIDATOR_NODE (invalidator));
 
 	arv_camera_set_trigger (camera, "Software", &error);
@@ -811,6 +815,611 @@ set_features_from_string_test (void)
 	g_object_unref (device);
 }
 
+#define GENICAM_LOCK_TEST_N_ITERATIONS	2000
+
+typedef struct {
+	ArvCamera *camera;
+	const char *selector;
+	gboolean success;
+} GenicamLockThreadData;
+
+static gpointer
+genicam_lock_thread (gpointer user_data)
+{
+	GenicamLockThreadData *data = user_data;
+	int i;
+
+	data->success = TRUE;
+
+	for (i = 0; i < GENICAM_LOCK_TEST_N_ITERATIONS; i++) {
+		GError *error = NULL;
+		char *selector;
+		gint64 width;
+
+		/* Atomic selector sequence */
+		arv_camera_lock (data->camera);
+		arv_camera_lock (data->camera);
+		arv_camera_set_string (data->camera, "TriggerSelector", data->selector, &error);
+		g_assert_no_error (error);
+		selector = arv_camera_dup_string (data->camera, "TriggerSelector", &error);
+		g_assert_no_error (error);
+		if (g_strcmp0 (selector, data->selector) != 0)
+			data->success = FALSE;
+		g_free (selector);
+		arv_camera_unlock (data->camera);
+		arv_camera_unlock (data->camera);
+
+		/* Unprotected single accesses */
+		width = arv_camera_get_integer (data->camera, "Width", &error);
+		g_assert_no_error (error);
+		arv_camera_set_integer (data->camera, "Width", width, &error);
+		g_assert_no_error (error);
+	}
+
+	return NULL;
+}
+
+static void
+genicam_lock_test (void)
+{
+	GenicamLockThreadData data[2];
+	GThread *threads[2];
+	ArvCamera *camera;
+	GError *error = NULL;
+	int i;
+
+	camera = arv_camera_new ("Fake_1", &error);
+	g_assert_no_error (error);
+
+	data[0].camera = camera;
+	data[0].selector = "FrameStart";
+	data[1].camera = camera;
+	data[1].selector = "AcquisitionStart";
+
+	for (i = 0; i < 2; i++)
+		threads[i] = g_thread_new ("genicam-lock", genicam_lock_thread, &data[i]);
+	for (i = 0; i < 2; i++)
+		g_thread_join (threads[i]);
+
+	g_assert_true (data[0].success);
+	g_assert_true (data[1].success);
+
+	g_object_unref (camera);
+}
+
+static void
+dup_string_test (void)
+{
+	ArvCamera *camera;
+	ArvDevice *device;
+	ArvGcNode *node;
+	GError *error = NULL;
+	char *string;
+
+	camera = arv_camera_new ("Fake_1", &error);
+	g_assert_no_error (error);
+	device = arv_camera_get_device (camera);
+
+	string = arv_camera_dup_vendor_name (camera, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, "Aravis");
+	g_free (string);
+
+	string = arv_camera_dup_model_name (camera, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, arv_camera_get_model_name (camera, NULL));
+	g_free (string);
+
+	string = arv_camera_dup_device_id (camera, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, arv_camera_get_device_id (camera, NULL));
+	g_free (string);
+
+	string = arv_camera_dup_device_serial_number (camera, &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, arv_camera_get_device_serial_number (camera, NULL));
+	g_free (string);
+
+	string = arv_camera_dup_string (camera, "DeviceVendorName", &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, "Aravis");
+	g_free (string);
+
+	string = arv_device_dup_string_feature_value (device, "DeviceModelName", &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, arv_device_get_string_feature_value (device, "DeviceModelName", NULL));
+	g_free (string);
+
+	string = arv_device_dup_string_feature_value (device, "Unknown", &error);
+	g_assert_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND);
+	g_assert_null (string);
+	g_clear_error (&error);
+
+	node = arv_device_get_feature (device, "DeviceVendorName");
+	string = arv_gc_string_dup_value (ARV_GC_STRING (node), &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, "Aravis");
+	g_free (string);
+
+	node = arv_device_get_feature (device, "Width");
+	string = arv_gc_feature_node_dup_value_as_string (ARV_GC_FEATURE_NODE (node), &error);
+	g_assert_no_error (error);
+	g_assert_cmpstr (string, ==, arv_gc_feature_node_get_value_as_string (ARV_GC_FEATURE_NODE (node), NULL));
+	g_free (string);
+
+	g_object_unref (camera);
+}
+
+static ArvDomNode *
+_get_value_text_node (ArvGc *genicam, const char *feature)
+{
+	ArvDomNode *iter;
+
+	for (iter = arv_dom_node_get_first_child (ARV_DOM_NODE (arv_gc_get_node (genicam, feature)));
+	     iter != NULL;
+	     iter = arv_dom_node_get_next_sibling (iter))
+		if (ARV_IS_GC_PROPERTY_NODE (iter) &&
+		    arv_gc_property_node_get_node_type (ARV_GC_PROPERTY_NODE (iter)) == ARV_GC_PROPERTY_NODE_TYPE_VALUE)
+			return arv_dom_node_get_first_child (iter);
+
+	return NULL;
+}
+
+static void
+write_lock_value_test (void)
+{
+	ArvCamera *camera;
+	ArvGc *genicam;
+	ArvDomNode *text;
+	GError *error = NULL;
+
+	camera = arv_camera_new ("Fake_1", &error);
+	g_assert_no_error (error);
+	genicam = arv_device_get_genicam (arv_camera_get_device (camera));
+
+	text = _get_value_text_node (genicam, "TriggerSelectorInteger");
+	g_assert_nonnull (text);
+	g_assert_cmpstr (arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (text)), ==, "0");
+
+	/* Runtime changes don't modify the DOM tree while it is write locked */
+	arv_camera_set_integer (camera, "TriggerSelectorInteger", 1, &error);
+	g_assert_no_error (error);
+	g_assert_cmpint (arv_camera_get_integer (camera, "TriggerSelectorInteger", NULL), ==, 1);
+	g_assert_cmpstr (arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (text)), ==, "0");
+
+	/* And are written back when the lock is released */
+	arv_dom_document_set_write_lock (ARV_DOM_DOCUMENT (genicam), FALSE);
+	g_assert_cmpstr (arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (text)), ==, "1");
+	g_assert_cmpint (arv_camera_get_integer (camera, "TriggerSelectorInteger", NULL), ==, 1);
+	arv_dom_document_set_write_lock (ARV_DOM_DOCUMENT (genicam), TRUE);
+
+	g_object_unref (camera);
+}
+
+static void
+write_lock_list_test (void)
+{
+	ArvGc *genicam;
+	ArvGcNode *root;
+	ArvGcNode *property;
+	const GSList *features;
+	char *xml;
+	gsize size;
+	guint n_features;
+
+	g_assert_true (g_file_get_contents (GENICAM_FILENAME, &xml, &size, NULL));
+	genicam = arv_gc_new (NULL, xml, size);
+	g_assert_true (ARV_IS_GC (genicam));
+	g_assert_false (arv_dom_document_get_write_lock (ARV_DOM_DOCUMENT (genicam)));
+
+	root = arv_gc_get_node (genicam, "Root");
+
+	/* Built while not locked */
+	n_features = g_slist_length ((GSList *) arv_gc_category_get_features (ARV_GC_CATEGORY (root)));
+	g_assert_cmpuint (n_features, >, 0);
+
+	property = arv_gc_property_node_new_p_feature ();
+	arv_dom_node_append_child (ARV_DOM_NODE (property),
+				   ARV_DOM_NODE (arv_dom_document_create_text_node (ARV_DOM_DOCUMENT (genicam), "Width")));
+	arv_dom_node_append_child (ARV_DOM_NODE (root), ARV_DOM_NODE (property));
+
+	/* The list built before the lock is not reused */
+	arv_dom_document_set_write_lock (ARV_DOM_DOCUMENT (genicam), TRUE);
+	features = arv_gc_category_get_features (ARV_GC_CATEGORY (root));
+	g_assert_cmpuint (g_slist_length ((GSList *) features), ==, n_features + 1);
+	g_assert_cmpstr (g_slist_last ((GSList *) features)->data, ==, "Width");
+
+	/* And the frozen list is not rebuilt */
+	g_assert_true (arv_gc_category_get_features (ARV_GC_CATEGORY (root)) == features);
+
+	g_object_unref (genicam);
+	g_free (xml);
+}
+
+#define WRITE_LOCK_N_THREADS	4
+
+typedef struct {
+	ArvGc *genicam;
+	gint *n_ready;
+	GPtrArray *results;
+} WriteLockThreadData;
+
+static void
+_collect (ArvDomNode *node, GPtrArray *results)
+{
+	ArvDomNode *iter;
+
+	g_ptr_array_add (results, arv_dom_node_get_child_nodes (node));
+
+	if (ARV_IS_GC_FEATURE_NODE (node)) {
+		g_ptr_array_add (results, (gpointer) arv_gc_feature_node_get_description (ARV_GC_FEATURE_NODE (node)));
+		g_ptr_array_add (results, (gpointer) arv_gc_feature_node_get_tooltip (ARV_GC_FEATURE_NODE (node)));
+		g_ptr_array_add (results, (gpointer) arv_gc_feature_node_get_display_name (ARV_GC_FEATURE_NODE (node)));
+	}
+	if (ARV_IS_GC_CATEGORY (node))
+		g_ptr_array_add (results, (gpointer) arv_gc_category_get_features (ARV_GC_CATEGORY (node)));
+	if (ARV_IS_GC_SELECTOR (node))
+		g_ptr_array_add (results, (gpointer) arv_gc_selector_get_selected_features (ARV_GC_SELECTOR (node)));
+	if (ARV_IS_GC_ENUMERATION (node))
+		g_ptr_array_add (results, (gpointer) arv_gc_enumeration_get_entries (ARV_GC_ENUMERATION (node)));
+
+	for (iter = arv_dom_node_get_first_child (node); iter != NULL; iter = arv_dom_node_get_next_sibling (iter))
+		_collect (iter, results);
+}
+
+static gpointer
+write_lock_thread (gpointer user_data)
+{
+	WriteLockThreadData *data = user_data;
+
+	/* Start together, in order to race on the first lazy builds */
+	g_atomic_int_inc (data->n_ready);
+	while (g_atomic_int_get (data->n_ready) < WRITE_LOCK_N_THREADS)
+		;
+
+	_collect (ARV_DOM_NODE (data->genicam), data->results);
+
+	return NULL;
+}
+
+static void
+write_lock_concurrent_read_test (void)
+{
+	WriteLockThreadData data[WRITE_LOCK_N_THREADS];
+	GThread *threads[WRITE_LOCK_N_THREADS];
+	GPtrArray *second_pass;
+	ArvGc *genicam;
+	char *xml;
+	gsize size;
+	gint n_ready = 0;
+	guint i, j;
+
+	/* Freshly locked tree, nothing built yet */
+	g_assert_true (g_file_get_contents (GENICAM_FILENAME, &xml, &size, NULL));
+	genicam = arv_gc_new (NULL, xml, size);
+	arv_dom_document_set_write_lock (ARV_DOM_DOCUMENT (genicam), TRUE);
+
+	for (i = 0; i < WRITE_LOCK_N_THREADS; i++) {
+		data[i].genicam = genicam;
+		data[i].n_ready = &n_ready;
+		data[i].results = g_ptr_array_new ();
+		threads[i] = g_thread_new ("write-lock-reader", write_lock_thread, &data[i]);
+	}
+	for (i = 0; i < WRITE_LOCK_N_THREADS; i++)
+		g_thread_join (threads[i]);
+
+	second_pass = g_ptr_array_new ();
+	_collect (ARV_DOM_NODE (genicam), second_pass);
+
+	/* Same lists and strings, in all threads, and in a later call */
+	for (i = 0; i < WRITE_LOCK_N_THREADS; i++) {
+		g_assert_cmpuint (data[i].results->len, ==, second_pass->len);
+		for (j = 0; j < second_pass->len; j++)
+			g_assert_true (g_ptr_array_index (data[i].results, j) == g_ptr_array_index (second_pass, j));
+		g_ptr_array_unref (data[i].results);
+	}
+
+	g_ptr_array_unref (second_pass);
+	g_object_unref (genicam);
+	g_free (xml);
+}
+
+#if ARAVIS_HAS_EVENT
+
+#define EVENT_TEST_N_EVENTS	5
+#define EVENT_TEST_TIMEOUT_US	5000000
+
+typedef struct {
+	ArvCamera *camera;
+	GThread *main_thread;
+	GThread *event_thread;
+	gint n_callbacks;
+	gint n_signals;
+	gboolean is_wrong_thread;
+	gboolean is_wrong_data;
+	gboolean is_wrong_selector;
+	gboolean use_selector;
+	gboolean block_callback;
+	gint is_callback_released;
+	gint64 frame_ids[EVENT_TEST_N_EVENTS];
+} EventTestData;
+
+static void
+_check_event_thread (EventTestData *data)
+{
+	/* Events are delivered from an internal thread, always the same one */
+	if (data->event_thread == NULL)
+		data->event_thread = g_thread_self ();
+	if (g_thread_self () == data->main_thread ||
+	    g_thread_self () != data->event_thread)
+		data->is_wrong_thread = TRUE;
+}
+
+static void
+event_test_callback (void *user_data, ArvEvent *event)
+{
+	EventTestData *data = user_data;
+	GError *error = NULL;
+	gint64 frame_id;
+	gint64 timestamp;
+	gint n_callbacks;
+
+	_check_event_thread (data);
+
+	g_assert_cmpuint (arv_event_get_id (event), ==, ARV_FAKE_CAMERA_EVENT_EXPOSURE_END);
+
+	/* Event features are read from the event thread, under the Genicam lock */
+	frame_id = arv_camera_get_integer (data->camera, "EventExposureEndFrameID", &error);
+	g_assert_no_error (error);
+	timestamp = arv_camera_get_integer (data->camera, "EventExposureEndTimestamp", &error);
+	g_assert_no_error (error);
+
+	if (frame_id != (gint64) (arv_event_get_block_id (event) & 0xffff) ||
+	    timestamp != (gint64) arv_event_get_timestamp (event))
+		data->is_wrong_data = TRUE;
+
+	if (data->use_selector) {
+		char *selector;
+
+		arv_camera_lock (data->camera);
+		arv_camera_set_string (data->camera, "TriggerSelector", "AcquisitionStart", &error);
+		g_assert_no_error (error);
+		selector = arv_camera_dup_string (data->camera, "TriggerSelector", &error);
+		g_assert_no_error (error);
+		if (g_strcmp0 (selector, "AcquisitionStart") != 0)
+			data->is_wrong_selector = TRUE;
+		g_free (selector);
+		arv_camera_unlock (data->camera);
+	}
+
+	n_callbacks = g_atomic_int_get (&data->n_callbacks);
+	if (n_callbacks < EVENT_TEST_N_EVENTS)
+		data->frame_ids[n_callbacks] = frame_id;
+
+	/* Blocked callback, for the overflow test */
+	while (data->block_callback && !g_atomic_int_get (&data->is_callback_released))
+		g_usleep (1000);
+
+	g_atomic_int_inc (&data->n_callbacks);
+}
+
+static void
+event_test_signal_cb (ArvDevice *device, ArvEvent *event, EventTestData *data)
+{
+	g_assert_true (ARV_IS_EVENT (event));
+
+	if (g_thread_self () != data->event_thread)
+		data->is_wrong_thread = TRUE;
+
+	g_atomic_int_inc (&data->n_signals);
+}
+
+static void
+event_test_acquire (ArvCamera *camera, EventTestData *data, guint n_frames, gboolean wait_events)
+{
+	ArvStream *stream;
+	GError *error = NULL;
+	gint64 start_time;
+	size_t payload;
+	guint i;
+
+	stream = arv_camera_create_stream (camera, NULL, NULL, NULL, &error);
+	g_assert_no_error (error);
+
+	payload = arv_camera_get_payload (camera, &error);
+	g_assert_no_error (error);
+	for (i = 0; i < 5; i++)
+		arv_stream_push_buffer (stream, arv_buffer_new (payload, NULL));
+
+	arv_camera_set_acquisition_mode (camera, ARV_ACQUISITION_MODE_CONTINUOUS, &error);
+	g_assert_no_error (error);
+	arv_camera_start_acquisition (camera, &error);
+	g_assert_no_error (error);
+
+	start_time = g_get_monotonic_time ();
+	i = 0;
+	while ((wait_events ? (guint) g_atomic_int_get (&data->n_callbacks) : i) < n_frames &&
+	       g_get_monotonic_time () - start_time < EVENT_TEST_TIMEOUT_US) {
+		ArvBuffer *buffer;
+
+		buffer = arv_stream_timeout_pop_buffer (stream, 100000);
+		if (buffer != NULL) {
+			arv_stream_push_buffer (stream, buffer);
+			i++;
+		}
+
+		/* Concurrent feature accesses from the main thread */
+		if (data->use_selector) {
+			char *selector;
+
+			arv_camera_lock (camera);
+			arv_camera_set_string (camera, "TriggerSelector", "FrameStart", &error);
+			g_assert_no_error (error);
+			selector = arv_camera_dup_string (camera, "TriggerSelector", &error);
+			g_assert_no_error (error);
+			if (g_strcmp0 (selector, "FrameStart") != 0)
+				data->is_wrong_selector = TRUE;
+			g_free (selector);
+			arv_camera_unlock (camera);
+		}
+	}
+
+	arv_camera_stop_acquisition (camera, &error);
+	g_assert_no_error (error);
+
+	g_object_unref (stream);
+}
+
+static void
+event_test (void)
+{
+	EventTestData data = {0};
+	ArvCamera *camera;
+	ArvDevice *device;
+	GError *error = NULL;
+	guint32 value;
+	gulong handler_id;
+	int i;
+
+	camera = arv_camera_new ("Fake_1", &error);
+	g_assert_no_error (error);
+	device = arv_camera_get_device (camera);
+
+	g_assert_true (arv_camera_are_events_available (camera, &error));
+	g_assert_no_error (error);
+
+	g_assert_false (arv_camera_get_event_notification (camera, "ExposureEnd", &error));
+	g_assert_no_error (error);
+
+	arv_camera_set_events (camera, "ExposureEnd", &error);
+	g_assert_no_error (error);
+	g_assert_true (arv_camera_get_event_notification (camera, "ExposureEnd", &error));
+	g_assert_no_error (error);
+
+	arv_camera_set_events (camera, "UnknownEvent", &error);
+	g_assert_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_FEATURE_NOT_FOUND);
+	g_clear_error (&error);
+
+	g_assert_cmpint (arv_camera_get_integer (camera, "EventExposureEnd", &error), ==,
+			 ARV_FAKE_CAMERA_EVENT_EXPOSURE_END);
+	g_assert_no_error (error);
+
+	/* No event received yet */
+	arv_camera_get_integer (camera, "EventExposureEndTimestamp", &error);
+	g_assert_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND);
+	g_clear_error (&error);
+
+	data.camera = camera;
+	data.main_thread = g_thread_self ();
+
+	arv_device_set_event_callback (device, event_test_callback, &data, NULL);
+	handler_id = g_signal_connect (device, "device-event", G_CALLBACK (event_test_signal_cb), &data);
+
+	event_test_acquire (camera, &data, EVENT_TEST_N_EVENTS, TRUE);
+
+	/* Waits for the end of a running delivery */
+	g_signal_handler_disconnect (device, handler_id);
+	arv_device_set_event_callback (device, NULL, NULL, NULL);
+
+	g_assert_cmpint (data.n_callbacks, >=, EVENT_TEST_N_EVENTS);
+	g_assert_cmpint (data.n_signals, >=, EVENT_TEST_N_EVENTS);
+	g_assert_cmpint (data.n_signals, <=, data.n_callbacks);
+	g_assert_false (data.is_wrong_thread);
+	g_assert_false (data.is_wrong_data);
+	g_assert_cmpuint (arv_device_get_n_dropped_events (device), ==, 0);
+
+	/* Event registers are not cached */
+	for (i = 1; i < EVENT_TEST_N_EVENTS; i++)
+		g_assert_cmpint (data.frame_ids[i], !=, data.frame_ids[i - 1]);
+
+	/* Unknown event */
+	g_assert_false (arv_device_read_event_data (device, 0x1234, 0, sizeof (value), &value, &error));
+	g_assert_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_NOT_FOUND);
+	g_clear_error (&error);
+
+	/* Out of range access */
+	g_assert_false (arv_device_read_event_data (device, ARV_FAKE_CAMERA_EVENT_EXPOSURE_END, 0x1000,
+						    sizeof (value), &value, &error));
+	g_assert_error (error, ARV_DEVICE_ERROR, ARV_DEVICE_ERROR_INVALID_PARAMETER);
+	g_clear_error (&error);
+
+	g_object_unref (camera);
+}
+
+static void
+event_concurrent_access_test (void)
+{
+	EventTestData data = {0};
+	ArvCamera *camera;
+	ArvDevice *device;
+	GError *error = NULL;
+
+	camera = arv_camera_new ("Fake_1", &error);
+	g_assert_no_error (error);
+	device = arv_camera_get_device (camera);
+
+	data.camera = camera;
+	data.main_thread = g_thread_self ();
+	data.use_selector = TRUE;
+
+	arv_camera_set_frame_rate (camera, 500.0, &error);
+	g_assert_no_error (error);
+	arv_camera_set_event_notification (camera, "ExposureEnd", TRUE, &error);
+	g_assert_no_error (error);
+	arv_device_set_event_callback (device, event_test_callback, &data, NULL);
+
+	/* Selector sequences in both the main thread and the event callback */
+	event_test_acquire (camera, &data, 200, TRUE);
+
+	arv_device_set_event_callback (device, NULL, NULL, NULL);
+
+	g_assert_cmpint (data.n_callbacks, >=, 200);
+	g_assert_false (data.is_wrong_thread);
+	g_assert_false (data.is_wrong_data);
+	g_assert_false (data.is_wrong_selector);
+
+	g_object_unref (camera);
+}
+
+static void
+event_overflow_test (void)
+{
+	EventTestData data = {0};
+	ArvCamera *camera;
+	ArvDevice *device;
+	GError *error = NULL;
+
+	camera = arv_camera_new ("Fake_1", &error);
+	g_assert_no_error (error);
+	device = arv_camera_get_device (camera);
+
+	data.camera = camera;
+	data.main_thread = g_thread_self ();
+	/* The callback is blocked until the end of the acquisition */
+	data.block_callback = TRUE;
+
+	arv_camera_set_frame_rate (camera, 1000.0, &error);
+	g_assert_no_error (error);
+	arv_camera_set_event_notification (camera, "ExposureEnd", TRUE, &error);
+	g_assert_no_error (error);
+	arv_device_set_event_callback (device, event_test_callback, &data, NULL);
+
+	event_test_acquire (camera, &data, 300, FALSE);
+
+	/* At most one event in the callback, and 256 in the queue */
+	g_assert_cmpuint (arv_device_get_n_dropped_events (device), >, 0);
+
+	/* Destruction with pending events, which are not delivered */
+	g_atomic_int_set (&data.is_callback_released, 1);
+	g_object_unref (camera);
+
+	g_assert_cmpint (data.n_callbacks, >, 0);
+	g_assert_cmpint (data.n_callbacks, <, 300);
+	g_assert_false (data.is_wrong_thread);
+}
+
+#endif
+
 int
 main (int argc, char *argv[])
 {
@@ -834,6 +1443,16 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fake/camera-device", camera_device_test);
 	g_test_add_func ("/fake/camera-trigger-selector", camera_trigger_selector_test);
 	g_test_add_func ("/fake/set-features-from-string", set_features_from_string_test);
+	g_test_add_func ("/fake/genicam-lock", genicam_lock_test);
+	g_test_add_func ("/fake/dup-string", dup_string_test);
+	g_test_add_func ("/fake/write-lock-value", write_lock_value_test);
+	g_test_add_func ("/fake/write-lock-list", write_lock_list_test);
+	g_test_add_func ("/fake/write-lock-concurrent-read", write_lock_concurrent_read_test);
+#if ARAVIS_HAS_EVENT
+	g_test_add_func ("/fake/event", event_test);
+	g_test_add_func ("/fake/event-concurrent-access", event_concurrent_access_test);
+	g_test_add_func ("/fake/event-overflow", event_overflow_test);
+#endif
 
 	result = g_test_run();
 

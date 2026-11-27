@@ -58,6 +58,9 @@ ARV_API void			arv_dom_document_set_path		(ArvDomDocument *self, const char *pat
 
 ARV_API void *			arv_dom_document_get_href_data		(ArvDomDocument *self, const char *href, gsize *size);
 
+ARV_API void			arv_dom_document_set_write_lock		(ArvDomDocument *self, gboolean write_lock);
+ARV_API gboolean		arv_dom_document_get_write_lock		(ArvDomDocument *self);
+
 G_END_DECLS
 
 #endif

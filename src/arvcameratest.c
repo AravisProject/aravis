@@ -34,6 +34,9 @@ static gboolean arv_option_high_priority = FALSE;
 static gboolean arv_option_no_packet_socket = FALSE;
 static gboolean arv_option_multipart = FALSE;
 static char *arv_option_chunks = NULL;
+#if ARAVIS_HAS_EVENT
+static char *arv_option_events = NULL;
+#endif
 static int arv_option_bandwidth_limit = -1;
 static char *arv_option_register_cache = NULL;
 static char *arv_option_range_check = NULL;
@@ -172,6 +175,13 @@ static const GOptionEntry arv_option_entries[] =
 		&arv_option_chunks,	 		"Chunks",
 		"<chunk_id>[,<chunk_id>[...]]"
 	},
+#if ARAVIS_HAS_EVENT
+	{
+		"events", 				'\0', 0, G_OPTION_ARG_STRING,
+		&arv_option_events,	 		"Event notifications",
+		"<event>[,<event>[...]]"
+	},
+#endif
 	{
 		"realtime",				'\0', 0, G_OPTION_ARG_NONE,
 		&arv_option_realtime,			"Make stream thread realtime",
@@ -266,6 +276,9 @@ typedef struct {
 	ArvChunkParser *chunk_parser;
 	char **chunks;
 
+	ArvCamera *camera;
+	GHashTable *event_names;
+
         gint64 start_time;
 } ApplicationData;
 
@@ -323,6 +336,46 @@ new_buffer_cb (ArvStream *stream, ApplicationData *data)
 		arv_stream_push_buffer (stream, buffer);
 	}
 }
+
+#if ARAVIS_HAS_EVENT
+static void
+event_cb (void *user_data, ArvEvent *event)
+{
+	ApplicationData *data = user_data;
+	const char *event_name;
+	const char *suffixes[] = {"Timestamp", "FrameID"};
+	guint i;
+
+	event_name = g_hash_table_lookup (data->event_names, GUINT_TO_POINTER (arv_event_get_id (event)));
+
+	g_print ("Event 0x%04x (%s) - timestamp %" G_GUINT64_FORMAT " - block id %" G_GUINT64_FORMAT "\n",
+		 arv_event_get_id (event), event_name != NULL ? event_name : "unknown",
+		 arv_event_get_timestamp (event), arv_event_get_block_id (event));
+
+	if (event_name == NULL)
+		return;
+
+	/* Called from the event thread. Feature accesses are protected by the Genicam lock. */
+	for (i = 0; i < G_N_ELEMENTS (suffixes); i++) {
+		char *feature;
+		GError *error = NULL;
+
+		feature = g_strdup_printf ("Event%s%s", event_name, suffixes[i]);
+		if (arv_camera_is_feature_available (data->camera, feature, NULL)) {
+			gint64 value;
+
+			value = arv_camera_get_integer (data->camera, feature, &error);
+			if (error == NULL)
+				g_print ("  %s = %" G_GINT64_FORMAT "\n", feature, value);
+			else {
+				g_print ("  %s: %s\n", feature, error->message);
+				g_clear_error (&error);
+			}
+		}
+		g_free (feature);
+	}
+}
+#endif
 
 static void
 stream_cb (void *user_data, ArvStreamCallbackType type, ArvBuffer *buffer)
@@ -403,6 +456,8 @@ main (int argc, char **argv)
 	data.transferred = 0;
 	data.chunks = NULL;
 	data.chunk_parser = NULL;
+	data.camera = NULL;
+	data.event_names = g_hash_table_new_full (g_direct_hash, g_direct_equal, NULL, g_free);
 
 	context = g_option_context_new (NULL);
 	g_option_context_set_summary (context, "Small utility for basic device checks.");
@@ -577,6 +632,39 @@ main (int argc, char **argv)
 
 		if (error == NULL && arv_camera_are_chunks_available (camera, NULL))
 			arv_camera_set_chunks (camera, arv_option_chunks, &error);
+#if ARAVIS_HAS_EVENT
+		data.camera = camera;
+		if (error == NULL && arv_option_events != NULL) {
+			if (arv_camera_are_events_available (camera, NULL)) {
+				char **events;
+
+				arv_camera_set_events (camera, arv_option_events, &error);
+
+				/* Event<Name> features give the event id */
+				events = g_strsplit_set (arv_option_events, " ,:;", -1);
+				for (i = 0; events[i] != NULL; i++) {
+					char *feature;
+
+					if (events[i][0] == '\0')
+						continue;
+
+					feature = g_strdup_printf ("Event%s", events[i]);
+					if (arv_camera_is_feature_available (camera, feature, NULL)) {
+						gint64 event_id;
+
+						event_id = arv_camera_get_integer (camera, feature, NULL);
+						g_hash_table_replace (data.event_names, GUINT_TO_POINTER (event_id),
+								      g_strdup (events[i]));
+					}
+					g_free (feature);
+				}
+				g_strfreev (events);
+
+				arv_device_set_event_callback (arv_camera_get_device (camera), event_cb, &data, NULL);
+			} else
+				printf ("Events not available\n");
+		}
+#endif
 		if (error == NULL) arv_camera_set_region (camera, -1, -1, arv_option_width, arv_option_height, &error);
 		if (error == NULL) arv_camera_set_binning (camera, arv_option_horizontal_binning,
 							   arv_option_vertical_binning, &error);
@@ -800,6 +888,7 @@ main (int argc, char **argv)
 		g_strfreev (data.chunks);
 
 	g_clear_object (&data.chunk_parser);
+	g_hash_table_unref (data.event_names);
 
 	return 0;
 }

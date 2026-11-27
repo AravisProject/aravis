@@ -20,6 +20,7 @@
  * Author: Emmanuel Pacaud <emmanuel.pacaud@free.fr>
  */
 
+#include <arvdomnodeprivate.h>
 #include <arvgcmaskedintregnode.h>
 #include <arvgcregisternodeprivate.h>
 #include <arvgcpropertynode.h>
@@ -40,6 +41,7 @@ typedef struct {
 
 	GSList *selecteds;
 	GSList *selected_features;
+	gint selected_features_are_frozen;
 } ArvGcMaskedIntRegNodePrivate;
 
 static void arv_gc_masked_int_reg_node_init (ArvGcMaskedIntRegNode *self);
@@ -239,8 +241,8 @@ arv_gc_masked_int_reg_node_integer_interface_init (ArvGcIntegerInterface *interf
 	interface->get_unit = arv_gc_masked_int_reg_node_get_unit;
 }
 
-static const GSList *
-arv_gc_masked_int_reg_node_get_selected_features (ArvGcSelector *self)
+static void
+_build_selected_features (ArvDomNode *self)
 {
 	ArvGcMaskedIntRegNodePrivate *priv = arv_gc_masked_int_reg_node_get_instance_private (ARV_GC_MASKED_INT_REG_NODE (self));
 	GSList *iter;
@@ -251,8 +253,26 @@ arv_gc_masked_int_reg_node_get_selected_features (ArvGcSelector *self)
 		if (ARV_IS_GC_FEATURE_NODE (feature_node))
 			priv->selected_features = g_slist_prepend (priv->selected_features, feature_node);
 	}
+}
+
+static const GSList *
+arv_gc_masked_int_reg_node_get_selected_features (ArvGcSelector *self)
+{
+	ArvGcMaskedIntRegNodePrivate *priv = arv_gc_masked_int_reg_node_get_instance_private (ARV_GC_MASKED_INT_REG_NODE (self));
+
+	/* Built once, at the first call, when the Genicam data are write locked */
+	arv_dom_node_lazy_build (ARV_DOM_NODE (self), &priv->selected_features_are_frozen,
+				 _build_selected_features);
 
 	return priv->selected_features;
+}
+
+static void
+_write_lock_released (ArvDomNode *self)
+{
+	ArvGcMaskedIntRegNodePrivate *priv = arv_gc_masked_int_reg_node_get_instance_private (ARV_GC_MASKED_INT_REG_NODE (self));
+
+	g_atomic_int_set (&priv->selected_features_are_frozen, FALSE);
 }
 
 static void
@@ -287,6 +307,7 @@ arv_gc_masked_int_reg_node_class_init (ArvGcMaskedIntRegNodeClass *this_class)
 
 	object_class->finalize = arv_gc_masked_int_reg_node_finalize;
 	dom_node_class->get_node_name = arv_gc_masked_int_reg_node_get_node_name;
+	dom_node_class->write_lock_released = _write_lock_released;
 	dom_node_class->post_new_child = arv_gc_masked_int_reg_node_post_new_child;
 	gc_register_node_class->default_cachable = ARV_GC_CACHABLE_WRITE_THROUGH;
 }

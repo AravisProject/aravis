@@ -27,6 +27,7 @@
  */
 
 #include <arvdomdocument.h>
+#include <arvdomnodeprivate.h>
 #include <arvdomelement.h>
 #include <arvstr.h>
 #include <arvdebug.h>
@@ -34,9 +35,16 @@
 #include <gio/gio.h>
 #include <string.h>
 
+enum {
+	PROP_0,
+	PROP_WRITE_LOCK
+};
+
 typedef struct {
 	char *		url;
 
+	gint		is_write_locked;
+	GRecMutex	lazy_mutex;
 } ArvDomDocumentPrivate;
 
 G_DEFINE_ABSTRACT_TYPE_WITH_CODE (ArvDomDocument, arv_dom_document, ARV_TYPE_DOM_NODE, G_ADD_PRIVATE (ArvDomDocument))
@@ -136,6 +144,7 @@ arv_dom_document_set_path (ArvDomDocument *self, const char *path)
 	ArvDomDocumentPrivate *priv = arv_dom_document_get_instance_private (ARV_DOM_DOCUMENT (self));
 
 	g_return_if_fail (ARV_IS_DOM_DOCUMENT (self));
+	g_return_if_fail (!arv_dom_document_get_write_lock (self));
 
 	g_free (priv->url);
 
@@ -153,6 +162,7 @@ arv_dom_document_set_url (ArvDomDocument *self, const char *url)
 	ArvDomDocumentPrivate *priv = arv_dom_document_get_instance_private (ARV_DOM_DOCUMENT (self));
 
 	g_return_if_fail (ARV_IS_DOM_DOCUMENT (self));
+	g_return_if_fail (!arv_dom_document_get_write_lock (self));
 	g_return_if_fail (url == NULL || arv_str_is_uri (url));
 
 	g_free (priv->url);
@@ -209,8 +219,197 @@ arv_dom_document_get_href_data (ArvDomDocument *self, const char *href, gsize *s
 }
 
 static void
+_write_lock_released (ArvDomNode *node)
+{
+	ArvDomNodeClass *node_class;
+	ArvDomNode *iter;
+
+	/* Children first, as the lazy data of a node may depend on the one of its children */
+	for (iter = arv_dom_node_get_first_child (node); iter != NULL; iter = arv_dom_node_get_next_sibling (iter))
+		_write_lock_released (iter);
+
+	node_class = ARV_DOM_NODE_GET_CLASS (node);
+	if (node_class->write_lock_released != NULL)
+		node_class->write_lock_released (node);
+}
+
+/**
+ * arv_dom_document_set_write_lock:
+ * @self: a #ArvDomDocument
+ * @write_lock: whether to write lock the document
+ *
+ * Sets the write lock of the document. When the document is write locked, any modification of the tree is refused,
+ * and the read accessors of the tree become thread safe: the strings and lists they return are built once, at the
+ * first call, and stay valid until the write lock is released.
+ *
+ * Without the write lock, the document behaves as a regular, not thread safe, DOM tree. The Genicam data of the
+ * devices are write locked at the end of the device creation.
+ *
+ * Changing the write lock is not thread safe, and must be done while the document is not used by another thread.
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_dom_document_set_write_lock (ArvDomDocument *self, gboolean write_lock)
+{
+	ArvDomDocumentPrivate *priv = arv_dom_document_get_instance_private (ARV_DOM_DOCUMENT (self));
+
+	g_return_if_fail (ARV_IS_DOM_DOCUMENT (self));
+
+	write_lock = write_lock ? TRUE : FALSE;
+
+	if (g_atomic_int_get (&priv->is_write_locked) == write_lock)
+		return;
+
+	if (write_lock) {
+		g_atomic_int_set (&priv->is_write_locked, TRUE);
+	} else {
+		g_atomic_int_set (&priv->is_write_locked, FALSE);
+
+		/* The data built under the write lock can not be trusted anymore */
+		_write_lock_released (ARV_DOM_NODE (self));
+	}
+
+	g_object_notify (G_OBJECT (self), "write-lock");
+}
+
+/**
+ * arv_dom_document_get_write_lock:
+ * @self: a #ArvDomDocument
+ *
+ * Returns: %TRUE if the document is write locked, see [method@ArvDomDocument.set_write_lock].
+ *
+ * Since: 0.10.0
+ */
+
+gboolean
+arv_dom_document_get_write_lock (ArvDomDocument *self)
+{
+	ArvDomDocumentPrivate *priv = arv_dom_document_get_instance_private (ARV_DOM_DOCUMENT (self));
+
+	g_return_val_if_fail (ARV_IS_DOM_DOCUMENT (self), FALSE);
+
+	return g_atomic_int_get (&priv->is_write_locked);
+}
+
+/*
+ * arv_dom_node_is_write_locked:
+ * @self: a #ArvDomNode
+ *
+ * Returns: %TRUE if @self belongs to a write locked document.
+ */
+
+gboolean
+arv_dom_node_is_write_locked (ArvDomNode *self)
+{
+	ArvDomDocument *document;
+
+	document = arv_dom_node_get_owner_document (self);
+	if (document == NULL)
+		return FALSE;
+
+	return arv_dom_document_get_write_lock (document);
+}
+
+/*
+ * arv_dom_node_lazy_lock:
+ * @self: a #ArvDomNode
+ *
+ * Locks the mutex protecting the lazy build of node data, while the owner document is write locked. The mutex is
+ * recursive. It must never be held while taking the Genicam lock.
+ */
+
+void
+arv_dom_node_lazy_lock (ArvDomNode *self)
+{
+	ArvDomDocument *document;
+	ArvDomDocumentPrivate *priv;
+
+	document = arv_dom_node_get_owner_document (self);
+	if (document == NULL)
+		return;
+
+	priv = arv_dom_document_get_instance_private (document);
+	g_rec_mutex_lock (&priv->lazy_mutex);
+}
+
+void
+arv_dom_node_lazy_unlock (ArvDomNode *self)
+{
+	ArvDomDocument *document;
+	ArvDomDocumentPrivate *priv;
+
+	document = arv_dom_node_get_owner_document (self);
+	if (document == NULL)
+		return;
+
+	priv = arv_dom_document_get_instance_private (document);
+	g_rec_mutex_unlock (&priv->lazy_mutex);
+}
+
+/*
+ * arv_dom_node_lazy_build:
+ * @self: a #ArvDomNode
+ * @is_frozen: the companion flag of the lazily built data
+ * @build: the function (re)building the data
+ *
+ * Builds data depending on the DOM tree. When the owner document is not write locked, the data are rebuilt at each
+ * call. When it is write locked, they are built once, at the first call, in a thread safe way, and kept until the
+ * write lock is released. The node write_lock_released implementation must clear @is_frozen.
+ */
+
+void
+arv_dom_node_lazy_build (ArvDomNode *self, gint *is_frozen, ArvDomNodeLazyBuildFunc build)
+{
+	if (!arv_dom_node_is_write_locked (self)) {
+		build (self);
+		return;
+	}
+
+	if (g_atomic_int_get (is_frozen))
+		return;
+
+	arv_dom_node_lazy_lock (self);
+	if (!*is_frozen) {
+		build (self);
+		g_atomic_int_set (is_frozen, TRUE);
+	}
+	arv_dom_node_lazy_unlock (self);
+}
+
+static void
+arv_dom_document_set_property (GObject *object, guint prop_id, const GValue *value, GParamSpec *pspec)
+{
+	switch (prop_id) {
+		case PROP_WRITE_LOCK:
+			arv_dom_document_set_write_lock (ARV_DOM_DOCUMENT (object), g_value_get_boolean (value));
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
+
+static void
+arv_dom_document_get_property (GObject *object, guint prop_id, GValue *value, GParamSpec *pspec)
+{
+	switch (prop_id) {
+		case PROP_WRITE_LOCK:
+			g_value_set_boolean (value, arv_dom_document_get_write_lock (ARV_DOM_DOCUMENT (object)));
+			break;
+		default:
+			G_OBJECT_WARN_INVALID_PROPERTY_ID (object, prop_id, pspec);
+			break;
+	}
+}
+
+static void
 arv_dom_document_init (ArvDomDocument *document)
 {
+	ArvDomDocumentPrivate *priv = arv_dom_document_get_instance_private (document);
+
+	g_rec_mutex_init (&priv->lazy_mutex);
 }
 
 static void
@@ -219,6 +418,7 @@ arv_dom_document_finalize (GObject *self)
 	ArvDomDocumentPrivate *priv = arv_dom_document_get_instance_private (ARV_DOM_DOCUMENT (self));
 
 	g_free (priv->url);
+	g_rec_mutex_clear (&priv->lazy_mutex);
 
 	G_OBJECT_CLASS (arv_dom_document_parent_class)->finalize (self);
 }
@@ -232,9 +432,25 @@ arv_dom_document_class_init (ArvDomDocumentClass *klass)
 	ArvDomNodeClass *node_class = ARV_DOM_NODE_CLASS (klass);
 
 	object_class->finalize = arv_dom_document_finalize;
+	object_class->set_property = arv_dom_document_set_property;
+	object_class->get_property = arv_dom_document_get_property;
 
 	node_class->get_node_name = arv_dom_document_get_node_name;
 	node_class->get_node_type = arv_dom_document_get_node_type;
 
 	klass->create_text_node = arv_dom_document_create_text_node_base;
+
+	/**
+	 * ArvDomDocument:write-lock:
+	 *
+	 * Whether the document is write locked, see [method@ArvDomDocument.set_write_lock].
+	 *
+	 * Since: 0.10.0
+	 */
+
+	g_object_class_install_property
+		(object_class, PROP_WRITE_LOCK,
+		 g_param_spec_boolean ("write-lock", "Write lock", "Refuse tree modifications, for thread safe reads",
+				       FALSE,
+				       G_PARAM_READWRITE | G_PARAM_STATIC_STRINGS | G_PARAM_EXPLICIT_NOTIFY));
 }

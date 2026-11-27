@@ -6,6 +6,7 @@
 #include <string.h>
 #include "../src/arvgvcpprivate.h"
 #include "../src/arvmiscprivate.h"
+#include "../src/arveventprivate.h"
 
 #if !ARAVIS_CHECK_VERSION (ARAVIS_MAJOR_VERSION, ARAVIS_MINOR_VERSION, ARAVIS_MICRO_VERSION)
 #error
@@ -308,6 +309,122 @@ gvcp_force_ip_packet_test (void)
 	g_free (packet);
 }
 
+static void
+gvcp_event_packet_test (void)
+{
+	const guint8 payload[] = {0xde, 0xad, 0xbe, 0xef};
+	ArvGvcpPacket *packet;
+	ArvGvcpEventInfos infos;
+	size_t packet_size;
+	size_t offset;
+	int i;
+
+	for (i = 0; i < 2; i++) {
+		gboolean extended_ids = i == 1;
+		size_t header_size = extended_ids ?
+			ARV_GVCP_EVENT_EXTENDED_HEADER_SIZE :
+			ARV_GVCP_EVENT_HEADER_SIZE;
+
+		packet = arv_gvcp_packet_new_eventdata_cmd (0x9001, 0, 0x123456789a, 0x1122334455667788,
+							    payload, sizeof (payload), extended_ids, 42, &packet_size);
+		g_assert_nonnull (packet);
+		g_assert_cmpuint (packet_size, ==, sizeof (ArvGvcpHeader) + header_size + sizeof (payload));
+		g_assert_cmpuint (arv_gvcp_packet_get_command (packet, packet_size), ==,
+				  ARV_GVCP_COMMAND_EVENTDATA_CMD);
+
+		offset = 0;
+		g_assert_true (arv_gvcp_packet_get_next_event (packet, packet_size, &offset, &infos));
+		g_assert_cmpuint (infos.event_id, ==, 0x9001);
+		g_assert_cmpuint (infos.stream_channel, ==, 0);
+		g_assert_cmpuint (infos.block_id, ==, extended_ids ? 0x123456789a : 0x789a);
+		g_assert_cmpuint (infos.timestamp, ==, 0x1122334455667788);
+		g_assert_cmpuint (infos.record_size, ==, header_size + sizeof (payload));
+		g_assert_cmpmem ((const guint8 *) infos.record + header_size, sizeof (payload),
+				 payload, sizeof (payload));
+		g_assert_false (arv_gvcp_packet_get_next_event (packet, packet_size, &offset, &infos));
+
+		/* Truncated packet */
+		offset = 0;
+		g_assert_false (arv_gvcp_packet_get_next_event (packet, sizeof (ArvGvcpHeader) + 4,
+								&offset, &infos));
+
+		g_free (packet);
+	}
+
+	/* EVENT_CMD with two records, using the reserved size field of devices not using extended ids */
+	{
+		/* guint64 array, for the alignment of the event record fields */
+		guint64 buffer[(sizeof (ArvGvcpHeader) + 2 * ARV_GVCP_EVENT_HEADER_SIZE) / sizeof (guint64)] = {0};
+		ArvGvcpPacket *event_packet = (ArvGvcpPacket *) buffer;
+
+		event_packet->header.packet_type = ARV_GVCP_PACKET_TYPE_CMD;
+		event_packet->header.packet_flags = ARV_GVCP_CMD_PACKET_FLAGS_ACK_REQUIRED;
+		event_packet->header.command = g_htons (ARV_GVCP_COMMAND_EVENT_CMD);
+		event_packet->header.size = g_htons (2 * ARV_GVCP_EVENT_HEADER_SIZE);
+		event_packet->header.id = g_htons (7);
+		event_packet->data[3] = 0x01;
+		event_packet->data[7] = 0x05;
+		event_packet->data[ARV_GVCP_EVENT_HEADER_SIZE + 3] = 0x02;
+		event_packet->data[ARV_GVCP_EVENT_HEADER_SIZE + 15] = 0x10;
+
+		offset = 0;
+		g_assert_true (arv_gvcp_packet_get_next_event (event_packet, sizeof (buffer), &offset, &infos));
+		g_assert_cmpuint (infos.event_id, ==, 0x0001);
+		g_assert_cmpuint (infos.block_id, ==, 5);
+		g_assert_true (arv_gvcp_packet_get_next_event (event_packet, sizeof (buffer), &offset, &infos));
+		g_assert_cmpuint (infos.event_id, ==, 0x0002);
+		g_assert_cmpuint (infos.timestamp, ==, 0x10);
+		g_assert_false (arv_gvcp_packet_get_next_event (event_packet, sizeof (buffer), &offset, &infos));
+
+		/* Record size not multiple of 8 */
+		event_packet->data[1] = 20;
+		offset = 0;
+		g_assert_false (arv_gvcp_packet_get_next_event (event_packet, sizeof (buffer), &offset, &infos));
+	}
+
+	packet = arv_gvcp_packet_new_event_ack (ARV_GVCP_COMMAND_EVENTDATA_CMD, 42, &packet_size);
+	g_assert_cmpuint (packet_size, ==, sizeof (ArvGvcpHeader));
+	g_assert_cmpuint (arv_gvcp_packet_get_packet_type (packet, packet_size), ==, ARV_GVCP_PACKET_TYPE_ACK);
+	g_assert_cmpuint (arv_gvcp_packet_get_command (packet, packet_size), ==, ARV_GVCP_COMMAND_EVENTDATA_ACK);
+	g_assert_cmpuint (arv_gvcp_packet_get_packet_id (packet, packet_size), ==, 42);
+	g_free (packet);
+}
+
+static void
+event_test (void)
+{
+	const guint8 payload[] = {0x01, 0x02, 0x03, 0x04, 0x05};
+	ArvEvent *event;
+	GBytes *bytes;
+	const guint8 *data;
+	size_t size;
+
+	event = arv_event_new (0x9001, 1234, 42, 0, payload, sizeof (payload));
+	g_assert_true (ARV_IS_EVENT (event));
+
+	g_assert_cmpuint (arv_event_get_id (event), ==, 0x9001);
+	g_assert_cmpuint (arv_event_get_timestamp (event), ==, 1234);
+	g_assert_cmpuint (arv_event_get_block_id (event), ==, 42);
+	g_assert_cmpuint (arv_event_get_stream_channel (event), ==, 0);
+
+	data = arv_event_peek_data (event, &size);
+	g_assert_cmpmem (data, size, payload, sizeof (payload));
+
+	bytes = arv_event_get_data (event);
+	g_assert_cmpmem (g_bytes_get_data (bytes, NULL), g_bytes_get_size (bytes), payload, sizeof (payload));
+
+	g_object_unref (event);
+
+	/* Data stay valid after the event destruction */
+	g_assert_cmpuint (g_bytes_get_size (bytes), ==, sizeof (payload));
+	g_bytes_unref (bytes);
+
+	event = arv_event_new (0x9002, 0, 0, ARV_EVENT_STREAM_CHANNEL_NONE, NULL, 0);
+	data = arv_event_peek_data (event, &size);
+	g_assert_cmpuint (size, ==, 0);
+	g_object_unref (event);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -325,6 +442,8 @@ main (int argc, char *argv[])
 	g_test_add_func ("/misc/globs", glob_test);
 	g_test_add_func ("/misc/matches", match_test);
 	g_test_add_func ("/gvcp/force-ip-packet", gvcp_force_ip_packet_test);
+	g_test_add_func ("/misc/event", event_test);
+	g_test_add_func ("/gvcp/event-packet", gvcp_event_packet_test);
 
 
 	result = g_test_run();

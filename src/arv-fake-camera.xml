@@ -22,6 +22,7 @@
 		<pFeature>ImageFormatControl</pFeature>
 		<pFeature>AcquisitionControl</pFeature>
 		<pFeature>AnalogControl</pFeature>
+		<pFeature>EventControl</pFeature>
 		<pFeature>TransportLayerControl</pFeature>
 		<pFeature>Debug</pFeature>
 	</Category>
@@ -448,6 +449,85 @@
 		<Endianess>BigEndian</Endianess>
 	</IntReg>
 
+	<!-- Event control -->
+
+	<Category Name="EventControl" NameSpace="Standard">
+		<pFeature>EventSelector</pFeature>
+		<pFeature>EventNotification</pFeature>
+		<pFeature>EventExposureEndData</pFeature>
+	</Category>
+
+	<Enumeration Name="EventSelector" NameSpace="Standard">
+		<Description>Selects which event to signal to the host.</Description>
+		<EnumEntry Name="ExposureEnd" NameSpace="Standard">
+			<Value>36865</Value>
+		</EnumEntry>
+		<pValue>EventSelectorRegister</pValue>
+		<pSelected>EventNotification</pSelected>
+	</Enumeration>
+
+	<IntReg Name="EventSelectorRegister" NameSpace="Custom">
+		<Address>0x340</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</IntReg>
+
+	<Enumeration Name="EventNotification" NameSpace="Standard">
+		<Description>Activates or deactivates the notification of the selected event.</Description>
+		<EnumEntry Name="Off" NameSpace="Standard">
+			<Value>0</Value>
+		</EnumEntry>
+		<EnumEntry Name="On" NameSpace="Standard">
+			<Value>1</Value>
+		</EnumEntry>
+		<pValue>EventNotificationRegister</pValue>
+	</Enumeration>
+
+	<IntReg Name="EventNotificationRegister" NameSpace="Custom">
+		<Address>0x344</Address>
+		<Length>4</Length>
+		<AccessMode>RW</AccessMode>
+		<pPort>Device</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</IntReg>
+
+	<Category Name="EventExposureEndData" NameSpace="Standard">
+		<pFeature>EventExposureEnd</pFeature>
+		<pFeature>EventExposureEndTimestamp</pFeature>
+		<pFeature>EventExposureEndFrameID</pFeature>
+	</Category>
+
+	<Integer Name="EventExposureEnd" NameSpace="Standard">
+		<Description>Unique identifier of the ExposureEnd event.</Description>
+		<Value>36865</Value>
+	</Integer>
+
+	<!-- Event data addresses are relative to the start of the event record, header included -->
+
+	<IntReg Name="EventExposureEndTimestamp" NameSpace="Standard">
+		<Description>Timestamp of the ExposureEnd event.</Description>
+		<Address>8</Address>
+		<Length>8</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>EventExposureEndPort</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</IntReg>
+
+	<IntReg Name="EventExposureEndFrameID" NameSpace="Standard">
+		<Description>Frame id of the ExposureEnd event.</Description>
+		<Address>6</Address>
+		<Length>2</Length>
+		<AccessMode>RO</AccessMode>
+		<pPort>EventExposureEndPort</pPort>
+		<Sign>Unsigned</Sign>
+		<Endianess>BigEndian</Endianess>
+	</IntReg>
+
 	<!-- Analog control -->
 
 	<Category Name="AnalogControl" NameSpace="Custom">
@@ -576,6 +656,10 @@
 	<!-- Port -->
 
 	<Port Name="Device" NameSpace="Standard">
+	</Port>
+
+	<Port Name="EventExposureEndPort" NameSpace="Custom">
+		<EventID>9001</EventID>
 	</Port>
 
 </RegisterDescription>

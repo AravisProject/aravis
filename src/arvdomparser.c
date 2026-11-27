@@ -319,6 +319,7 @@ arv_dom_document_append_from_memory (ArvDomDocument *document, ArvDomNode *node,
 				     const void *buffer, int size, GError **error)
 {
 	g_return_if_fail (ARV_IS_DOM_DOCUMENT (document));
+	g_return_if_fail (!arv_dom_document_get_write_lock (document));
 	g_return_if_fail (ARV_IS_DOM_NODE (node) || node == NULL);
 	g_return_if_fail (buffer != NULL);
 
