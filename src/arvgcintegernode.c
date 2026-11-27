@@ -25,6 +25,7 @@
  * @short_description: Class for Integer nodes
  */
 
+#include <arvdomnodeprivate.h>
 #include <arvgcintegernode.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
@@ -52,6 +53,7 @@ struct _ArvGcIntegerNode {
 
 	GSList *selecteds;		/* #ArvGcPropertyNode */
 	GSList *selected_features;	/* #ArvGcFeatureNode */
+	gint selected_features_are_frozen;
 };
 
 struct _ArvGcIntegerNodeClass {
@@ -64,6 +66,8 @@ static void arv_gc_integer_node_selector_interface_init (ArvGcSelectorInterface 
 G_DEFINE_TYPE_WITH_CODE (ArvGcIntegerNode, arv_gc_integer_node, ARV_TYPE_GC_FEATURE_NODE,
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_integer_node_integer_interface_init)
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_SELECTOR, arv_gc_integer_node_selector_interface_init))
+
+static void _write_lock_released (ArvDomNode *self);
 
 /* ArvDomNode implementation */
 
@@ -217,6 +221,7 @@ arv_gc_integer_node_class_init (ArvGcIntegerNodeClass *this_class)
 
 	object_class->finalize = arv_gc_integer_node_finalize;
 	dom_node_class->get_node_name = arv_gc_integer_node_get_node_name;
+	dom_node_class->write_lock_released = _write_lock_released;
 	dom_node_class->post_new_child = arv_gc_integer_node_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_integer_node_pre_remove_child;
 	gc_feature_node_class->get_linked_feature = arv_gc_integer_node_get_linked_feature;
@@ -458,8 +463,8 @@ arv_gc_integer_node_integer_interface_init (ArvGcIntegerInterface *interface)
 	interface->impose_max = arv_gc_integer_node_impose_max;
 }
 
-static const GSList *
-arv_gc_integer_node_get_selected_features (ArvGcSelector *selector)
+static void
+_build_selected_features (ArvDomNode *selector)
 {
 	ArvGcIntegerNode *integer = ARV_GC_INTEGER_NODE (selector);
 	GSList *iter;
@@ -470,8 +475,26 @@ arv_gc_integer_node_get_selected_features (ArvGcSelector *selector)
 		if (ARV_IS_GC_FEATURE_NODE (feature_node))
 			integer->selected_features = g_slist_prepend (integer->selected_features, feature_node);
 	}
+}
+
+static const GSList *
+arv_gc_integer_node_get_selected_features (ArvGcSelector *selector)
+{
+	ArvGcIntegerNode *integer = ARV_GC_INTEGER_NODE (selector);
+
+	/* Built once, at the first call, when the Genicam data are write locked */
+	arv_dom_node_lazy_build (ARV_DOM_NODE (selector), &integer->selected_features_are_frozen,
+				 _build_selected_features);
 
 	return integer->selected_features;
+}
+
+static void
+_write_lock_released (ArvDomNode *selector)
+{
+	ArvGcIntegerNode *integer = ARV_GC_INTEGER_NODE (selector);
+
+	g_atomic_int_set (&integer->selected_features_are_frozen, FALSE);
 }
 
 static void

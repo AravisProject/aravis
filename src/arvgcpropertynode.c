@@ -29,6 +29,7 @@
  */
 
 #include <arvgcpropertynode.h>
+#include <arvdomnodeprivate.h>
 #include <arvgcfeaturenode.h>
 #include <arvgcinteger.h>
 #include <arvgcfloat.h>
@@ -55,6 +56,8 @@ typedef struct {
 
 	gboolean value_data_up_to_date;
 	char *value_data;
+	/* TRUE if value_data was built, or set, while the document is write locked */
+	gint value_data_is_frozen;
 } ArvGcPropertyNodePrivate;
 
 G_DEFINE_TYPE_WITH_CODE (ArvGcPropertyNode, arv_gc_property_node, ARV_TYPE_GC_NODE, G_ADD_PRIVATE (ArvGcPropertyNode))
@@ -227,32 +230,52 @@ arv_gc_property_node_get_attribute (ArvDomElement *self, const char *name)
 
 /* ArvGcPropertyNode implementation */
 
+static void
+_build_value_data (ArvGcPropertyNode *property_node)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (property_node);
+	ArvDomNode *iter;
+	GString *string = g_string_new (NULL);
+
+	for (iter = arv_dom_node_get_first_child (ARV_DOM_NODE (property_node));
+	     iter != NULL;
+	     iter = arv_dom_node_get_next_sibling (iter))
+		g_string_append (string, arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (iter)));
+	g_free (priv->value_data);
+	priv->value_data = arv_g_string_free_and_steal(string);
+	priv->value_data_up_to_date = TRUE;
+}
+
 static const char *
 _get_value_data (ArvGcPropertyNode *property_node)
 {
 	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (property_node);
 	ArvDomNode *dom_node = ARV_DOM_NODE (property_node);
 
-	if (!priv->value_data_up_to_date) {
-		ArvDomNode *iter;
-		GString *string = g_string_new (NULL);
+	if (!arv_dom_node_is_write_locked (dom_node)) {
+		if (!priv->value_data_up_to_date)
+			_build_value_data (property_node);
 
-		for (iter = arv_dom_node_get_first_child (dom_node);
-		     iter != NULL;
-		     iter = arv_dom_node_get_next_sibling (iter))
-			g_string_append (string, arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (iter)));
-		g_free (priv->value_data);
-		priv->value_data = arv_g_string_free_and_steal(string);
-		priv->value_data_up_to_date = TRUE;
+		return priv->value_data;
+	}
+
+	/* Thread safe lazy build, the DOM tree can't change while write locked */
+	if (!g_atomic_int_get (&priv->value_data_is_frozen)) {
+		arv_dom_node_lazy_lock (dom_node);
+		if (!priv->value_data_is_frozen) {
+			if (!priv->value_data_up_to_date)
+				_build_value_data (property_node);
+			g_atomic_int_set (&priv->value_data_is_frozen, TRUE);
+		}
+		arv_dom_node_lazy_unlock (dom_node);
 	}
 
 	return priv->value_data;
 }
 
 static void
-_set_value_data (ArvGcPropertyNode *property_node, const char *data)
+_write_value_data_to_dom (ArvGcPropertyNode *property_node, const char *data)
 {
-	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (property_node);
 	ArvDomNode *dom_node = ARV_DOM_NODE (property_node);
 
 	if (arv_dom_node_get_first_child (dom_node) != NULL) {
@@ -264,10 +287,46 @@ _set_value_data (ArvGcPropertyNode *property_node, const char *data)
 		     iter = arv_dom_node_get_next_sibling (iter))
 			arv_dom_character_data_set_data (ARV_DOM_CHARACTER_DATA (iter), "");
 	}
+}
 
+static void
+_set_value_data (ArvGcPropertyNode *property_node, const char *data)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (property_node);
+	ArvDomNode *dom_node = ARV_DOM_NODE (property_node);
+
+	if (!arv_dom_node_is_write_locked (dom_node)) {
+		_write_value_data_to_dom (property_node, data);
+
+		g_free (priv->value_data);
+		priv->value_data = g_strdup (data);
+		priv->value_data_up_to_date = TRUE;
+		return;
+	}
+
+	/* The DOM tree is not modified while write locked, it will be updated when the lock is released */
+	arv_dom_node_lazy_lock (dom_node);
 	g_free (priv->value_data);
 	priv->value_data = g_strdup (data);
 	priv->value_data_up_to_date = TRUE;
+	g_atomic_int_set (&priv->value_data_is_frozen, TRUE);
+	arv_dom_node_lazy_unlock (dom_node);
+}
+
+static void
+_write_lock_released (ArvDomNode *self)
+{
+	ArvGcPropertyNodePrivate *priv = arv_gc_property_node_get_instance_private (ARV_GC_PROPERTY_NODE (self));
+
+	/* Values changed while write locked are written back to the DOM tree */
+	if (priv->value_data_is_frozen && priv->value_data_up_to_date && priv->value_data != NULL) {
+		char *data = g_strdup (priv->value_data);
+
+		_write_value_data_to_dom (ARV_GC_PROPERTY_NODE (self), data);
+		g_free (data);
+	}
+
+	g_atomic_int_set (&priv->value_data_is_frozen, FALSE);
 }
 
 static ArvDomNode *
@@ -1158,6 +1217,7 @@ arv_gc_property_node_class_init (ArvGcPropertyNodeClass *this_class)
 	dom_node_class->can_append_child = _can_append_child;
 	dom_node_class->post_new_child = _post_new_child;
 	dom_node_class->pre_remove_child = _pre_remove_child;
+	dom_node_class->write_lock_released = _write_lock_released;
 	dom_element_class->set_attribute = arv_gc_property_node_set_attribute;
 	dom_element_class->get_attribute = arv_gc_property_node_get_attribute;
 

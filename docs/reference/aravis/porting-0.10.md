@@ -54,3 +54,11 @@ receiving thread.
 [method@Aravis.FakeCamera.set_fill_pattern] take an additional GDestroyNotify
 parameter, that will be called when the callback closure data are not useful
 anymore, and can be destroyed.
+
+#### Genicam DOM tree write lock
+
+The Genicam DOM tree of a device is write locked once the device is created:
+modifications of the tree are refused, unless the write lock is first released
+using [method@Aravis.DomDocument.set_write_lock]. In exchange, the DOM read
+accessors, and the strings and lists they return, are thread safe (see
+[Thread Safety](thread-safety.html)).

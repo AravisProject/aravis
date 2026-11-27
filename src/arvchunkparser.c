@@ -336,6 +336,9 @@ arv_chunk_parser_new (const char *xml, gsize size)
 
 	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
 
+	/* Read only Genicam DOM tree, for thread safe read accessors */
+	arv_dom_document_set_write_lock (ARV_DOM_DOCUMENT (genicam), TRUE);
+
 	chunk_parser = g_object_new (ARV_TYPE_CHUNK_PARSER, "genicam", genicam, NULL);
 
 	g_object_unref (genicam);

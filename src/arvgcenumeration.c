@@ -25,6 +25,7 @@
  * @short_description: Class for Enumeration nodes
  */
 
+#include <arvdomnodeprivate.h>
 #include <arvgcenumeration.h>
 #include <arvgcenumentry.h>
 #include <arvgcinteger.h>
@@ -44,6 +45,7 @@ struct _ArvGcEnumeration {
 
 	GSList *selecteds;		/* #ArvGcPropertyNode */
 	GSList *selected_features;	/* #ArvGcFeatureNode */
+	gint selected_features_are_frozen;
 };
 
 struct _ArvGcEnumerationClass {
@@ -58,6 +60,8 @@ G_DEFINE_TYPE_WITH_CODE (ArvGcEnumeration, arv_gc_enumeration, ARV_TYPE_GC_FEATU
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_INTEGER, arv_gc_enumeration_integer_interface_init)
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_STRING, arv_gc_enumeration_string_interface_init)
 			 G_IMPLEMENT_INTERFACE (ARV_TYPE_GC_SELECTOR, arv_gc_enumeration_selector_interface_init))
+
+static void _write_lock_released (ArvDomNode *self);
 
 /* ArvGcDomNode implementation */
 
@@ -589,6 +593,7 @@ arv_gc_enumeration_class_init (ArvGcEnumerationClass *this_class)
 
 	object_class->finalize = arv_gc_enumeration_finalize;
 	dom_node_class->get_node_name = arv_gc_enumeration_get_node_name;
+	dom_node_class->write_lock_released = _write_lock_released;
 	dom_node_class->can_append_child = arv_gc_enumeration_can_append_child;
 	dom_node_class->post_new_child = arv_gc_enumeration_post_new_child;
 	dom_node_class->pre_remove_child = arv_gc_enumeration_pre_remove_child;
@@ -665,8 +670,8 @@ arv_gc_enumeration_string_interface_init (ArvGcStringInterface *interface)
 	interface->get_max_length = arv_gc_enumeration_get_max_string_length;
 }
 
-static const GSList *
-arv_gc_enumeration_get_selected_features (ArvGcSelector *selector)
+static void
+_build_selected_features (ArvDomNode *selector)
 {
 	ArvGcEnumeration *enumeration = ARV_GC_ENUMERATION (selector);
 	GSList *iter;
@@ -677,8 +682,26 @@ arv_gc_enumeration_get_selected_features (ArvGcSelector *selector)
 		if (ARV_IS_GC_FEATURE_NODE (feature_node))
 		    enumeration->selected_features = g_slist_prepend (enumeration->selected_features, feature_node);
 	}
+}
+
+static const GSList *
+arv_gc_enumeration_get_selected_features (ArvGcSelector *selector)
+{
+	ArvGcEnumeration *enumeration = ARV_GC_ENUMERATION (selector);
+
+	/* Built once, at the first call, when the Genicam data are write locked */
+	arv_dom_node_lazy_build (ARV_DOM_NODE (selector), &enumeration->selected_features_are_frozen,
+				 _build_selected_features);
 
 	return enumeration->selected_features;
+}
+
+static void
+_write_lock_released (ArvDomNode *selector)
+{
+	ArvGcEnumeration *enumeration = ARV_GC_ENUMERATION (selector);
+
+	g_atomic_int_set (&enumeration->selected_features_are_frozen, FALSE);
 }
 
 static void

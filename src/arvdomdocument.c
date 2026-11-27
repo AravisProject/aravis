@@ -242,7 +242,8 @@ _write_lock_released (ArvDomNode *node)
  * and the read accessors of the tree become thread safe: the strings and lists they return are built once, at the
  * first call, and stay valid until the write lock is released.
  *
- * Without the write lock, the document behaves as a regular, not thread safe, DOM tree.
+ * Without the write lock, the document behaves as a regular, not thread safe, DOM tree. The Genicam data of the
+ * devices are write locked at the end of the device creation.
  *
  * Changing the write lock is not thread safe, and must be done while the document is not used by another thread.
  *

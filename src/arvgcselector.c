@@ -57,6 +57,10 @@ arv_gc_selector_is_selector (ArvGcSelector *gc_selector)
  * arv_gc_selector_get_selected_features:
  * @gc_selector: a #ArvGcSelector
  *
+ * The list is owned by @gc_selector. When the Genicam data are write locked, which is the case once the device is
+ * created, the list is built at the first call and stays valid until the write lock is released, which makes this
+ * function thread safe. Otherwise the list is rebuilt, and the previous one freed, at each call.
+ *
  * Returns: (element-type ArvGcFeatureNode) (transfer none): a list of selected #ArvGcFeatureNode
  *
  * Since: 0.8.0

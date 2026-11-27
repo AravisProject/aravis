@@ -1643,6 +1643,10 @@ arv_device_initable_init (GInitable     *initable,
 		return FALSE;
 	}
 
+	/* The Genicam DOM tree is read only once the device is created, which makes its read accessors thread safe */
+	if (ARV_IS_GC (arv_device_get_genicam (ARV_DEVICE (initable))))
+		arv_dom_document_set_write_lock (ARV_DOM_DOCUMENT (arv_device_get_genicam (ARV_DEVICE (initable))), TRUE);
+
 	return TRUE;
 }
 

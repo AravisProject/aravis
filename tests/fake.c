@@ -690,7 +690,11 @@ camera_trigger_selector_test (void)
 	arv_dom_node_append_child (ARV_DOM_NODE (invalidator),
 				   ARV_DOM_NODE (arv_dom_document_create_text_node (ARV_DOM_DOCUMENT (genicam),
 										    "TriggerMode")));
+	/* The device Genicam data are write locked once the device is created */
+	g_assert_true (arv_dom_document_get_write_lock (ARV_DOM_DOCUMENT (genicam)));
+	arv_dom_document_set_write_lock (ARV_DOM_DOCUMENT (genicam), FALSE);
 	arv_dom_node_append_child (ARV_DOM_NODE (genicam), ARV_DOM_NODE (invalidator));
+	arv_dom_document_set_write_lock (ARV_DOM_DOCUMENT (genicam), TRUE);
 	arv_gc_invalidator_has_changed (ARV_GC_INVALIDATOR_NODE (invalidator));
 
 	arv_camera_set_trigger (camera, "Software", &error);
@@ -811,6 +815,180 @@ set_features_from_string_test (void)
 	g_object_unref (device);
 }
 
+static ArvDomNode *
+_get_value_text_node (ArvGc *genicam, const char *feature)
+{
+	ArvDomNode *iter;
+
+	for (iter = arv_dom_node_get_first_child (ARV_DOM_NODE (arv_gc_get_node (genicam, feature)));
+	     iter != NULL;
+	     iter = arv_dom_node_get_next_sibling (iter))
+		if (ARV_IS_GC_PROPERTY_NODE (iter) &&
+		    arv_gc_property_node_get_node_type (ARV_GC_PROPERTY_NODE (iter)) == ARV_GC_PROPERTY_NODE_TYPE_VALUE)
+			return arv_dom_node_get_first_child (iter);
+
+	return NULL;
+}
+
+static void
+write_lock_value_test (void)
+{
+	ArvCamera *camera;
+	ArvGc *genicam;
+	ArvDomNode *text;
+	GError *error = NULL;
+
+	camera = arv_camera_new ("Fake_1", &error);
+	g_assert_no_error (error);
+	genicam = arv_device_get_genicam (arv_camera_get_device (camera));
+
+	text = _get_value_text_node (genicam, "TriggerSelectorInteger");
+	g_assert_nonnull (text);
+	g_assert_cmpstr (arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (text)), ==, "0");
+
+	/* Runtime changes don't modify the DOM tree while it is write locked */
+	arv_camera_set_integer (camera, "TriggerSelectorInteger", 1, &error);
+	g_assert_no_error (error);
+	g_assert_cmpint (arv_camera_get_integer (camera, "TriggerSelectorInteger", NULL), ==, 1);
+	g_assert_cmpstr (arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (text)), ==, "0");
+
+	/* And are written back when the lock is released */
+	arv_dom_document_set_write_lock (ARV_DOM_DOCUMENT (genicam), FALSE);
+	g_assert_cmpstr (arv_dom_character_data_get_data (ARV_DOM_CHARACTER_DATA (text)), ==, "1");
+	g_assert_cmpint (arv_camera_get_integer (camera, "TriggerSelectorInteger", NULL), ==, 1);
+	arv_dom_document_set_write_lock (ARV_DOM_DOCUMENT (genicam), TRUE);
+
+	g_object_unref (camera);
+}
+
+static void
+write_lock_list_test (void)
+{
+	ArvGc *genicam;
+	ArvGcNode *root;
+	ArvGcNode *property;
+	const GSList *features;
+	char *xml;
+	gsize size;
+	guint n_features;
+
+	g_assert_true (g_file_get_contents (GENICAM_FILENAME, &xml, &size, NULL));
+	genicam = arv_gc_new (NULL, xml, size);
+	g_assert_true (ARV_IS_GC (genicam));
+	g_assert_false (arv_dom_document_get_write_lock (ARV_DOM_DOCUMENT (genicam)));
+
+	root = arv_gc_get_node (genicam, "Root");
+
+	/* Built while not locked */
+	n_features = g_slist_length ((GSList *) arv_gc_category_get_features (ARV_GC_CATEGORY (root)));
+	g_assert_cmpuint (n_features, >, 0);
+
+	property = arv_gc_property_node_new_p_feature ();
+	arv_dom_node_append_child (ARV_DOM_NODE (property),
+				   ARV_DOM_NODE (arv_dom_document_create_text_node (ARV_DOM_DOCUMENT (genicam), "Width")));
+	arv_dom_node_append_child (ARV_DOM_NODE (root), ARV_DOM_NODE (property));
+
+	/* The list built before the lock is not reused */
+	arv_dom_document_set_write_lock (ARV_DOM_DOCUMENT (genicam), TRUE);
+	features = arv_gc_category_get_features (ARV_GC_CATEGORY (root));
+	g_assert_cmpuint (g_slist_length ((GSList *) features), ==, n_features + 1);
+	g_assert_cmpstr (g_slist_last ((GSList *) features)->data, ==, "Width");
+
+	/* And the frozen list is not rebuilt */
+	g_assert_true (arv_gc_category_get_features (ARV_GC_CATEGORY (root)) == features);
+
+	g_object_unref (genicam);
+	g_free (xml);
+}
+
+#define WRITE_LOCK_N_THREADS	4
+
+typedef struct {
+	ArvGc *genicam;
+	gint *n_ready;
+	GPtrArray *results;
+} WriteLockThreadData;
+
+static void
+_collect (ArvDomNode *node, GPtrArray *results)
+{
+	ArvDomNode *iter;
+
+	g_ptr_array_add (results, arv_dom_node_get_child_nodes (node));
+
+	if (ARV_IS_GC_FEATURE_NODE (node)) {
+		g_ptr_array_add (results, (gpointer) arv_gc_feature_node_get_description (ARV_GC_FEATURE_NODE (node)));
+		g_ptr_array_add (results, (gpointer) arv_gc_feature_node_get_tooltip (ARV_GC_FEATURE_NODE (node)));
+		g_ptr_array_add (results, (gpointer) arv_gc_feature_node_get_display_name (ARV_GC_FEATURE_NODE (node)));
+	}
+	if (ARV_IS_GC_CATEGORY (node))
+		g_ptr_array_add (results, (gpointer) arv_gc_category_get_features (ARV_GC_CATEGORY (node)));
+	if (ARV_IS_GC_SELECTOR (node))
+		g_ptr_array_add (results, (gpointer) arv_gc_selector_get_selected_features (ARV_GC_SELECTOR (node)));
+	if (ARV_IS_GC_ENUMERATION (node))
+		g_ptr_array_add (results, (gpointer) arv_gc_enumeration_get_entries (ARV_GC_ENUMERATION (node)));
+
+	for (iter = arv_dom_node_get_first_child (node); iter != NULL; iter = arv_dom_node_get_next_sibling (iter))
+		_collect (iter, results);
+}
+
+static gpointer
+write_lock_thread (gpointer user_data)
+{
+	WriteLockThreadData *data = user_data;
+
+	/* Start together, in order to race on the first lazy builds */
+	g_atomic_int_inc (data->n_ready);
+	while (g_atomic_int_get (data->n_ready) < WRITE_LOCK_N_THREADS)
+		;
+
+	_collect (ARV_DOM_NODE (data->genicam), data->results);
+
+	return NULL;
+}
+
+static void
+write_lock_concurrent_read_test (void)
+{
+	WriteLockThreadData data[WRITE_LOCK_N_THREADS];
+	GThread *threads[WRITE_LOCK_N_THREADS];
+	GPtrArray *second_pass;
+	ArvGc *genicam;
+	char *xml;
+	gsize size;
+	gint n_ready = 0;
+	guint i, j;
+
+	/* Freshly locked tree, nothing built yet */
+	g_assert_true (g_file_get_contents (GENICAM_FILENAME, &xml, &size, NULL));
+	genicam = arv_gc_new (NULL, xml, size);
+	arv_dom_document_set_write_lock (ARV_DOM_DOCUMENT (genicam), TRUE);
+
+	for (i = 0; i < WRITE_LOCK_N_THREADS; i++) {
+		data[i].genicam = genicam;
+		data[i].n_ready = &n_ready;
+		data[i].results = g_ptr_array_new ();
+		threads[i] = g_thread_new ("write-lock-reader", write_lock_thread, &data[i]);
+	}
+	for (i = 0; i < WRITE_LOCK_N_THREADS; i++)
+		g_thread_join (threads[i]);
+
+	second_pass = g_ptr_array_new ();
+	_collect (ARV_DOM_NODE (genicam), second_pass);
+
+	/* Same lists and strings, in all threads, and in a later call */
+	for (i = 0; i < WRITE_LOCK_N_THREADS; i++) {
+		g_assert_cmpuint (data[i].results->len, ==, second_pass->len);
+		for (j = 0; j < second_pass->len; j++)
+			g_assert_true (g_ptr_array_index (data[i].results, j) == g_ptr_array_index (second_pass, j));
+		g_ptr_array_unref (data[i].results);
+	}
+
+	g_ptr_array_unref (second_pass);
+	g_object_unref (genicam);
+	g_free (xml);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -834,6 +1012,9 @@ main (int argc, char *argv[])
 	g_test_add_func ("/fake/camera-device", camera_device_test);
 	g_test_add_func ("/fake/camera-trigger-selector", camera_trigger_selector_test);
 	g_test_add_func ("/fake/set-features-from-string", set_features_from_string_test);
+	g_test_add_func ("/fake/write-lock-value", write_lock_value_test);
+	g_test_add_func ("/fake/write-lock-list", write_lock_list_test);
+	g_test_add_func ("/fake/write-lock-concurrent-read", write_lock_concurrent_read_test);
 
 	result = g_test_run();
 
