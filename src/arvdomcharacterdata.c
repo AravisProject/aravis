@@ -26,6 +26,7 @@
  * @short_description: Base class for DOM character data nodes
  */
 
+#include <arvdomnodeprivate.h>
 #include <arvdomcharacterdata.h>
 #include <arvdebugprivate.h>
 #include <string.h>
@@ -69,6 +70,7 @@ arv_dom_character_data_set_data (ArvDomCharacterData* self, const char * value)
 
 	g_return_if_fail (ARV_IS_DOM_CHARACTER_DATA (self));
 	g_return_if_fail (value != NULL);
+	g_return_if_fail (!arv_dom_node_is_write_locked (ARV_DOM_NODE (self)));
 
 	g_free (priv->data);
 	priv->data = g_strdup (value);

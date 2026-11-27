@@ -26,6 +26,7 @@
  * @short_description: Base class for DOM nodes
  */
 
+#include <arvdomnodeprivate.h>
 #include <arvdomnode.h>
 #include <arvdomnodechildlist.h>
 #include <arvdomnodelist.h>
@@ -40,6 +41,7 @@ typedef struct {
 	ArvDomNode	*parent_node;
 	ArvDomNode	*first_child;
 	ArvDomNode	*last_child;
+	ArvDomNodeList	*child_nodes;
 } ArvDomNodePrivate;
 
 G_DEFINE_ABSTRACT_TYPE_WITH_PRIVATE (ArvDomNode, arv_dom_node, G_TYPE_OBJECT)
@@ -97,6 +99,7 @@ arv_dom_node_set_node_value (ArvDomNode* self, const char* new_value)
 
 	g_return_if_fail (node_class != NULL);
 	g_return_if_fail (new_value != NULL);
+	g_return_if_fail (!arv_dom_node_is_write_locked (self));
 
 	if (node_class->set_node_value)
 		node_class->set_node_value (self, new_value);
@@ -137,21 +140,31 @@ arv_dom_node_get_parent_node (ArvDomNode* self)
  * arv_dom_node_get_child_nodes:
  * @self: a #ArvDomNode
  *
+ * The returned list is a live view of the children of @self, owned by @self. It is created once, at the first call.
+ * This function is thread safe, but iterating over the list is not while the tree is modified from another thread.
+ *
  * Returns: (transfer none): a #ArvDomNodeList, NULL on error.
  */
 
 ArvDomNodeList*
 arv_dom_node_get_child_nodes (ArvDomNode* self)
 {
+	ArvDomNodePrivate *priv;
 	ArvDomNodeList *list;
 
 	g_return_val_if_fail (ARV_IS_DOM_NODE (self), NULL);
 
-	list = g_object_get_data (G_OBJECT (self), "child-nodes");
+	priv = arv_dom_node_get_instance_private (self);
 
-	if (list == NULL) {
-		list = arv_dom_node_child_list_new (self);
-		g_object_set_data_full (G_OBJECT (self), "child-nodes", list, g_object_unref);
+	list = g_atomic_pointer_get (&priv->child_nodes);
+	if (list != NULL)
+		return list;
+
+	/* Lock free lazy creation, the list of the first thread to publish its list wins */
+	list = arv_dom_node_child_list_new (self);
+	if (!g_atomic_pointer_compare_and_exchange (&priv->child_nodes, NULL, list)) {
+		g_object_unref (list);
+		list = g_atomic_pointer_get (&priv->child_nodes);
 	}
 
 	return list;
@@ -281,6 +294,9 @@ arv_dom_node_insert_before (ArvDomNode* self, ArvDomNode* new_child, ArvDomNode*
 	ArvDomNodePrivate *ref_child_priv = arv_dom_node_get_instance_private (ref_child);
 	ArvDomNodeClass *node_class;
 
+	if (ARV_IS_DOM_NODE (self))
+		g_return_val_if_fail (!arv_dom_node_is_write_locked (self), NULL);
+
 	if (ref_child == NULL)
 		arv_dom_node_append_child (self, new_child);
 
@@ -366,6 +382,9 @@ arv_dom_node_replace_child (ArvDomNode* self, ArvDomNode* new_child, ArvDomNode*
 	ArvDomNode *next_sibling;
 	ArvDomNode *node;
 
+	if (ARV_IS_DOM_NODE (self))
+		g_return_val_if_fail (!arv_dom_node_is_write_locked (self), NULL);
+
 	if (new_child == NULL)
 		return arv_dom_node_remove_child (self, old_child);
 
@@ -440,6 +459,7 @@ arv_dom_node_remove_child (ArvDomNode* self, ArvDomNode* old_child)
 	ArvDomNodeClass *node_class;
 
 	g_return_val_if_fail (ARV_IS_DOM_NODE (self), NULL);
+	g_return_val_if_fail (!arv_dom_node_is_write_locked (self), NULL);
 
 	if (old_child == NULL)
 		return NULL;
@@ -509,6 +529,13 @@ arv_dom_node_append_child (ArvDomNode* self, ArvDomNode* new_child)
 	if (!ARV_IS_DOM_NODE (self)) {
 		g_critical ("%s: self is not a ArvDomNode", G_STRFUNC);
 		g_object_unref (new_child);
+		return NULL;
+	}
+
+	if (arv_dom_node_is_write_locked (self)) {
+		g_critical ("%s: the document is write locked", G_STRFUNC);
+		if (ARV_IS_DOM_NODE (new_child))
+			g_object_unref (new_child);
 		return NULL;
 	}
 
@@ -607,6 +634,8 @@ arv_dom_node_finalize (GObject *object)
 		g_object_unref (child);
 		child = next_child;
 	}
+
+	g_clear_object (&priv->child_nodes);
 
 	G_OBJECT_CLASS (arv_dom_node_parent_class)->finalize (object);
 }

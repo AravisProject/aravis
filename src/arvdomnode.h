@@ -73,8 +73,12 @@ struct _ArvDomNodeClass {
 	void			(*changed)		(ArvDomNode *self);
 	gboolean		(*child_changed)	(ArvDomNode *self, ArvDomNode *child);
 
+	/* Write lock virtuals */
+
+	void			(*write_lock_released)	(ArvDomNode *self);
+
         /* Padding for future expansion */
-        gpointer padding[10];
+        gpointer padding[9];
 };
 
 ARV_API const char *		arv_dom_node_get_node_name		(ArvDomNode *self);
@@ -88,7 +92,6 @@ ARV_API ArvDomNode *		arv_dom_node_get_last_child		(ArvDomNode *self);
 ARV_API ArvDomNode *		arv_dom_node_get_previous_sibling	(ArvDomNode *self);
 ARV_API ArvDomNode *		arv_dom_node_get_next_sibling		(ArvDomNode *self);
 #if 0
-ARV_API ArvDomNamedNodeMap * 	arv_dom_node_get_attributes		(ArvDomNode *self);
 #endif
 ARV_API ArvDomNode *		arv_dom_node_insert_before		(ArvDomNode *self, ArvDomNode *new_child, ArvDomNode *ref_child);
 ARV_API ArvDomNode *		arv_dom_node_replace_child		(ArvDomNode *self, ArvDomNode *new_child, ArvDomNode *old_child);
