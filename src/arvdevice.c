@@ -759,6 +759,9 @@ arv_device_set_string_feature_value (ArvDevice *device, const char *feature, con
  * @feature: feature name
  * @error: a #GError placeholder
  *
+ * The returned string is owned by the Genicam data. This function is not thread safe, as the string may be changed,
+ * or freed, by a feature access from another thread. Use [method@ArvDevice.dup_string_feature_value] instead.
+ *
  * Returns: the string feature value, %NULL on error.
  *
  * Since: 0.8.0
@@ -774,6 +777,81 @@ arv_device_get_string_feature_value (ArvDevice *device, const char *feature, GEr
 		return arv_gc_string_get_value (ARV_GC_STRING (node), error);
 
 	return NULL;
+}
+
+/**
+ * arv_device_dup_string_feature_value:
+ * @device: a #ArvDevice
+ * @feature: feature name
+ * @error: a #GError placeholder
+ *
+ * Thread safe version of [method@ArvDevice.get_string_feature_value].
+ *
+ * Returns: (transfer full): a newly allocated copy of the string feature value, %NULL on error.
+ *
+ * Since: 0.10.0
+ */
+
+char *
+arv_device_dup_string_feature_value (ArvDevice *device, const char *feature, GError **error)
+{
+	ArvGcNode *node;
+
+	node = _get_feature (device, ARV_TYPE_GC_STRING, feature, error);
+	if (node != NULL)
+		return arv_gc_string_dup_value (ARV_GC_STRING (node), error);
+
+	return NULL;
+}
+
+/**
+ * arv_device_lock_genicam:
+ * @device: a #ArvDevice
+ *
+ * Locks the access to the device Genicam data. Each feature access is already protected by this lock, which makes
+ * the device safe to use from different threads. This function allows to make a sequence of feature accesses
+ * atomic, for example a selector change followed by the access to a selected feature, when the device is also used
+ * from another thread.
+ *
+ * The lock is recursive, and each call must be balanced by a call to [method@ArvDevice.unlock_genicam]. It must not be
+ * held while waiting for an internal aravis thread, for example during the destruction of a device or a stream.
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_device_lock_genicam (ArvDevice *device)
+{
+	ArvGc *genicam;
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	arv_gc_lock (genicam);
+}
+
+/**
+ * arv_device_unlock_genicam:
+ * @device: a #ArvDevice
+ *
+ * Unlocks the access to the device Genicam data, see [method@ArvDevice.lock_genicam].
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_device_unlock_genicam (ArvDevice *device)
+{
+	ArvGc *genicam;
+
+	g_return_if_fail (ARV_IS_DEVICE (device));
+
+	genicam = arv_device_get_genicam (device);
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	arv_gc_unlock (genicam);
 }
 
 /**
@@ -1260,6 +1338,9 @@ arv_device_set_features_from_string (ArvDevice *device, const char *string, GErr
 	if (string == NULL)
 		return TRUE;
 
+	/* The whole list of assignments is atomic */
+	arv_device_lock_genicam (device);
+
 	regex = g_regex_new ("((?<Key>[^\\s\"'\\=]+)|\"(?<Key>[^\"]*)\"|'(?<Key>[^']*)')"
 			     "(?:\\=((?<Value>[^\\s\"']+)|\"(?<Value>[^\"]*)\"|'(?<Value>[^']*)'))?",
 			     G_REGEX_DUPNAMES, 0, NULL);
@@ -1329,6 +1410,8 @@ arv_device_set_features_from_string (ArvDevice *device, const char *string, GErr
 	}
 
 	g_regex_unref (regex);
+
+	arv_device_unlock_genicam (device);
 
 	if (local_error != NULL) {
 		g_propagate_error (error, local_error);

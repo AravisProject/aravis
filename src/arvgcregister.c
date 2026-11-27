@@ -25,6 +25,7 @@
  * @short_description: Register interface
  */
 
+#include <arvgcprivate.h>
 #include <arvgcregister.h>
 #include <arvmisc.h>
 
@@ -38,41 +39,63 @@ G_DEFINE_INTERFACE (ArvGcRegister, arv_gc_register, G_TYPE_OBJECT)
 void
 arv_gc_register_get (ArvGcRegister *gc_register, void *buffer, guint64 length, GError **error)
 {
+	ArvGc *genicam;
+
 	g_return_if_fail (ARV_IS_GC_REGISTER (gc_register));
 	g_return_if_fail (buffer != NULL);
 	g_return_if_fail (length > 0);
 	g_return_if_fail (error == NULL || *error == NULL);
 
+	genicam = arv_gc_node_lock_genicam (gc_register);
 	ARV_GC_REGISTER_GET_IFACE (gc_register)->get (gc_register, buffer, length, error);
+	arv_gc_node_unlock_genicam (genicam);
 }
 
 void
 arv_gc_register_set (ArvGcRegister *gc_register, const void *buffer, guint64 length, GError **error)
 {
+	ArvGc *genicam;
+
 	g_return_if_fail (ARV_IS_GC_REGISTER (gc_register));
 	g_return_if_fail (buffer != NULL);
 	g_return_if_fail (length > 0);
 	g_return_if_fail (error == NULL || *error == NULL);
 
+	genicam = arv_gc_node_lock_genicam (gc_register);
 	ARV_GC_REGISTER_GET_IFACE (gc_register)->set (gc_register, buffer, length, error);
+	arv_gc_node_unlock_genicam (genicam);
 }
 
 guint64
 arv_gc_register_get_address (ArvGcRegister *gc_register, GError **error)
 {
+	ArvGc *genicam;
+	guint64 value;
+
 	g_return_val_if_fail (ARV_IS_GC_REGISTER (gc_register), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
-	return ARV_GC_REGISTER_GET_IFACE (gc_register)->get_address (gc_register, error);
+	genicam = arv_gc_node_lock_genicam (gc_register);
+	value = ARV_GC_REGISTER_GET_IFACE (gc_register)->get_address (gc_register, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
 guint64
 arv_gc_register_get_length (ArvGcRegister *gc_register, GError **error)
 {
+	ArvGc *genicam;
+	guint64 value;
+
 	g_return_val_if_fail (ARV_IS_GC_REGISTER (gc_register), 0);
 	g_return_val_if_fail (error == NULL || *error == NULL, 0);
 
-	return ARV_GC_REGISTER_GET_IFACE (gc_register)->get_length (gc_register, error);
+	genicam = arv_gc_node_lock_genicam (gc_register);
+	value = ARV_GC_REGISTER_GET_IFACE (gc_register)->get_length (gc_register, error);
+	arv_gc_node_unlock_genicam (genicam);
+
+	return value;
 }
 
 /**
@@ -89,6 +112,7 @@ arv_gc_register_get_length (ArvGcRegister *gc_register, GError **error)
 void *
 arv_gc_register_dup (ArvGcRegister *gc_register, guint64 *length, GError **error)
 {
+        ArvGc *genicam;
         GError *local_error = NULL;
         void *buffer = NULL;
         guint64 register_length = 0;
@@ -98,12 +122,17 @@ arv_gc_register_dup (ArvGcRegister *gc_register, guint64 *length, GError **error
 
         g_return_val_if_fail (ARV_IS_GC_REGISTER(gc_register), NULL);
 
+        /* Keep the length consistent with the read content */
+        genicam = arv_gc_node_lock_genicam (gc_register);
+
         register_length = arv_gc_register_get_length(gc_register, &local_error);
         if (register_length < 65536 && local_error == NULL) {
                 buffer = g_malloc (register_length);
                 if (buffer != NULL)
                         arv_gc_register_get (gc_register, buffer, register_length, &local_error);
         }
+
+        arv_gc_node_unlock_genicam (genicam);
 
         if (local_error != NULL) {
                 g_clear_pointer (&buffer, g_free);

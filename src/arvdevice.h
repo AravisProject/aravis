@@ -151,6 +151,7 @@ ARV_API void		arv_device_get_boolean_feature_value_gi	(ArvDevice *device, const 
 
 ARV_API void		arv_device_set_string_feature_value	(ArvDevice *device, const char *feature, const char *value, GError **error);
 ARV_API const char *	arv_device_get_string_feature_value	(ArvDevice *device, const char *feature, GError **error);
+ARV_API char *		arv_device_dup_string_feature_value	(ArvDevice *device, const char *feature, GError **error);
 
 ARV_API void		arv_device_set_integer_feature_value	(ArvDevice *device, const char *feature, gint64 value, GError **error);
 ARV_API gint64		arv_device_get_integer_feature_value	(ArvDevice *device, const char *feature, GError **error);
@@ -177,6 +178,9 @@ ARV_API gboolean	arv_device_is_enumeration_entry_available				(ArvDevice *device
 												 const char *entry, GError **error);
 
 ARV_API gboolean	arv_device_set_features_from_string	(ArvDevice *device, const char *string, GError **error);
+
+ARV_API void		arv_device_lock_genicam			(ArvDevice *device);
+ARV_API void		arv_device_unlock_genicam		(ArvDevice *device);
 
 ARV_API void		arv_device_set_register_cache_policy	(ArvDevice *device, ArvRegisterCachePolicy policy);
 ARV_API void		arv_device_set_range_check_policy	(ArvDevice *device, ArvRangeCheckPolicy policy);

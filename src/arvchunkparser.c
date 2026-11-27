@@ -91,6 +91,9 @@ arv_chunk_parser_get_boolean_value (ArvChunkParser *parser, ArvBuffer *buffer, c
 	g_return_val_if_fail (ARV_IS_CHUNK_PARSER (parser), 0.0);
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0.0);
 
+	/* The attached buffer is shared state, keep it during the value read */
+	arv_gc_lock (parser->priv->genicam);
+
 	node = arv_gc_get_node (parser->priv->genicam, chunk);
 	arv_gc_set_buffer (parser->priv->genicam, buffer);
 
@@ -108,6 +111,8 @@ arv_chunk_parser_get_boolean_value (ArvChunkParser *parser, ArvBuffer *buffer, c
 			     "[%s] Not a boolean", chunk);
 	}
 
+	arv_gc_unlock (parser->priv->genicam);
+
 	return value;
 }
 
@@ -117,6 +122,10 @@ arv_chunk_parser_get_boolean_value (ArvChunkParser *parser, ArvBuffer *buffer, c
  * @buffer: a #ArvBuffer with a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA payload
  * @chunk: chunk data name
  * @error: a #GError placeholder
+ *
+ * The returned string is owned by the parser Genicam data. This function is not thread safe, as the string may be
+ * changed by another access to the same parser from another thread. Use [method@ArvChunkParser.dup_string_value]
+ * instead.
  *
  * Returns: the string chunk data value.
  */
@@ -129,6 +138,9 @@ arv_chunk_parser_get_string_value (ArvChunkParser *parser, ArvBuffer *buffer, co
 
 	g_return_val_if_fail (ARV_IS_CHUNK_PARSER (parser), NULL);
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), NULL);
+
+	/* The attached buffer is shared state, keep it during the value read */
+	arv_gc_lock (parser->priv->genicam);
 
 	node = arv_gc_get_node (parser->priv->genicam, chunk);
 	arv_gc_set_buffer (parser->priv->genicam, buffer);
@@ -146,6 +158,37 @@ arv_chunk_parser_get_string_value (ArvChunkParser *parser, ArvBuffer *buffer, co
 		g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
 			     "[%s] Not a string", chunk);
 	}
+
+	arv_gc_unlock (parser->priv->genicam);
+
+	return string;
+}
+
+/**
+ * arv_chunk_parser_dup_string_value:
+ * @parser: a #ArvChunkParser
+ * @buffer: a #ArvBuffer with a #ARV_BUFFER_PAYLOAD_TYPE_CHUNK_DATA payload
+ * @chunk: chunk data name
+ * @error: a #GError placeholder
+ *
+ * Thread safe version of [method@ArvChunkParser.get_string_value].
+ *
+ * Returns: (transfer full): a newly allocated copy of the string chunk data value.
+ *
+ * Since: 0.10.0
+ */
+
+char *
+arv_chunk_parser_dup_string_value (ArvChunkParser *parser, ArvBuffer *buffer, const char *chunk, GError **error)
+{
+	char *string;
+
+	g_return_val_if_fail (ARV_IS_CHUNK_PARSER (parser), NULL);
+	g_return_val_if_fail (ARV_IS_BUFFER (buffer), NULL);
+
+	arv_gc_lock (parser->priv->genicam);
+	string = g_strdup (arv_chunk_parser_get_string_value (parser, buffer, chunk, error));
+	arv_gc_unlock (parser->priv->genicam);
 
 	return string;
 }
@@ -169,6 +212,9 @@ arv_chunk_parser_get_integer_value (ArvChunkParser *parser, ArvBuffer *buffer, c
 	g_return_val_if_fail (ARV_IS_CHUNK_PARSER (parser), 0.0);
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0.0);
 
+	/* The attached buffer is shared state, keep it during the value read */
+	arv_gc_lock (parser->priv->genicam);
+
 	node = arv_gc_get_node (parser->priv->genicam, chunk);
 	arv_gc_set_buffer (parser->priv->genicam, buffer);
 
@@ -185,6 +231,8 @@ arv_chunk_parser_get_integer_value (ArvChunkParser *parser, ArvBuffer *buffer, c
 		g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
 			     "[%s] Not an integer", chunk);
 	}
+
+	arv_gc_unlock (parser->priv->genicam);
 
 	return value;
 }
@@ -208,6 +256,9 @@ arv_chunk_parser_get_float_value (ArvChunkParser *parser, ArvBuffer *buffer, con
 	g_return_val_if_fail (ARV_IS_CHUNK_PARSER (parser), 0.0);
 	g_return_val_if_fail (ARV_IS_BUFFER (buffer), 0.0);
 
+	/* The attached buffer is shared state, keep it during the value read */
+	arv_gc_lock (parser->priv->genicam);
+
 	node = arv_gc_get_node (parser->priv->genicam, chunk);
 	arv_gc_set_buffer (parser->priv->genicam, buffer);
 
@@ -224,6 +275,8 @@ arv_chunk_parser_get_float_value (ArvChunkParser *parser, ArvBuffer *buffer, con
 		g_set_error (error, ARV_CHUNK_PARSER_ERROR, ARV_CHUNK_PARSER_ERROR_INVALID_FEATURE_TYPE,
 			     "[%s] Not a float", chunk);
 	}
+
+	arv_gc_unlock (parser->priv->genicam);
 
 	return value;
 }

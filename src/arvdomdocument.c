@@ -317,7 +317,7 @@ arv_dom_node_is_write_locked (ArvDomNode *self)
  * @self: a #ArvDomNode
  *
  * Locks the mutex protecting the lazy build of node data, while the owner document is write locked. The mutex is
- * recursive.
+ * recursive. It must never be held while taking the Genicam lock.
  */
 
 void

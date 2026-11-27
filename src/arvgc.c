@@ -76,6 +76,8 @@ typedef struct {
 	ArvAccessCheckPolicy access_check_policy;
 
         unsigned n_register_cache_errors;
+
+	GRecMutex mutex;
 } ArvGcPrivate;
 
 struct _ArvGc {
@@ -371,7 +373,7 @@ arv_gc_set_register_cache_policy (ArvGc *genicam, ArvRegisterCachePolicy policy)
 {
 	g_return_if_fail (ARV_IS_GC (genicam));
 
-	genicam->priv->cache_policy = policy;
+	g_atomic_int_set ((gint *) &genicam->priv->cache_policy, policy);
 }
 
 ArvRegisterCachePolicy
@@ -379,7 +381,7 @@ arv_gc_get_register_cache_policy (ArvGc *genicam)
 {
 	g_return_val_if_fail (ARV_IS_GC (genicam), ARV_REGISTER_CACHE_POLICY_DISABLE);
 
-	return genicam->priv->cache_policy;
+	return g_atomic_int_get ((gint *) &genicam->priv->cache_policy);
 }
 
 void
@@ -387,7 +389,7 @@ arv_gc_set_range_check_policy (ArvGc *genicam, ArvRangeCheckPolicy policy)
 {
 	g_return_if_fail (ARV_IS_GC (genicam));
 
-	genicam->priv->range_check_policy = policy;
+	g_atomic_int_set ((gint *) &genicam->priv->range_check_policy, policy);
 }
 
 ArvRangeCheckPolicy
@@ -395,7 +397,7 @@ arv_gc_get_range_check_policy (ArvGc *genicam)
 {
 	g_return_val_if_fail (ARV_IS_GC (genicam), ARV_RANGE_CHECK_POLICY_DISABLE);
 
-	return genicam->priv->range_check_policy;
+	return g_atomic_int_get ((gint *) &genicam->priv->range_check_policy);
 }
 
 void
@@ -403,7 +405,7 @@ arv_gc_set_access_check_policy (ArvGc *genicam, ArvAccessCheckPolicy policy)
 {
 	g_return_if_fail (ARV_IS_GC (genicam));
 
-	genicam->priv->access_check_policy = policy;
+	g_atomic_int_set ((gint *) &genicam->priv->access_check_policy, policy);
 }
 
 ArvAccessCheckPolicy
@@ -411,7 +413,7 @@ arv_gc_get_access_check_policy (ArvGc *genicam)
 {
 	g_return_val_if_fail (ARV_IS_GC (genicam), ARV_ACCESS_CHECK_POLICY_DISABLE);
 
-	return genicam->priv->access_check_policy;
+	return g_atomic_int_get ((gint *) &genicam->priv->access_check_policy);
 }
 
 static void
@@ -421,6 +423,16 @@ _weak_notify_cb (gpointer data, GObject *object)
 
 	genicam->priv->buffer = NULL;
 }
+
+/**
+ * arv_gc_set_buffer:
+ * @genicam: a #ArvGc object
+ * @buffer: a #ArvBuffer
+ *
+ * Binds a buffer to the Genicam data, for the access to its chunk data. The bound buffer is shared by all the users
+ * of @genicam: when it is used from several threads, the binding and the following chunk accesses must be protected
+ * using [method@ArvGc.lock].
+ */
 
 void
 arv_gc_set_buffer (ArvGc *genicam, ArvBuffer *buffer)
@@ -451,6 +463,78 @@ arv_gc_get_buffer (ArvGc *genicam)
 	g_return_val_if_fail (ARV_IS_GC (genicam), NULL);
 
 	return genicam->priv->buffer;
+}
+
+/**
+ * arv_gc_lock:
+ * @genicam: a #ArvGc object
+ *
+ * Locks the access to the Genicam data. All the feature accesses already take this lock, which makes them safe to
+ * use from different threads. This function allows to make a sequence of feature accesses atomic, for example a
+ * selector change followed by the read of a selected feature, when the device is also used from another thread.
+ *
+ * The lock is recursive, and each call must be balanced by a call to [method@ArvGc.unlock]. It must not be held
+ * while waiting for an internal aravis thread, for example during the destruction of a device or a stream.
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_gc_lock (ArvGc *genicam)
+{
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	g_rec_mutex_lock (&genicam->priv->mutex);
+}
+
+/**
+ * arv_gc_unlock:
+ * @genicam: a #ArvGc object
+ *
+ * Unlocks the access to the Genicam data, see [method@ArvGc.lock].
+ *
+ * Since: 0.10.0
+ */
+
+void
+arv_gc_unlock (ArvGc *genicam)
+{
+	g_return_if_fail (ARV_IS_GC (genicam));
+
+	g_rec_mutex_unlock (&genicam->priv->mutex);
+}
+
+/*
+ * arv_gc_node_lock_genicam:
+ * @node: (nullable): a #ArvGcNode
+ *
+ * Locks the Genicam data @node belongs to.
+ *
+ * Returns: (transfer none) (nullable): the locked #ArvGc, to be passed to arv_gc_node_unlock_genicam().
+ */
+
+ArvGc *
+arv_gc_node_lock_genicam (void *node)
+{
+	ArvGc *genicam;
+
+	if (!ARV_IS_GC_NODE (node))
+		return NULL;
+
+	genicam = arv_gc_node_get_genicam (ARV_GC_NODE (node));
+	if (!ARV_IS_GC (genicam))
+		return NULL;
+
+	g_rec_mutex_lock (&genicam->priv->mutex);
+
+	return genicam;
+}
+
+void
+arv_gc_node_unlock_genicam (ArvGc *genicam)
+{
+	if (genicam != NULL)
+		g_rec_mutex_unlock (&genicam->priv->mutex);
 }
 
 guint64
@@ -491,6 +575,8 @@ arv_gc_init (ArvGc *genicam)
 
 	genicam->priv->nodes = g_hash_table_new_full (g_str_hash, g_str_equal, NULL, g_object_unref);
 	genicam->priv->cache_policy = ARV_REGISTER_CACHE_POLICY_DISABLE;
+
+	g_rec_mutex_init (&genicam->priv->mutex);
 }
 
 static void
@@ -502,6 +588,8 @@ arv_gc_finalize (GObject *object)
 		g_object_weak_unref (G_OBJECT (genicam->priv->buffer), _weak_notify_cb, genicam);
 
 	g_hash_table_unref (genicam->priv->nodes);
+
+	g_rec_mutex_clear (&genicam->priv->mutex);
 
 	G_OBJECT_CLASS (arv_gc_parent_class)->finalize (object);
 }
