@@ -23,7 +23,7 @@ jobs:
         brew install --force python3 && brew unlink python3 && brew unlink python3 && brew link --overwrite python3
     - name: Install dependencies
       run: |
-        brew install meson ninja gcc gettext intltool libxml2 libusb gstreamer adwaita-icon-theme gobject-introspection glib
+        brew install meson ninja gcc gettext intltool libxml2 libusb gstreamer gtk4 libadwaita adwaita-icon-theme gobject-introspection glib
     - name: Build
       run: |
         meson setup --buildtype=plain -Ddocumentation=disabled -Dgst-plugin=enabled -Dintrospection=disabled -Dusb=enabled -Dviewer=enabled -Dgentl-producer=true . ./build

@@ -6,12 +6,16 @@ aravis_icon_dir = join_paths (get_option ('datadir'), 'icons', 'hicolor')
 
 viewer_sources = [
 	'main.c',
-	'arvviewer.c'
+	'arvviewer.c',
+	'arvcameralist.c',
+	'arvvideosink.c'
 ]
 
 viewer_headers = [
 	'arvviewertypes.h',
-	'arvviewer.h'
+	'arvviewer.h',
+	'arvcameralist.h',
+	'arvvideosink.h'
 ]
 
 viewer_c_args = [

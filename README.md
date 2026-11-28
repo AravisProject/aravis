@@ -37,8 +37,10 @@ support depending on libusb1.
 The GStreamer plugin depends on GStreamer1 in addition to the Aravis library
 dependencies.
 
-The simple viewer depends on GStreamer1, Gtk+3 and the Aravis library
-dependencies.
+The simple viewer depends on GStreamer1, GTK 4, libadwaita and the Aravis
+library dependencies. The viewer renders through `gtk4paintablesink` (from
+gst-plugins-rs) when that element is available, and falls back to a CPU
+renderer otherwise; gst-plugins-rs is therefore optional at build time.
 
 The required versions are specified in the
 [meson.build](https://github.com/AravisProject/aravis/blob/main/meson.build)

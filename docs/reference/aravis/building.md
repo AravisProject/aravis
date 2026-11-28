@@ -37,25 +37,29 @@ indicates development releases, and even minor values stable releases. Prior to
 1.0.0, stable releases with different minor are not compatible, and are parallel
 installable, with executables suffixed with `-major.minor`.
 
-## Install dependencies on Ubuntu 20.04
+## Install dependencies on Ubuntu 24.04
+
+The viewer requires GTK 4.12 and libadwaita 1.4, so Ubuntu 24.04 or later is
+needed; older releases do not ship a new enough GTK 4.
 
 Prior to running `meson` and `ninja`, dependencies can be installed using the
-following(tested on Ubuntu 20.04):
+following(tested on Ubuntu 24.04):
 
 ```sh
 sudo apt install libxml2-dev libglib2.0-dev cmake libusb-1.0-0-dev gobject-introspection \
-                 libgtk-3-dev gtk-doc-tools  xsltproc libgstreamer1.0-dev \
+                 libgtk-4-dev libadwaita-1-dev gtk-doc-tools  xsltproc libgstreamer1.0-dev \
                  libgstreamer-plugins-base1.0-dev libgstreamer-plugins-good1.0-dev \
                  libgirepository1.0-dev gettext
 ```
 
-## Install dependencies on Fedora 34/35
+## Install dependencies on Fedora 40 or later
 Due to differences in the deb and rpm package ecosystems dependencies can be
-installed on  Fedora (tested on 34 and 35) with:
+installed on Fedora with:
 
 ```sh
 sudo dnf install libxml2-devel glib2-devel cmake libusb1-devel gobject-introspection \
-                 gobject-introspection-devel gstreamer1-plugins-base-devel gtk3-devel \
+                 gobject-introspection-devel gstreamer1-plugins-base-devel gtk4-devel \
+                 libadwaita-devel \
                  gtk-doc libxslt gstreamer1-devel gstreamer1-plugins-good python3-gobject \
                  g++ meson gettext
 ```
@@ -86,7 +90,7 @@ If you want to be able to build the viewer, you have to install some additional
 packages:
 
 ```sh
-brew install gtk+3 gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad libnotify gnome-icon-theme
+brew install gtk4 libadwaita gstreamer gst-plugins-base gst-plugins-good gst-plugins-bad libnotify gnome-icon-theme
 meson configure -Dviewer=enabled build
 ```
 
@@ -121,7 +125,7 @@ pip3 install --user git+git://git.tuxfamily.org/gitroot/crossroad/crossroad.git
 # create cross-compilation environment with architecture "w64" called "aravis"
 crossroad w64 aravis
 # install packages required for compilation; crossroad adds the mingw-w64_x86_64- prefix automatically
-crossroad install libnotify gstreamer gst-plugins-good gst-plugins-bad gst-plugins-bad gobject-introspection libusb gtk3 libxml2 zlib
+crossroad install libnotify gstreamer gst-plugins-good gst-plugins-bad gst-plugins-bad gobject-introspection libusb gtk4 libadwaita libxml2 zlib
 # clone aravis sources
 git clone https://github.com/AravisProject/aravis
 cd aravis
